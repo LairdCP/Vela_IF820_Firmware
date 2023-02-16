@@ -1,8 +1,8 @@
 import common.ez_serial_port as ez_port
 
-PORT_NAME = '/dev/cu.usbmodem334304'
+PORT_NAME = '/dev/cu.usbmodem34304'
 
-ez = ez_port.open(PORT_NAME, 115200)
+ez, port = ez_port.open(PORT_NAME, 115200)
 
 res = ez.sendAndWait('system_ping')
 
