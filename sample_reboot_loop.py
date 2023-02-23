@@ -1,11 +1,23 @@
 import argparse
 import logging
 import time
+import sys
 import ezserial_host_api.ezslib as ez_serial
-import common.ez_serial_port as ez_port
+import common.EzSerialPort as ez_port
 
 # Binary mode is unstable now, use text mode
 API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_TEXT
+
+
+def log_resp_err(resp: int):
+    if resp != 0:
+        logging.error(f'Response err: {resp}')
+
+
+def quit_on_resp_err(resp: int):
+    if resp != 0:
+        sys.exit(f'Response err: {resp}')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -21,14 +33,17 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    ez, port = ez_port.open(args.connection, 115200)
+    ezp = ez_port.EzSerialPort()
+    ez, port = ezp.open(args.connection, 115200)
     ez.defaults.apiformat = API_FORMAT
-    ez.sendAndWait('protocol_set_parse_mode', rxtimeout=1, mode=API_FORMAT)
+    res = ezp.send_and_wait(command='protocol_set_parse_mode',
+                            rxtimeout=1, mode=API_FORMAT)
+    quit_on_resp_err(res)
 
     while (True):
         try:
             logging.info('Send reboot')
-            res = ez.sendAndWait('system_reboot', rxtimeout=1)
+            log_resp_err(ezp.send_and_wait('system_reboot', rxtimeout=1))
             logging.info('Wait for boot...')
             res = ez.waitEvent('system_boot')
             logging.info(f'Event: {res}')
@@ -36,5 +51,5 @@ if __name__ == '__main__':
             logging.error(e)
             ez.reset()
             port.reset_input_buffer()
-            ez_port.clear_rx_queue()
+            ezp.clear_rx_queue()
         time.sleep(5)

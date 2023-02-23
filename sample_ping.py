@@ -1,6 +1,6 @@
 import argparse
 import logging
-import common.ez_serial_port as ez_port
+import common.EzSerialPort as ez_port
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -16,6 +16,10 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    ez, port = ez_port.open(args.connection, 115200)
-    res = ez.sendAndWait('system_ping')
-    logging.info(f'Ping result: {res}')
+    ezp = ez_port.EzSerialPort()
+    ezp.open(args.connection, 115200)
+    res = ezp.send_and_wait('system_ping')
+    if res == 0:
+        logging.info(f'Ping result: {res}')
+    else:
+        logging.error(f'Response err: {res}')
