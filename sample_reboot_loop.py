@@ -36,7 +36,7 @@ if __name__ == '__main__':
     ezp = ez_port.EzSerialPort()
     ez, port = ezp.open(args.connection, 115200)
     ez.defaults.apiformat = API_FORMAT
-    res = ezp.send_and_wait(command='protocol_set_parse_mode',
+    res = ezp.send_and_wait('protocol_set_parse_mode',
                             rxtimeout=1, mode=API_FORMAT)
     quit_on_resp_err(res)
 
@@ -45,8 +45,11 @@ if __name__ == '__main__':
             logging.info('Send reboot')
             log_resp_err(ezp.send_and_wait('system_reboot', rxtimeout=1))
             logging.info('Wait for boot...')
-            res = ez.waitEvent('system_boot')
-            logging.info(f'Event: {res}')
+            res = ezp.wait_event('system_boot')
+            if (res[0] == 0):
+                logging.info(f'Event: {res[1]}')
+            else:
+                logging.error(f'Error waiting for boot: {res[0]}')
         except Exception as e:
             logging.error(e)
             ez.reset()

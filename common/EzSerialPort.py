@@ -18,11 +18,14 @@ class EzSerialPort:
         self.port = None
         self.ez = None
         self.rx_queue = None
+        self.stop_threads = False
 
     def __queue_monitor(self):
         last_len = 0
         curr_len = 0
         while True:
+            if self.stop_threads:
+                break
             time.sleep(CLEAR_QUEUE_TIMEOUT)
             if not self.rx_queue.empty():
                 curr_len = self.rx_queue.qsize()
@@ -36,6 +39,8 @@ class EzSerialPort:
 
     def __serial_port_rx_thread(self):
         while True:
+            if self.stop_threads:
+                break
             try:
                 bytes = self.port.read(1)
                 for byte in bytes:
@@ -78,6 +83,7 @@ class EzSerialPort:
         self.port.reset_input_buffer()
         self.port.reset_output_buffer()
         self.rx_queue = queue.Queue()
+        self.stop_threads = False
         # The serial port RX thread reads all bytes received and places them in a queue
         threading.Thread(target=self.__serial_port_rx_thread,
                          daemon=True).start()
@@ -98,7 +104,7 @@ class EzSerialPort:
         Args:
             command (str): Command to send
             apiformat (int, optional): API format to use 0=text, 1=binary. Defaults to None.
-            rxtimeout (int, optional): Time to wait for response (in seconds). Defaults to False.
+            rxtimeout (int, optional): Time to wait for response (in seconds). Defaults to False (Receive immediately).
 
         Returns:
             int: 0 for success, else error. This is the received packet result code.
@@ -109,3 +115,23 @@ class EzSerialPort:
             return -1
         else:
             return res[0].payload['result']
+
+    def wait_event(self, event: str, rxtimeout: int = False) -> tuple:
+        """Wait for an event to be received
+
+        Args:
+            event (str): The event to wait for
+            rxtimeout (int, optional): Time to wait for the event. Defaults to False (Don't wait).
+
+        Returns:
+            tuple: (err code - 0 for success else error, Packet object)
+        """
+        res = self.ez.waitEvent(event, rxtimeout)
+        if res[0] == None:
+            return (-1, None)
+        else:
+            return (0, res[0])
+
+    def close(self):
+        self.stop_threads = True
+        self.port.close()
