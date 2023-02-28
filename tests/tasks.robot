@@ -3,24 +3,44 @@ Documentation       EZ-Serial Test Suite
 
 Library             ..${/}common${/}EzSerialPort.py
 
+Test Timeout        2 minutes
+
+Default Tags        bt20820
+
 
 *** Variables ***
-${COM_PORT}             /dev/cu.usbmodem334304
-${BAUD_RATE}            115200
-${API_MODE_TEXT}        0
-${API_MODE_BINARY}      1
+${COM_PORT}                 /dev/cu.usbmodem334304
+${BAUD_RATE}                115200
+${API_MODE_TEXT}            0
+${API_MODE_BINARY}          1
+${REBOOT_COUNT}             10
+${BOOT_DELAY_SECONDS}       3
 
 
 *** Test Cases ***
 Ping
-    [Tags]    l2vv-3
+    Set Tags    L2VV-3
     Open the connection
     Send Ping
     Close the connection
 
 Reboot
+    Set Tags    L2VV-9
     Open the connection
     Reboot the device
+    Close the connection
+    Sleep    ${BOOT_DELAY_SECONDS}
+
+Reboot Loop Text Mode
+    Set Tags    L2VV-12
+    Open the connection
+    Reboot Loop
+    Close the connection
+
+Reboot Loop Binary Mode
+    Set Tags    L2VV-13
+    Open the connection
+    Reboot Loop    arg_api_mode=${API_MODE_BINARY}
     Close the connection
 
 
@@ -47,3 +67,15 @@ Reboot the device
 Fail on error
     [Arguments]    ${err}
     IF    ${err} != 0    Fail    Response error ${err}
+
+Reboot Loop
+    [Timeout]    ${arg_timeout}
+    [Arguments]    ${arg_loop_count}=${REBOOT_COUNT}    ${arg_api_mode}=${API_MODE_TEXT}    ${arg_timeout}=60 seconds
+    FOR    ${counter}    IN RANGE    ${arg_loop_count}
+        TRY
+            Reboot the device    ${arg_api_mode}
+        EXCEPT    AS    ${err}
+            Fail    Loop iteration ${counter+1}: ${err}
+        END
+        Sleep    ${BOOT_DELAY_SECONDS}
+    END

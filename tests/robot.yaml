@@ -8,6 +8,12 @@ tasks:
   Reboot Test:
     robotTaskName: Reboot
 
+  Reboot Loop Text Mode:
+    robotTaskName: Reboot Loop Text Mode
+
+  Reboot Loop Binary Mode:
+    robotTaskName: Reboot Loop Binary Mode
+
 condaConfigFile: conda.yaml
 
 environmentConfigs:
