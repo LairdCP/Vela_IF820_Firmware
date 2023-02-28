@@ -1,6 +1,6 @@
 tasks:
-  Run all tasks:
-    shell: python -m robot --report NONE --outputdir output --logtitle "Test Report" tasks.robot
+  Test Basic Commands:
+    shell: python -m robot --report NONE --outputdir output --logtitle "Basic Commands" basic_commands.robot
 
   Ping Test:
     robotTaskName: Ping

@@ -1,5 +1,5 @@
 *** Settings ***
-Documentation       EZ-Serial Test Suite
+Documentation       Basic Commands Test Suite
 
 Library             ..${/}common${/}EzSerialPort.py
 
