@@ -52,7 +52,10 @@
 
 # -*- coding: utf-8 -*-
 
-import sys, re, struct
+import sys
+import re
+import struct
+
 
 class dotdict(dict):
     # dot.notation access to dictionary attributes
@@ -60,27 +63,34 @@ class dotdict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
-    
+
 # custom cases for cleaner exception handling
+
+
 class EZSerialException(Exception):
     pass
+
 
 class TimeoutException(EZSerialException):
     pass
 
+
 class ProtocolException(EZSerialException):
     pass
+
 
 class PacketException(EZSerialException):
     def __init__(self, msg, packet):
         super(PacketException, self).__init__(msg)
         self.packet = packet
 
+
 class ParseException(EZSerialException):
     pass
 
+
 class Protocol():
-    
+
     dataTypeMap = {
         "uint8": "B",
         "uint16": "H",
@@ -94,7 +104,7 @@ class Protocol():
         "longuint8a": "H",
         "longstring": "H"
     }
-    
+
     dataTypeWidth = {
         "uint8": 1,
         "uint16": 2,
@@ -108,7 +118,7 @@ class Protocol():
         "longuint8a": 2,
         "longstring": 2
     }
-    
+
     commands = {
         1: {
             "name": "protocol",
@@ -278,7 +288,7 @@ class Protocol():
             2: {"name": "get_parameters", "textname": ".EDDYGP", "flashopt": 1, "parameters": [], "returns": [{"type": "uint8", "name": "enable", "textname": "E"}, {"type": "uint16", "name": "interval", "textname": "I"}, {"type": "uint8", "name": "type", "textname": "T"}, {"type": "uint8a", "name": "data", "textname": "D"}]},
         },
     }
-    
+
     events = {
         1: {
             "name": "protocol",
@@ -358,31 +368,35 @@ class Protocol():
             "name": "p_eddystone",
         },
     }
-    
+
     @classmethod
     def getMethodByName(cls, name):
         parts = name.split('_', 2)
         if len(parts) < 3:
-            raise ProtocolException("Invalid method name '%s' specified, format must be similar to 'cmd_system_ping'" % name)
-        
+            raise ProtocolException(
+                "Invalid method name '%s' specified, format must be similar to 'cmd_system_ping'" % name)
+
         if parts[0] in ["cmd", "rsp"]:
             search = Protocol.commands
         elif parts[0] == "evt":
             search = Protocol.events
         else:
-            raise ProtocolException("Invalid method type '%s' specified, must be 'cmd', 'rsp', or 'evt'" % parts[0])
-            
+            raise ProtocolException(
+                "Invalid method type '%s' specified, must be 'cmd', 'rsp', or 'evt'" % parts[0])
+
         # group is "p_cyspp" or "p_ibeacon" or similar, adjust name
         if parts[1] == "p":
             temp = parts[2].split('_', 1)
             parts[1] += "_" + temp[0]
             parts[2] = temp[1]
-            
+
         for group in search:
-            if type(group) != int: continue
+            if type(group) != int:
+                continue
             if search[group]["name"] == parts[1]:
                 for method in search[group]:
-                    if type(method) != int: continue
+                    if type(method) != int:
+                        continue
                     if search[group][method]["name"] == parts[2]:
                         search[group][method]["group"] = group
                         search[group][method]["method"] = method
@@ -398,34 +412,40 @@ class Protocol():
     @classmethod
     def getEventByName(cls, name):
         return Protocol.getMethodByName("evt_%s" % name)
-        
+
     @classmethod
     def getCommandByTextName(cls, name):
         for group in Protocol.commands:
-            if type(group) != int: continue
+            if type(group) != int:
+                continue
             for method in Protocol.commands[group]:
-                if type(method) != int: continue
+                if type(method) != int:
+                    continue
                 if Protocol.commands[group][method]["textname"] == name.upper():
                     Protocol.commands[group][method]["group"] = group
                     Protocol.commands[group][method]["method"] = method
                     return Protocol.commands[group][method]
 
         # not found in table
-        raise ProtocolException("Command method with text name '%s' not found" % name)
+        raise ProtocolException(
+            "Command method with text name '%s' not found" % name)
 
     @classmethod
     def getEventByTextName(cls, name):
         for group in Protocol.events:
-            if type(group) != int: continue
+            if type(group) != int:
+                continue
             for method in Protocol.events[group]:
-                if type(method) != int: continue
+                if type(method) != int:
+                    continue
                 if Protocol.events[group][method]["textname"] == name.upper():
                     Protocol.events[group][method]["group"] = group
                     Protocol.events[group][method]["method"] = method
                     return Protocol.events[group][method]
 
         # not found in table
-        raise ProtocolException("Event method with text name '%s' not found" % name)
+        raise ProtocolException(
+            "Event method with text name '%s' not found" % name)
 
     @classmethod
     def getCommandByIds(cls, group, method):
@@ -435,7 +455,8 @@ class Protocol():
             return Protocol.commands[group][method]
 
         # not found in table
-        raise ProtocolException("Command method with IDs %d/%d not found" % (group, method))
+        raise ProtocolException(
+            "Command method with IDs %d/%d not found" % (group, method))
 
     @classmethod
     def getEventByIds(cls, group, method):
@@ -445,8 +466,10 @@ class Protocol():
             return Protocol.events[group][method]
 
         # not found in table
-        raise ProtocolException("Event method with IDs %d/%d not found" % (group, method))
-    
+        raise ProtocolException(
+            "Event method with IDs %d/%d not found" % (group, method))
+
+
 class Packet():
 
     EZS_PACKET_TYPE_COMMAND = 0
@@ -461,7 +484,7 @@ class Packet():
     EZS_MEMORY_SCOPE_RAM = 0
     EZS_MEMORY_SCOPE_FLASH = 1
     EZS_MEMORY_SCOPE_NAMES = ["ram", "flash"]
-    
+
     EZS_ORIGIN_ASSEMBLY = 0
     EZS_ORIGIN_BINARY = 1
     EZS_ORIGIN_TEXT = 2
@@ -470,7 +493,7 @@ class Packet():
     def __getitem__(self, i):
         return self.payload[i]
 
-    def __init__(self, command=None, memscope=EZS_MEMORY_SCOPE_RAM, **kwargs): 
+    def __init__(self, command=None, memscope=EZS_MEMORY_SCOPE_RAM, **kwargs):
         self.entry = None
         self.type = None
         self.scope = None
@@ -478,7 +501,7 @@ class Packet():
         self.group = None
         self.method = None
         self.payload = dotdict()
-        
+
         self.origin = None
         self.binaryByteArray = None
         self.textString = None
@@ -488,32 +511,38 @@ class Packet():
 
         if command != None:
             self.buildOutgoingFromArgs(command, memscope, **kwargs)
-    
+
     def __repr__(self):
         argList = None
         if self.type == self.EZS_PACKET_TYPE_COMMAND or self.type == self.EZS_PACKET_TYPE_RESPONSE:
             if self.group == None:
                 buf = "[%s packet, uninitialized group ID" % self.EZS_PACKET_TYPE_NAMES[self.type]
             elif self.group not in Protocol.commands:
-                buf = "[%s packet, unknown group ID %d" % (self.EZS_PACKET_TYPE_NAMES[self.type], self.group)
+                buf = "[%s packet, unknown group ID %d" % (
+                    self.EZS_PACKET_TYPE_NAMES[self.type], self.group)
             elif self.method == None:
-                buf = "[%s packet in group %d, uninitialized method ID" % (self.EZS_PACKET_TYPE_NAMES[self.type], self.group)
+                buf = "[%s packet in group %d, uninitialized method ID" % (
+                    self.EZS_PACKET_TYPE_NAMES[self.type], self.group)
             elif self.method not in Protocol.commands[self.group]:
-                buf = "[%s packet in group %d, unknown method ID %d" % (self.EZS_PACKET_TYPE_NAMES[self.type], self.group, self.method)
+                buf = "[%s packet in group %d, unknown method ID %d" % (
+                    self.EZS_PACKET_TYPE_NAMES[self.type], self.group, self.method)
             else:
-                buf = "[%s_%s_%s (%d/%d) from %s (scope=%s)" % ( \
-                        self.EZS_PACKET_TYPE_PREFIXES[self.type], \
-                        Protocol.commands[self.group]["name"], \
-                        Protocol.commands[self.group][self.method]["name"], \
-                        self.group, self.method, self.EZS_ORIGIN_NAMES[self.origin], self.EZS_MEMORY_SCOPE_NAMES[self.scope])
+                buf = "[%s_%s_%s (%d/%d) from %s (scope=%s)" % (
+                    self.EZS_PACKET_TYPE_PREFIXES[self.type],
+                    Protocol.commands[self.group]["name"],
+                    Protocol.commands[self.group][self.method]["name"],
+                    self.group, self.method, self.EZS_ORIGIN_NAMES[self.origin], self.EZS_MEMORY_SCOPE_NAMES[self.scope])
                 if self.type == self.EZS_PACKET_TYPE_COMMAND:
                     # copy (not directly assign!) parameter list definition to working argument list
-                    argList = list(Protocol.commands[self.group][self.method]["parameters"])
+                    argList = list(
+                        Protocol.commands[self.group][self.method]["parameters"])
                 else:
                     # copy (not directly assign!) parameter list definition to working argument list
-                    argList = list(Protocol.commands[self.group][self.method]["returns"])
-                    argList.insert(0, {"type": 'uint16', "name": 'result', "textname": '_'})
-                
+                    argList = list(
+                        Protocol.commands[self.group][self.method]["returns"])
+                    argList.insert(
+                        0, {"type": 'uint16', "name": 'result', "textname": '_'})
+
         elif self.type == self.EZS_PACKET_TYPE_EVENT:
             if self.group == None:
                 buf = "[event packet, uninitialized group ID"
@@ -522,13 +551,15 @@ class Packet():
             elif self.method == None:
                 buf = "[event packet, uninitialized method ID"
             elif self.method not in Protocol.events[self.group]:
-                buf = "[event packet in group %d, unknown method ID %d" % (self.group, self.method)
+                buf = "[event packet in group %d, unknown method ID %d" % (
+                    self.group, self.method)
             else:
-                buf = "[evt_%s_%s (%d/%d) from %s" % (Protocol.events[self.group]["name"], \
-                        Protocol.events[self.group][self.method]["name"],
-                        self.group, self.method, self.EZS_ORIGIN_NAMES[self.origin])
+                buf = "[evt_%s_%s (%d/%d) from %s" % (Protocol.events[self.group]["name"],
+                                                      Protocol.events[self.group][self.method]["name"],
+                                                      self.group, self.method, self.EZS_ORIGIN_NAMES[self.origin])
                 # copy (not directly assign!) parameter list definition to working argument list
-                argList = list(Protocol.events[self.group][self.method]["parameters"])
+                argList = list(
+                    Protocol.events[self.group][self.method]["parameters"])
 
         else:
             buf = "[uninitialized packet"
@@ -539,44 +570,51 @@ class Packet():
                     buf += ", %s: MISSING" % x["name"]
                 else:
                     if x["type"] == "macaddr":
-                        buf += ", %s: %s" % (x["name"], ":".join(['%02X' % b for b in reversed(self.payload[x["name"]])]))
+                        buf += ", %s: %s" % (x["name"], ":".join(['%02X' %
+                                             b for b in reversed(self.payload[x["name"]])]))
                     elif x["type"] in ['uint8a', 'longuint8a']:
                         if type(self.payload[x["name"]]) == str:
-                            buf += ", %s: %s" % (x["name"], "".join(['%02X' % ord(b) for b in self.payload[x["name"]]]))
+                            buf += ", %s: %s" % (x["name"], "".join(['%02X' % ord(b)
+                                                 for b in self.payload[x["name"]]]))
                         else:
-                            buf += ", %s: %s" % (x["name"], "".join(['%02X' % b for b in self.payload[x["name"]]]))
+                            buf += ", %s: %s" % (x["name"], "".join(
+                                ['%02X' % b for b in self.payload[x["name"]]]))
                     elif x["type"] in ['string', 'longstring']:
-                        buf += ", %s: %s" % (x["name"], self.payload[x["name"]])
+                        buf += ", %s: %s" % (x["name"],
+                                             self.payload[x["name"]])
                     else:
-                        buf += ", %s: 0x%X" % (x["name"], self.payload[x["name"]])
+                        buf += ", %s: 0x%X" % (x["name"],
+                                               self.payload[x["name"]])
 
         buf += "]"
         return buf
-        
+
     def getPayloadLengthFromBinaryBuffer(self, buf):
         # all valid packets must be at least 5 bytes (4 header + 1 checksum)
         if len(buf) < 5:
-            raise PacketException("Binary packet buffer is not properly initialized with header data", self)
-        
+            raise PacketException(
+                "Binary packet buffer is not properly initialized with header data", self)
+
         # packet length is 11-bit field spread across two
         return ((buf[0] & 0x7) << 8) + buf[1]
 
     def buildOutgoingFromArgs(self, command, memscope=EZS_MEMORY_SCOPE_RAM, **kwargs):
         self.entry = Protocol.getCommandByName(command)
         argList = self.entry["parameters"]
-        packFormat = '<%s' % ''.join([Protocol.dataTypeMap[z["type"]] for z in argList])
+        packFormat = '<%s' % ''.join(
+            [Protocol.dataTypeMap[z["type"]] for z in argList])
         self.type = Packet.EZS_PACKET_TYPE_COMMAND
         self.payloadLength = struct.calcsize(packFormat)
         self.group = self.entry["group"]
         self.method = self.entry["method"]
         self.origin = Packet.EZS_ORIGIN_ASSEMBLY
         self.scope = memscope
-        
+
         byteList = [0xC0, self.payloadLength, self.group, self.method]
         packValues = []
         suffix = None
-        
-        # start text string with command name            
+
+        # start text string with command name
         self.textString = self.entry["textname"]
 
         # apply correct memory scope if flash is specified
@@ -586,7 +624,8 @@ class Packet():
 
         for arg in argList:
             if arg["name"] not in kwargs:
-                raise PacketException("Missing required command argument '%s' (type=%s)" % (arg["name"], arg["type"]), self)
+                raise PacketException("Missing required command argument '%s' (type=%s)" % (
+                    arg["name"], arg["type"]), self)
             if arg["type"] in ['uint8a', 'string', 'longuint8a', 'longstring']:
                 packValues.append(len(kwargs[arg["name"]]))
                 if sys.version_info < (3, 0):
@@ -603,29 +642,35 @@ class Packet():
                     self.textPayload[arg["textname"]] = kwargs[arg["name"]]
                 else:
                     # byte to ASCII hex conversion for normal data blobs
-                    self.textPayload[arg["textname"]] = ''.join(['%02X' % b for b in bytearray(kwargs[arg["name"]])])
+                    self.textPayload[arg["textname"]] = ''.join(
+                        ['%02X' % b for b in bytearray(kwargs[arg["name"]])])
             else:
                 if arg["type"] == "macaddr":
-                    self.textPayload[arg["textname"]] = ''.join(reversed(['%02X' % b for b in bytearray(kwargs[arg["name"]])]))
+                    self.textPayload[arg["textname"]] = ''.join(
+                        reversed(['%02X' % b for b in bytearray(kwargs[arg["name"]])]))
                     if sys.version_info < (3, 0):
                         # Python 2.x
-                        packValues.append("".join(map(chr, kwargs[arg["name"]])))
+                        packValues.append(
+                            "".join(map(chr, kwargs[arg["name"]])))
                     else:
                         # Python 3.x
                         packValues.append(bytes(kwargs[arg["name"]]))
                 else:
-                    self.textPayload[arg["textname"]] = ('{:0%dX}' % (Protocol.dataTypeWidth[arg["type"]] * 2)).format(kwargs[arg["name"]], "x")
+                    self.textPayload[arg["textname"]] = ('{:0%dX}' % (
+                        Protocol.dataTypeWidth[arg["type"]] * 2)).format(kwargs[arg["name"]], "x")
                     packValues.append(kwargs[arg["name"]])
-                
+
             # append this argument to the literal argument list
             self.payload[arg["name"]] = kwargs[arg["name"]]
-                
+
             # append this argument to the text string
-            self.textString = self.textString + (",%s=%s" % (arg["textname"], self.textPayload[arg["textname"]]))
-            
+            self.textString = self.textString + \
+                (",%s=%s" %
+                 (arg["textname"], self.textPayload[arg["textname"]]))
+
         # end text string
         self.textString = self.textString + "\r\n"
-        
+
         # assemble binary byte array
         self.binaryByteArray = byteList
         self.binaryByteArray += bytearray(struct.pack(packFormat, *packValues))
@@ -639,7 +684,7 @@ class Packet():
                     self.binaryByteArray += bytearray(suffix, "utf-8")
             else:
                 self.binaryByteArray += suffix
-        
+
         # calculate and append checksum
         checksum = 0x99
         for b in self.binaryByteArray:
@@ -655,66 +700,76 @@ class Packet():
         self.scope = Packet.EZS_MEMORY_SCOPE_RAM
         rePacket = re.compile('^([a-zA-Z0-9\\$\\.\\/]+)([^\r\n]*)\r\n$')
         reMatch = rePacket.match(self.textString)
-        
+
         if not reMatch:
-            raise PacketException("Malformed text command packet: '%s'" % self.textString, self)
+            raise PacketException(
+                "Malformed text command packet: '%s'" % self.textString, self)
         self.textName = reMatch.group(1).upper()
         if self.textName[-1] == '$':
             self.scope = Packet.EZS_MEMORY_SCOPE_FLASH
             self.textName = self.textName[:-1]
-        
+
         # command packet
         self.type = self.EZS_PACKET_TYPE_COMMAND
         rePayload = re.compile('^,*(.*)$')
         payloadMatch = rePayload.match(reMatch.group(2))
         if not payloadMatch:
-            raise PacketException("Malformed text command packet: '%s'" % self.textString, self)
+            raise PacketException(
+                "Malformed text command packet: '%s'" % self.textString, self)
         argText = payloadMatch.group(1)
-        
+
         # attempt to find this packet in the API definition
         self.entry = Protocol.getCommandByTextName(self.textName)
         self.group = self.entry["group"]
         self.method = self.entry["method"]
 
         # parse all text parameters from this packet
-        reArgs = re.compile('([a-zA-Z])=([^,]*)');
+        reArgs = re.compile('([a-zA-Z])=([^,]*)')
         for argMatch in reArgs.finditer(argText):
             argName = argMatch.group(1).upper()
             if argName in self.textPayload:
-                raise PacketException("Text argument '%s' already encountered in payload '%s'" % (argName, argText), self)
+                raise PacketException(
+                    "Text argument '%s' already encountered in payload '%s'" % (argName, argText), self)
             if argName not in [x["textname"] for x in self.entry["parameters"]]:
-                raise PacketException("Text argument '%s' from payload '%s' not expected for this command" % (argName, argText), self)
+                raise PacketException(
+                    "Text argument '%s' from payload '%s' not expected for this command" % (argName, argText), self)
             self.textPayload[argMatch.group(1).upper()] = argMatch.group(2)
-                
+
         # convert to binary based on API definition
         missing = []
         for x in self.entry["parameters"]:
             if x["textname"] in self.textPayload:
                 if x["type"] in ["uint8a", "longuint8a"]:
-                    self.payload[x["name"]] = bytearray.fromhex(self.textPayload[x["textname"]])
+                    self.payload[x["name"]] = bytearray.fromhex(
+                        self.textPayload[x["textname"]])
                 elif x["type"] in ["string", "longstring"]:
                     self.payload[x["name"]] = self.textPayload[x["textname"]]
                 elif x["type"] == "macaddr":
-                    self.payload[x["name"]] = list(reversed(bytearray.fromhex(self.textPayload[x["textname"]])))
+                    self.payload[x["name"]] = list(
+                        reversed(bytearray.fromhex(self.textPayload[x["textname"]])))
                 else:
-                    self.payload[x["name"]] = int(self.textPayload[x["textname"]], 16)
+                    self.payload[x["name"]] = int(
+                        self.textPayload[x["textname"]], 16)
             else:
                 # some argument is missing, can't safely convert from text to binary
                 missing.append(x)
-                
+
         if len(missing) > 0:
-            raise PacketException("Missing text arguments: %s" % ", ".join(["%s (%s)" % (x["name"], x["textname"]) for x in missing]), self)
-                    
+            raise PacketException("Missing text arguments: %s" % ", ".join(
+                ["%s (%s)" % (x["name"], x["textname"]) for x in missing]), self)
+
         # reuse other method to do the legwork of filling in the rest of the packet details
-        self.buildOutgoingFromArgs(Protocol.commands[self.group]["name"] + "_" + Protocol.commands[self.group][self.method]["name"], **self.payload)
-                        
+        self.buildOutgoingFromArgs(
+            Protocol.commands[self.group]["name"] + "_" + Protocol.commands[self.group][self.method]["name"], **self.payload)
+
     def buildIncomingFromBinaryBuffer(self, buf):
         self.binaryByteArray = bytearray(buf)
         self.origin = Packet.EZS_ORIGIN_BINARY
         payloadLength = self.getPayloadLengthFromBinaryBuffer(buf)
-        
+
         if len(buf) != payloadLength + 5:
-            raise PacketException("Malformed binary packet, invalid length", self)
+            raise PacketException(
+                "Malformed binary packet, invalid length", self)
 
         # assign known packet metadata from header
         self.payloadLength = payloadLength
@@ -727,107 +782,126 @@ class Packet():
         if (buf[0] & 0xC0) == 0xC0:
             # response packet has first 2 MSB's set (0xC0)
             self.type = self.EZS_PACKET_TYPE_RESPONSE
-            
+
             # assume RAM scope as default
             self.scope = self.EZS_MEMORY_SCOPE_RAM
-            
+
             # check for flash memory scope bit
             if buf[0] & 0x30 == 0x10:
                 self.scope = self.EZS_MEMORY_SCOPE_FLASH
-                
+
             # store API definition entry reference in packet
             self.entry = Protocol.getCommandByIds(buf[2], buf[3])
 
             # begin text string
             self.textString = "@R,"
             textSub = "," + self.entry["textname"]
-            
+
             if self.scope == self.EZS_MEMORY_SCOPE_FLASH:
                 textSub = textSub + "$"
-            
+
             # copy (not directly assign!) parameter list definition to working argument list
             argList = list(self.entry["returns"])
-            argList.insert(0, {"type": 'uint16', "name": 'result', "textname": '_'})
-                
+            argList.insert(
+                0, {"type": 'uint16', "name": 'result', "textname": '_'})
+
         elif (buf[0] & 0xC0) == 0x80:
             # event packet has only first MSB set and second MSB clear (0x80)
             self.type = self.EZS_PACKET_TYPE_EVENT
-            
+
             # store API definition entry reference in packet
             self.entry = Protocol.getEventByIds(buf[2], buf[3])
 
             # begin text string
             self.textString = "@E,"
             textSub = "," + self.entry["textname"]
-                
+
             # copy (not directly assign!) parameter list definition to working argument list
             argList = list(self.entry["parameters"])
 
         else:
             # packet has neither of first two MSB's set, which is invalid
-            raise PacketException("Unidentifiable packet type, SOF byte=0x%02X" % buf[0], self)
-            
+            raise PacketException(
+                "Unidentifiable packet type, SOF byte=0x%02X" % buf[0], self)
+
         # proceed if argument list is known
         if argList != None:
-            unpackFormat = '<%s' % ''.join([Protocol.dataTypeMap[z["type"]] for z in argList])
-            argValues = struct.unpack_from(unpackFormat, self.binaryByteArray[4:])
+            unpackFormat = '<%s' % ''.join(
+                [Protocol.dataTypeMap[z["type"]] for z in argList])
+            argValues = struct.unpack_from(
+                unpackFormat, self.binaryByteArray[4:])
             for x in range(len(argList)):
-                if argList[x]["type"] in ["uint8a","longuint8a","string","longstring"]:
+                if argList[x]["type"] in ["uint8a", "longuint8a", "string", "longstring"]:
                     start = 4 + struct.calcsize(unpackFormat)
                     if start + argValues[x] != self.payloadLength + 4:
                         # variable-length array does not fit properly within header-specified payload length
-                        raise PacketException("Variable-length argument '%s' claims %d bytes but actually has %d" % (argList[x]["name"], argValues[x], self.payloadLength - start + 4), self)
+                        raise PacketException("Variable-length argument '%s' claims %d bytes but actually has %d" % (
+                            argList[x]["name"], argValues[x], self.payloadLength - start + 4), self)
                     if argList[x]["type"] in ["string", "longstring"]:
                         # raw data copy and conversion to decoded string (NOT bytearray) for these special data types
-                        self.payload[argList[x]["name"]] = self.binaryByteArray[start:start+argValues[x]].decode()
-                        self.textPayload[argList[x]["textname"]] = self.binaryByteArray[start:start+argValues[x]].decode()
+                        self.payload[argList[x]["name"]
+                                     ] = self.binaryByteArray[start:start+argValues[x]].decode()
+                        self.textPayload[argList[x]["textname"]
+                                         ] = self.binaryByteArray[start:start+argValues[x]].decode()
                     else:
                         # raw byte array slice for binary payload of normal data blob
-                        self.payload[argList[x]["name"]] = self.binaryByteArray[start:start+argValues[x]]
+                        self.payload[argList[x]["name"]
+                                     ] = self.binaryByteArray[start:start+argValues[x]]
 
                         # byte to ASCII hex conversion for normal data blobs
-                        self.textPayload[argList[x]["textname"]] = ''.join(['%02X' % b for b in self.binaryByteArray[start:start+argValues[x]]])
+                        self.textPayload[argList[x]["textname"]] = ''.join(
+                            ['%02X' % b for b in self.binaryByteArray[start:start+argValues[x]]])
                 elif argList[x]["type"] == "macaddr":
-                    self.payload[argList[x]["name"]] = list(bytearray(argValues[x]))
-                    self.textPayload[argList[x]["textname"]] = ''.join(['%02X' % b for b in reversed(bytearray(argValues[x]))])
+                    self.payload[argList[x]["name"]] = list(
+                        bytearray(argValues[x]))
+                    self.textPayload[argList[x]["textname"]] = ''.join(
+                        ['%02X' % b for b in reversed(bytearray(argValues[x]))])
                 else:
                     self.payload[argList[x]["name"]] = argValues[x]
-                    self.textPayload[argList[x]["textname"]] = ('{:0%dX}' % (Protocol.dataTypeWidth[argList[x]["type"]] * 2)).format(argValues[x], "x")
-            
+                    self.textPayload[argList[x]["textname"]] = ('{:0%dX}' % (
+                        Protocol.dataTypeWidth[argList[x]["type"]] * 2)).format(argValues[x], "x")
+
                 # append this argument to the text string
                 if argList[x]["textname"] == "_":
                     # result in a response, no name prefix
-                    textSub = textSub + (",%s" % self.textPayload[argList[x]["textname"]])
+                    textSub = textSub + \
+                        (",%s" % self.textPayload[argList[x]["textname"]])
                 else:
-                    textSub = textSub + (",%s=%s" % (argList[x]["textname"], self.textPayload[argList[x]["textname"]]))
-                    
+                    textSub = textSub + \
+                        (",%s=%s" % (
+                            argList[x]["textname"], self.textPayload[argList[x]["textname"]]))
+
         # calculate text string payload length value and end it
-        self.textString = self.textString + ("%04X" % len(textSub)) + textSub + "\r\n"
-            
+        self.textString = self.textString + \
+            ("%04X" % len(textSub)) + textSub + "\r\n"
+
     def buildIncomingFromTextBuffer(self, buf):
         self.textString = "".join(map(chr, buf))
         self.origin = Packet.EZS_ORIGIN_TEXT
-        rePacket = re.compile('^@([RE]),([0-9A-F]{4}),([A-Z0-9\\$\\.\\/]+)([^\r\n]*)\r\n$')
+        rePacket = re.compile(
+            '^@([RE]),([0-9A-F]{4}),([A-Z0-9\\$\\.\\/]+)([^\r\n]*)\r\n$')
         reMatch = rePacket.match(self.textString)
-        
+
         if not reMatch:
-            raise PacketException("Malformed text packet: '%s'" % self.textString, self)
+            raise PacketException(
+                "Malformed text packet: '%s'" % self.textString, self)
 
         self.textSublength = int(reMatch.group(2), 16)
         self.textName = reMatch.group(3)
         argList = None
-        
+
         if self.textSublength != (len(reMatch.group(3)) + len(reMatch.group(4)) + 1):
-            raise PacketException("Text length specified %d payload bytes but %d found, detail: %s" % \
-                (self.textSublength, len(reMatch.group(3)) + len(reMatch.group(4)) + 1, self.textString), self)
-        
+            raise PacketException("Text length specified %d payload bytes but %d found, detail: %s" %
+                                  (self.textSublength, len(reMatch.group(3)) + len(reMatch.group(4)) + 1, self.textString), self)
+
         if reMatch.group(1) == "R":
             # response packet
             self.type = self.EZS_PACKET_TYPE_RESPONSE
             rePayload = re.compile('^,([0-9A-F]{4}),*(.*)$')
             payloadMatch = rePayload.match(reMatch.group(4))
             if not payloadMatch:
-                raise PacketException("Malformed text response packet: '%s'" % self.textString, self)
+                raise PacketException(
+                    "Malformed text response packet: '%s'" % self.textString, self)
             self.textPayload['_'] = payloadMatch.group(1)
             argText = payloadMatch.group(2)
 
@@ -838,7 +912,7 @@ class Packet():
             if self.textName[-1] == '$':
                 self.scope = self.EZS_MEMORY_SCOPE_FLASH
                 self.textName = self.textName[0:-1]
-                
+
             # attempt to get method details based on text name
             self.entry = Protocol.getCommandByTextName(self.textName)
             self.group = self.entry["group"]
@@ -846,80 +920,89 @@ class Packet():
 
             # copy (not directly assign!) parameter list definition to working argument list
             argList = list(self.entry["returns"])
-            argList.insert(0, {"type": 'uint16', "name": 'result', "textname": '_'})
-                
+            argList.insert(
+                0, {"type": 'uint16', "name": 'result', "textname": '_'})
+
         elif reMatch.group(1) == "E":
             # event packet
             self.type = self.EZS_PACKET_TYPE_EVENT
             rePayload = re.compile('^,*(.*)$')
             payloadMatch = rePayload.match(reMatch.group(4))
             if not payloadMatch:
-                raise PacketException("Malformed text event packet: '%s'" % self.textString, self)
+                raise PacketException(
+                    "Malformed text event packet: '%s'" % self.textString, self)
             argText = payloadMatch.group(1)
-            
+
             # attempt to find this packet in the API definition
             self.entry = Protocol.getEventByTextName(self.textName)
             self.group = self.entry["group"]
             self.method = self.entry["method"]
-                        
+
             # copy (not directly assign!) parameter list definition to working argument list
             argList = list(self.entry["parameters"])
-            
+
         else:
-            raise PacketException("Invalid incoming text packet type, SOF match='%s'" % reMatch.group(1), self)
+            raise PacketException(
+                "Invalid incoming text packet type, SOF match='%s'" % reMatch.group(1), self)
 
         # parse all text parameters from this packet
-        reArgs = re.compile('([A-Z])=([^,]*)');
+        reArgs = re.compile('([A-Z])=([^,]*)')
         for argMatch in reArgs.finditer(argText):
             if argMatch.group(1) in self.textPayload:
-                raise PacketException("Text argument '%s' already encountered in payload '%s'" % (argMatch.group(1), argText), self)
+                raise PacketException("Text argument '%s' already encountered in payload '%s'" % (
+                    argMatch.group(1), argText), self)
             else:
                 self.textPayload[argMatch.group(1)] = argMatch.group(2)
-                
+
         # convert to binary based on API definition
         if argList != None:
             for x in argList:
                 if x["textname"] in self.textPayload:
                     if x["type"] in ["uint8a", "longuint8a"]:
-                        self.payload[x["name"]] = bytearray.fromhex(self.textPayload[x["textname"]])
+                        self.payload[x["name"]] = bytearray.fromhex(
+                            self.textPayload[x["textname"]])
                     elif x["type"] in ["string", "longstring"]:
-                        self.payload[x["name"]] = self.textPayload[x["textname"]]
+                        self.payload[x["name"]
+                                     ] = self.textPayload[x["textname"]]
                     elif x["type"] == "macaddr":
-                        self.payload[x["name"]] = list(reversed(bytearray.fromhex(self.textPayload[x["textname"]])))
+                        self.payload[x["name"]] = list(
+                            reversed(bytearray.fromhex(self.textPayload[x["textname"]])))
                     else:
-                        self.payload[x["name"]] = int(self.textPayload[x["textname"]], 16)
+                        self.payload[x["name"]] = int(
+                            self.textPayload[x["textname"]], 16)
+
 
 class API():
-    
+
     EZS_BINARY_SOF_MASK = 0x80
     EZS_TEXT_SOF_CHAR = 0x40
     EZS_BINARY_CHECKSUM_INITIAL_VALUE = 0x99
-    
+
     EZS_OUTPUT_RESULT_DATA_WRITTEN = 0
     EZS_OUTPUT_RESULT_RESPONSE_PENDING = 1
-    
+
     EZS_INPUT_RESULT_BYTE_READ = 2
     EZS_INPUT_RESULT_NO_DATA = 3
-    
+
     EZS_PARSE_RESULT_BYTE_IGNORED = 4
     EZS_PARSE_RESULT_IN_PROGRESS = 5
     EZS_PARSE_RESULT_PACKET_COMPLETE = 6
-    
+
     def __init__(self, rxPacketHandler=None, txPacketHandler=None, hardwareOutput=None, hardwareInput=None):
         self.rxPacketHandler = rxPacketHandler
         self.txPacketHandler = txPacketHandler
         self.hardwareOutput = hardwareOutput
         self.hardwareInput = hardwareInput
-        
+
         self.lastTxPacket = None
         self.lastRxPacket = None
-        
+
         self.defaults = dotdict()
-        self.defaults.memscope = Packet.EZS_MEMORY_SCOPE_RAM # used if argument=None
-        self.defaults.rxtimeout = None # wait forever, used if argument=False
-        self.defaults.apiformat = Packet.EZS_API_FORMAT_BINARY # used if argument=None
-        self.defaults.consumeecho = 1 # enabled, used if argument=None
-        
+        self.defaults.memscope = Packet.EZS_MEMORY_SCOPE_RAM  # used if argument=None
+        self.defaults.rxtimeout = None  # wait forever, used if argument=False
+        self.defaults.apiformat = Packet.EZS_API_FORMAT_BINARY  # used if argument=None
+        self.defaults.consumeecho = 1  # enabled, used if argument=None
+
         self.reset()
 
     def reset(self):
@@ -931,16 +1014,16 @@ class API():
         self.lastOutputResult = None
         self.lastInputResult = None
         self.lastParseResult = None
-        
+
     def parse(self, b):
         if type(b) is str:
             b = ord(b)
-            
+
         # assume correct parsing
         result = self.EZS_PARSE_RESULT_IN_PROGRESS
-        
+
         if self.inBinaryPacket or (b & self.EZS_BINARY_SOF_MASK) != 0:
-            #print("B:%02X" % b)
+            # print("B:%02X" % b)
             if not self.inBinaryPacket:
                 # start of new binary packet
                 self.inBinaryPacket = True
@@ -949,97 +1032,110 @@ class API():
                 # reset packet and clear text packet status to be safe
                 self.inTextPacket = False
                 self.rxPacketBuffer[:] = []
-                
+
             elif len(self.rxPacketBuffer) == 1:
                 # length byte in binary packet header
-                self.rxPacketLengthExpected = 5 + b + ((self.rxPacketBuffer[0] & 0x7) << 8)
+                self.rxPacketLengthExpected = 5 + b + \
+                    ((self.rxPacketBuffer[0] & 0x7) << 8)
 
-            # append incoming binary byte to packet buffer            
+            # append incoming binary byte to packet buffer
             self.rxPacketBuffer.append(b)
-            
+
             if len(self.rxPacketBuffer) == self.rxPacketLengthExpected:
                 # verify checksum
                 if self.rxPacketChecksum != b:
-                    raise ParseException("Invalid checksum byte 0x%02X, expecting 0x%02X" % (self.rxPacketChecksum, b))
+                    raise ParseException(
+                        "Invalid checksum byte 0x%02X, expecting 0x%02X" % (self.rxPacketChecksum, b))
                 else:
                     self.lastRxPacket = Packet()
-                    self.lastRxPacket.buildIncomingFromBinaryBuffer(self.rxPacketBuffer)
+                    self.lastRxPacket.buildIncomingFromBinaryBuffer(
+                        self.rxPacketBuffer)
                     if self.rxPacketHandler != None:
                         self.rxPacketHandler(self.lastRxPacket)
-                    result = self.EZS_PARSE_RESULT_PACKET_COMPLETE;
-                    
+                    result = self.EZS_PARSE_RESULT_PACKET_COMPLETE
+
                     # reset packet
                     self.inBinaryPacket = False
                     self.rxPacketBuffer[:] = []
-                    
+
             else:
                 # compute running checksum
                 self.rxPacketChecksum += b
                 self.rxPacketChecksum %= 256
-                
+
         elif self.inTextPacket or b == self.EZS_TEXT_SOF_CHAR:
-            #print("T:%02X,%c" % (b, b))
+            # print("T:%02X,%c" % (b, b))
             if not self.inTextPacket:
                 # start of new text packet
                 self.inTextPacket = True
                 self.rxPacketBuffer[:] = []
-                
+
             # append incoming text byte to packet buffer
             self.rxPacketBuffer.append(b)
-            
+
             if b == 0x0A:
                 # end of text packet in progress
                 self.lastRxPacket = Packet()
-                self.lastRxPacket.buildIncomingFromTextBuffer(self.rxPacketBuffer)
+                self.lastRxPacket.buildIncomingFromTextBuffer(
+                    self.rxPacketBuffer)
                 if self.rxPacketHandler != None:
                     self.rxPacketHandler(self.lastRxPacket)
                 result = self.EZS_PARSE_RESULT_PACKET_COMPLETE
-                
+
                 # reset packet
                 self.inTextPacket = False
                 self.rxPacketBuffer[:] = []
-                
+
         else:
             result = self.EZS_PARSE_RESULT_BYTE_IGNORED
-            
+
         self.lastParseResult = result
         return result
-        
+
     def sendCommand(self, command, memscope=None, apiformat=None, **kwargs):
-        if memscope == None: memscope = self.defaults.memscope
+        if memscope == None:
+            memscope = self.defaults.memscope
         self.lastTxPacket = Packet(command, memscope, **kwargs)
-        if apiformat == None: apiformat = self.defaults.apiformat
+        if apiformat == None:
+            apiformat = self.defaults.apiformat
         if self.txPacketHandler != None:
             self.txPacketHandler(self.lastTxPacket)
         if apiformat == Packet.EZS_API_FORMAT_BINARY:
-            outputTuple = self.hardwareOutput(self.lastTxPacket.binaryByteArray)
+            outputTuple = self.hardwareOutput(
+                self.lastTxPacket.binaryByteArray)
         else:
-            outputTuple = self.hardwareOutput(bytearray(self.lastTxPacket.textString, "utf-8"))
+            outputTuple = self.hardwareOutput(
+                bytearray(self.lastTxPacket.textString, "utf-8"))
         self.lastOutputResult = outputTuple[1]
         return outputTuple
-        
+
     def sendPacket(self, packet, apiformat=None):
         self.lastTxPacket = packet
-        if apiformat == None: apiformat = self.defaults.apiformat
+        if apiformat == None:
+            apiformat = self.defaults.apiformat
         if self.txPacketHandler != None:
             self.txPacketHandler(self.lastTxPacket)
         if apiformat == Packet.EZS_API_FORMAT_BINARY:
-            outputTuple = self.hardwareOutput(self.lastTxPacket.binaryByteArray)
+            outputTuple = self.hardwareOutput(
+                self.lastTxPacket.binaryByteArray)
         else:
-            outputTuple = self.hardwareOutput(bytearray(self.lastTxPacket.textString, "utf-8"))
+            outputTuple = self.hardwareOutput(
+                bytearray(self.lastTxPacket.textString, "utf-8"))
         self.lastOutputResult = outputTuple[1]
         return outputTuple
-        
+
     def consumeEcho(self, data, rxtimeout=False):
         read = 0
         readResult = self.EZS_INPUT_RESULT_NO_DATA
         readData = bytearray()
-        if rxtimeout is False: rxtimeout = self.defaults.rxtimeout
+        if rxtimeout is False:
+            rxtimeout = self.defaults.rxtimeout
         while read < len(data):
             (b, readResult) = self.hardwareInput(rxtimeout)
             if b == None:
                 # no data available to read
-                raise ParseException("Incoming echo data after '%s' is not available as expected in '%s'" % (readData, bytearray(data, "utf-8")))
+                raise ParseException("Incoming echo data after '%s' is not available as expected in '%s'" % (
+                    readData, bytearray(data, "utf-8")))
             if type(b) is str:
                 # Python 2.x compatibility
                 b = ord(b)
@@ -1050,15 +1146,17 @@ class API():
                     read = read + 1
                 else:
                     # incoming data doesn't match expected data
-                    raise ParseException("Incoming echo data 0x%02X in '%s' does not match expected byte 0x%02X in '%s'" % (b, readData, ord(data[read]), bytearray(data, "utf-8")))
-        
+                    raise ParseException("Incoming echo data 0x%02X in '%s' does not match expected byte 0x%02X in '%s'" % (
+                        b, readData, ord(data[read]), bytearray(data, "utf-8")))
+
         # send back the count of bytes actually read
         return read
-    
+
     def waitPacket(self, rxtimeout=False):
         readResult = self.EZS_INPUT_RESULT_NO_DATA
         parseResult = None
-        if rxtimeout is False: rxtimeout = self.defaults.rxtimeout
+        if rxtimeout is False:
+            rxtimeout = self.defaults.rxtimeout
         if rxtimeout == 0:
             (b, readResult) = self.hardwareInput(rxtimeout)
             self.lastInputResult = readResult
@@ -1070,48 +1168,53 @@ class API():
                 self.lastInputResult = readResult
                 if readResult == self.EZS_INPUT_RESULT_BYTE_READ:
                     parseResult = self.parse(b)
-            
+
         # send back results
         if parseResult == self.EZS_PARSE_RESULT_PACKET_COMPLETE:
             return (self.lastRxPacket, readResult, parseResult)
         else:
             return (None, readResult, parseResult)
-                    
-        
+
     def waitResponse(self, response, rxtimeout=False):
         # initialize to unique value (not valid waitPacket() return value)
         packet = False
-        
+
         # identify target response to wait for
         entry = Protocol.getCommandByName(response)
-        
+
         # keep polling for packets until we time out (None) or find a match
         while packet == False:
             (packet, readResult, parseResult) = self.waitPacket(rxtimeout=rxtimeout)
-            if packet != None and not packet.entry is entry: packet = False
-            
+            if packet != None and not packet.entry is entry:
+                packet = False
+
         # send back results
         return (packet, readResult, parseResult)
 
     def waitEvent(self, event, rxtimeout=False):
         # initialize to unique value (not valid waitPacket() return value)
         packet = False
-        
+
         # identify target response to wait for
         entry = Protocol.getEventByName(event)
-        
+
         # keep polling for packets until we time out (None) or find a match
         while packet == False:
             (packet, readResult, parseResult) = self.waitPacket(rxtimeout=rxtimeout)
-            if packet != None and not packet.entry is entry: packet = False
-            
+            if packet != None and not packet.entry is entry:
+                packet = False
+
         return (packet, readResult, parseResult)
-                        
+
     def sendAndWait(self, command, memscope=None, apiformat=None, consumeecho=None, rxtimeout=False, **kwargs):
-        if memscope == None: memscope = self.defaults.memscope
-        if apiformat == None: apiformat = self.defaults.apiformat
-        if consumeecho == None: consumeecho = self.defaults.consumeecho
-        if rxtimeout is False: rxtimeout = self.defaults.rxtimeout
+        if memscope == None:
+            memscope = self.defaults.memscope
+        if apiformat == None:
+            apiformat = self.defaults.apiformat
+        if consumeecho == None:
+            consumeecho = self.defaults.consumeecho
+        if rxtimeout is False:
+            rxtimeout = self.defaults.rxtimeout
         self.sendCommand(command, memscope, apiformat, **kwargs)
         if apiformat == Packet.EZS_API_FORMAT_TEXT and consumeecho != 0:
             self.consumeEcho(self.lastTxPacket.textString, rxtimeout)
