@@ -116,6 +116,18 @@ class EzSerialPort:
         else:
             return res[0].payload['result']
 
+    def send(self, command: str, apiformat: int = None, rxtimeout: int = False, **kwargs):
+        """Send command
+
+        Args:
+            command (str): Command to send
+            apiformat (int, optional): API format to use 0=text, 1=binary. Defaults to None.
+
+        Returns:
+            none
+            """       
+        self.ez.sendCommand(command=command, apiformat=apiformat, **kwargs)
+
     def wait_event(self, event: str, rxtimeout: int = False) -> tuple:
         """Wait for an event to be received
 
