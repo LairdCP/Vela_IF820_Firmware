@@ -19,6 +19,8 @@ class EzSerialPort:
         self.ez = None
         self.rx_queue = None
         self.stop_threads = False
+        self.queue_monitor_event = threading.Event()
+
 
     def __queue_monitor(self):
         last_len = 0
@@ -26,7 +28,7 @@ class EzSerialPort:
         while True:
             if self.stop_threads:
                 break
-            time.sleep(CLEAR_QUEUE_TIMEOUT)
+            self.queue_monitor_event.wait()
             if not self.rx_queue.empty():
                 curr_len = self.rx_queue.qsize()
                 if curr_len == last_len:
@@ -36,6 +38,13 @@ class EzSerialPort:
                 else:
                     logging.debug(f'RX queue len: {curr_len}')
                 last_len = curr_len
+            time.sleep(CLEAR_QUEUE_TIMEOUT)
+
+    def __pause_queue_monitor(self):
+        self.queue_monitor_event.clear()
+
+    def __resume_queue_monitor(self):
+        self.queue_monitor_event.set()
 
     def __serial_port_rx_thread(self):
         while True:
@@ -109,12 +118,20 @@ class EzSerialPort:
         Returns:
             int: 0 for success, else error. This is the received packet result code.
         """
+        self.__pause_queue_monitor()
         res = self.ez.sendAndWait(
             command=command, apiformat=apiformat, rxtimeout=rxtimeout, **kwargs)
         if res[0] == None:
+            self.__resume_queue_monitor()
             return -1
         else:
-            return res[0].payload['result']
+            error = res[0].payload.get('error', None)
+            if error:
+                self.__resume_queue_monitor()
+                return error
+            else:
+                self.__resume_queue_monitor()
+                return res[0].payload['result']
 
     def send(self, command: str, apiformat: int = None, rxtimeout: int = False, **kwargs):
         """Send command
@@ -138,10 +155,13 @@ class EzSerialPort:
         Returns:
             tuple: (err code - 0 for success else error, Packet object)
         """
+        self.__pause_queue_monitor()
         res = self.ez.waitEvent(event, rxtimeout)
         if res[0] == None:
+            self.__resume_queue_monitor()
             return (-1, None)
         else:
+            self.__resume_queue_monitor()
             return (0, res[0])
 
     def close(self):
