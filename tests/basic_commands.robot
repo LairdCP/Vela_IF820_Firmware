@@ -30,6 +30,12 @@ Query Firmware
     Query Firmware Version
     Close the connection
 
+Factory Reset
+    Set Tags     L2VV-37
+    Open the connection
+    Send Factory Reset
+    Close the connection  
+
 Reboot
     Set Tags    L2VV-9
     Open the connection
@@ -64,6 +70,15 @@ Send Ping
 Query Firmware Version
     ${res} =    EzSerialPort.Send And Wait    system_query_firmware_version
     Fail on error    ${res}
+
+Send Factory Reset
+    EzSerialPort.Send    system_factory_reset
+    #Bug L220D100-19
+    #${res} =    EzSerialPort.Wait Event    system_factory_reset_complete
+    #Fail on error    ${res}[0]
+    ${res} =    EzSerialPort.Wait Event    system_boot
+    Fail on error    ${res}[0]
+    Sleep    ${BOOT_DELAY_SECONDS}
 
 Reboot the device
     [Arguments]    ${arg_api_mode}=${API_MODE_TEXT}
