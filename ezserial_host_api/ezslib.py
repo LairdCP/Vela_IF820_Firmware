@@ -1185,7 +1185,7 @@ class API():
         # keep polling for packets until we time out (None) or find a match
         while packet == False:
             (packet, readResult, parseResult) = self.waitPacket(rxtimeout=rxtimeout)
-            if packet != None and not packet.entry is entry:
+            if packet != None and not packet.entry is entry and not packet.entry['name'] == 'error':
                 packet = False
 
         # send back results
