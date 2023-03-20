@@ -24,6 +24,12 @@ Ping
     Send Ping
     Close the connection
 
+Query Firmware
+    Set Tags     L2VV-36
+    Open the connection
+    Query Firmware Version
+    Close the connection
+
 Reboot
     Set Tags    L2VV-9
     Open the connection
@@ -53,6 +59,10 @@ Close the connection
 
 Send Ping
     ${res} =    EzSerialPort.Send And Wait    system_ping
+    Fail on error    ${res}
+
+Query Firmware Version
+    ${res} =    EzSerialPort.Send And Wait    system_query_firmware_version
     Fail on error    ${res}
 
 Reboot the device
