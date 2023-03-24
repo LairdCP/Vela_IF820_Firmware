@@ -2,6 +2,9 @@ tasks:
   Test Basic Commands:
     shell: python -m robot --report NONE --outputdir output --logtitle "Basic Commands" basic_commands.robot
 
+  Test BLE:
+    shell: python -m robot --report NONE --outputdir output --logtitle "BLE" ble.robot
+
   Ping Test:
     robotTaskName: Ping
 
@@ -13,6 +16,9 @@ tasks:
 
   Reboot Loop Binary Mode:
     robotTaskName: Reboot Loop Binary Mode
+
+  BLE Custom Advertiser:
+    robotTaskName: BLE Custom Advertiser
 
 condaConfigFile: conda.yaml
 

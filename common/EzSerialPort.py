@@ -142,7 +142,7 @@ class EzSerialPort:
 
         Returns:
             none
-            """       
+            """
         self.ez.sendCommand(command=command, apiformat=apiformat, **kwargs)
 
     def wait_event(self, event: str, rxtimeout: int = False) -> tuple:
@@ -167,3 +167,11 @@ class EzSerialPort:
     def close(self):
         self.stop_threads = True
         self.port.close()
+
+    def set_api_format(self, api: int):
+        """Set API format to use for sending commands
+
+        Args:
+            api (int): 0 = TEXT, 1 = BINARY
+        """
+        self.ez.defaults.apiformat = api
