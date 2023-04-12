@@ -2,6 +2,7 @@ import argparse
 import logging
 import common.EzSerialPort as ez_port
 
+#sample cmd: python sample_ping.py -c /dev/cu.usbmodem33303  
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--connection',
@@ -19,7 +20,7 @@ if __name__ == '__main__':
     ezp = ez_port.EzSerialPort()
     ezp.open(args.connection, 115200)
     res = ezp.send_and_wait('system_ping')
-    if res == 0:
+    if res[0] == 0:
         logging.info(f'Ping result: {res}')
     else:
         logging.error(f'Response err: {res}')

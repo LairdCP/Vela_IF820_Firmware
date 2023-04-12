@@ -8,6 +8,7 @@ import common.EzSerialPort as ez_port
 # Binary mode is unstable now, use text mode
 API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_TEXT
 
+#sample cmd: python sample_reboot_loop.py -c /dev/cu.usbmodem33303  
 
 def log_resp_err(resp: int):
     if resp != 0:
@@ -38,7 +39,7 @@ if __name__ == '__main__':
     ez.defaults.apiformat = API_FORMAT
     res = ezp.send_and_wait('protocol_set_parse_mode',
                             rxtimeout=1, mode=API_FORMAT)
-    quit_on_resp_err(res)
+    quit_on_resp_err(res[0])
 
     while (True):
         try:

@@ -4,7 +4,7 @@ import serial
 import threading
 import queue
 import sys
-from AppLogging import AppLogging
+from common.AppLogging import AppLogging
 sys.path.append("..")  # Adds parent directory to python modules path
 
 CLEAR_QUEUE_TIMEOUT = 0.1
