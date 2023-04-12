@@ -1,18 +1,21 @@
 import ezserial_host_api.ezslib as ez_serial
-import logging
 import time
 import serial
 import threading
 import queue
 import sys
+from AppLogging import AppLogging
 sys.path.append("..")  # Adds parent directory to python modules path
 
 CLEAR_QUEUE_TIMEOUT = 0.1
+SUCCESS = 0
+ERROR_NO_RESPONSE = -1
+ERROR_RESPONSE = -2
 
-
-class EzSerialPort:
+class EzSerialPort(AppLogging):
     """Serial port implementation to communicate with EZ-Serial devices
     """
+    ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
 
     def __init__(self):
         self.port = None
@@ -20,8 +23,11 @@ class EzSerialPort:
         self.rx_queue = None
         self.stop_threads = False
         self.queue_monitor_event = threading.Event()
-
-
+        self.app_logger = AppLogging()
+        self.app_logger.configure_app_logging(root_level=self.app_logger.NOTSET,
+                                         stdout_level=self.NOTSET,
+                                         file_level=self.NOTSET,
+                                         log_file_name="EzSerialPort.log")
     def __queue_monitor(self):
         last_len = 0
         curr_len = 0
@@ -32,11 +38,11 @@ class EzSerialPort:
             if not self.rx_queue.empty():
                 curr_len = self.rx_queue.qsize()
                 if curr_len == last_len:
-                    logging.debug(f'Clear RX queue ({curr_len})')
+                    self.app_logger.app_log_debug(f'Clear RX queue ({curr_len})')
                     self.clear_rx_queue()
                     # TODO: Instead of clearing the queue, see if a packet can be parsed and fire an event
                 else:
-                    logging.debug(f'RX queue len: {curr_len}')
+                    self.app_logger.app_log_debug(f'RX queue len: {curr_len}')
                 last_len = curr_len
             time.sleep(CLEAR_QUEUE_TIMEOUT)
 
@@ -54,6 +60,7 @@ class EzSerialPort:
                 bytes = self.port.read(1)
                 for byte in bytes:
                     self.rx_queue.put(byte)
+                    self.app_logger.app_log_debug(f'RX: {hex(byte)}')
             except:
                 pass
 
@@ -85,6 +92,10 @@ class EzSerialPort:
             tuple: (EZ-Serial API object, Serial Port Object)
         """
 
+        # if the port is already open just return
+        if self.port and self.port.is_open:
+            return
+
         self.ez = ez_serial.API(hardwareOutput=self.__write_bytes,
                                 hardwareInput=self.__read_bytes)
         self.port = serial.Serial(portName, baud)
@@ -107,7 +118,7 @@ class EzSerialPort:
         with self.rx_queue.mutex:
             self.rx_queue.queue.clear()
 
-    def send_and_wait(self, command: str, apiformat: int = None, rxtimeout: int = False, **kwargs) -> int:
+    def send_and_wait(self, command: str, apiformat: int = None, rxtimeout: int = False, **kwargs) -> tuple:
         """Send command and wait for a response
 
         Args:
@@ -123,15 +134,15 @@ class EzSerialPort:
             command=command, apiformat=apiformat, rxtimeout=rxtimeout, **kwargs)
         if res[0] == None:
             self.__resume_queue_monitor()
-            return -1
+            return (ERROR_NO_RESPONSE, None)
         else:
             error = res[0].payload.get('error', None)
             if error:
                 self.__resume_queue_monitor()
-                return error
+                return (ERROR_RESPONSE, None)
             else:
                 self.__resume_queue_monitor()
-                return res[0].payload['result']
+                return (SUCCESS, res[0])
 
     def send(self, command: str, apiformat: int = None, rxtimeout: int = False, **kwargs):
         """Send command
@@ -166,7 +177,8 @@ class EzSerialPort:
 
     def close(self):
         self.stop_threads = True
-        self.port.close()
+        if self.port and self.port.is_open:
+            self.port.close()
 
     def set_api_format(self, api: int):
         """Set API format to use for sending commands

@@ -8,12 +8,12 @@ Library             Collections
 
 Test Timeout        2 minutes
 
-Default Tags        bt20820
+Default Tags        Vela IF820
 
 
 *** Variables ***
-${PERIPHERAL_COM_PORT}              /dev/cu.usbmodem34104
-${CENTRAL_COM_PORT}                 /dev/cu.usbmodem3304
+${PERIPHERAL_COM_PORT}              /dev/cu.usbmodem334203
+${CENTRAL_COM_PORT}                 /dev/cu.usbmodem334303
 ${DEV_PERIPHERAL}                   Peripheral
 ${DEV_Central}                      Central
 ${BAUD_RATE}                        ${115200}
@@ -111,7 +111,7 @@ Disable CYSPP
     ...    sleep_level=${SLEEP_LEVEL_NORMAL}
     ...    server_security=${0}
     ...    client_flags=${CYSPP_FLAGS_RX_FLOW_CONTROL}
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
 
 Set advertising params
     ${res}=    Peripheral.Send And Wait
@@ -124,14 +124,14 @@ Set advertising params
     ...    filter=${0x0800}
     ...    timeout=${ADV_TIMEOUT}
     ...    flags=${ADV_FLAGS_CUSTOM_DATA}
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
 
 Set advertising data
     ${res}=    Peripheral.Send And Wait
     ...    gap_set_adv_data
     ...    rxtimeout=${RX_TIMEOUT}
     ...    data=@{ADV_DATA}
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
 
 Start advertising
     ${res}=    Peripheral.Send And Wait
@@ -143,24 +143,24 @@ Start advertising
     ...    channels=${ADV_CHANNELS}
     ...    filter=${ADV_FILTER}
     ...    timeout=${ADV_TIMEOUT}
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
 
 Stop advertising
     ${res}=    Peripheral.Send And Wait
     ...    gap_stop_adv
     ...    rxtimeout=${RX_TIMEOUT}
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
     ${res}=    Peripheral.Wait Event
     ...    gap_adv_state_changed
-    Fail on error    ${res}[0]
+    Fail on error    ${res[0]}
 
 Reboot the ${dev}
-    ${res}=    Set Variable    0
+    ${res}=    Set Variable    (-1, None)
     IF    "${dev}" == "${DEV_PERIPHERAL}"
         ${res}=    Peripheral.Send And Wait
         ...    system_reboot
         ...    rxtimeout=${RX_TIMEOUT}
-        Fail on error    ${res}
+        Fail on error    ${res[0]}
         ${res}=    Peripheral.Wait Event
         ...    system_boot
         Fail on error    ${res}[0]
@@ -171,10 +171,10 @@ Reboot the ${dev}
         ${res}=    Central.Send And Wait
         ...    system_reboot
         ...    rxtimeout=${RX_TIMEOUT}
-        Fail on error    ${res}
+        Fail on error    ${res[0]}
         ${res}=    Central.Wait Event
         ...    system_boot
-        Fail on error    ${res}[0]
+        Fail on error    ${res[0]}
     END
     Log    ${res}[1]
     Sleep    ${BOOT_DELAY_SECONDS}
@@ -190,7 +190,7 @@ Scan for custom Peripheral
     ...    filter=${SCAN_FILTER_ACCEPT_ALL}
     ...    nodupe=${1}
     ...    timeout=${0}
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
     WHILE    True
         ${res}=    Central.Wait Event
         ...    gap_scan_result

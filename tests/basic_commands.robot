@@ -5,11 +5,11 @@ Library             ..${/}common${/}EzSerialPort.py
 
 Test Timeout        2 minutes
 
-Default Tags        bt20820
+Default Tags        Vela IF820
 
 
 *** Variables ***
-${COM_PORT}                 /dev/cu.usbmodem334304
+${COM_PORT}                 /dev/cu.usbmodem334203
 ${BAUD_RATE}                115200
 ${API_MODE_TEXT}            0
 ${API_MODE_BINARY}          1
@@ -65,11 +65,11 @@ Close the connection
 
 Send Ping
     ${res} =    EzSerialPort.Send And Wait    system_ping
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
 
 Query Firmware Version
     ${res} =    EzSerialPort.Send And Wait    system_query_firmware_version
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
 
 Send Factory Reset
     EzSerialPort.Send    system_factory_reset
@@ -85,9 +85,9 @@ Reboot the device
     # need to ensure this variable is sent as an int in the param
     ${api_mode} =    Convert To Integer    ${arg_api_mode}
     ${res} =    EzSerialPort.Send And Wait    system_reboot    rxtimeout=1    apiformat=${api_mode}
-    Fail on error    ${res}
+    Fail on error    ${res[0]}
     ${res} =    EzSerialPort.Wait Event    system_boot
-    Fail on error    ${res}[0]
+    Fail on error    ${res[0]}
 
 Fail on error
     [Arguments]    ${err}

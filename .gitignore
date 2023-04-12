@@ -18,3 +18,7 @@ testrun/*
 log.html
 report.html
 output.xml
+
+*.log
+
+interactive_console_output.xml

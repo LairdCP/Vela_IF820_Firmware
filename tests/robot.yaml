@@ -17,6 +17,9 @@ tasks:
   Reboot Loop Binary Mode:
     robotTaskName: Reboot Loop Binary Mode
 
+  System Commands:
+      shell: python -m robot --report NONE --outputdir output --logtitle "system_commands" system_commands.robot
+
   BLE Custom Advertiser:
     robotTaskName: BLE Custom Advertiser
 
