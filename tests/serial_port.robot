@@ -1,6 +1,5 @@
 *** Settings ***
 Documentation       Helper functions to open and close the serial port.
-Library             ..${/}common${/}AppLogging.py    WITH NAME    AppLog
 Library             ..${/}common${/}EzSerialPort.py    WITH NAME    Central
 Library             ..${/}common${/}EzSerialPort.py    WITH NAME    Peripheral
 Resource            common.robot
@@ -82,11 +81,12 @@ Wait For Event
 Enable Serial Port Debugging
     [Arguments]    ${device}
     ${res}=    Set Variable    ${0}
+    ${LogLevel} =    Get Library Instance    Peripheral
 
     IF     "${device}" == "${DEV_PERIPHERAL}"
-        Peripheral.Configure App Logging    root_level=${AppLogging.NOTSET}    stdout_level=${AppLogging.NOTSET}    file_level=${AppLogging.NOTSET}    log_file_name=ezperipheral.log
+        Peripheral.Configure App Logging    level=${LogLevel.NOTSET}    file_level=${LogLevel.NOTSET}
     ELSE IF     "${device}" == "${DEV_CENTRAL}"
-        Central.Configure App Logging    root_level=${AppLogging.NOTSET}    stdout_level=${AppLogging.NOTSET}    file_level=${AppLogging.NOTSET}    log_file_name=ezcentral.log
+        Central.Configure App Logging    level=${LogLevel.NOTSET}    file_level=${LogLevel.NOTSET}
     ELSE
         Log    ${ERROR_DEVICE_TYPE}
         ${res}=    Set Variable    ${-1}

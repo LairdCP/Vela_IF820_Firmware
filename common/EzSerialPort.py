@@ -12,22 +12,21 @@ SUCCESS = 0
 ERROR_NO_RESPONSE = -1
 ERROR_RESPONSE = -2
 
+
 class EzSerialPort(AppLogging):
     """Serial port implementation to communicate with EZ-Serial devices
     """
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
 
     def __init__(self):
+        super().__init__('ez_serial_port')
         self.port = None
         self.ez = None
         self.rx_queue = None
         self.stop_threads = False
         self.queue_monitor_event = threading.Event()
-        self.app_logger = AppLogging()
-        self.app_logger.configure_app_logging(root_level=self.app_logger.NOTSET,
-                                         stdout_level=self.NOTSET,
-                                         file_level=self.NOTSET,
-                                         log_file_name="EzSerialPort.log")
+        self.configure_app_logging(self.NOTSET, self.NOTSET)
+
     def __queue_monitor(self):
         last_len = 0
         curr_len = 0
@@ -38,11 +37,12 @@ class EzSerialPort(AppLogging):
             if not self.rx_queue.empty():
                 curr_len = self.rx_queue.qsize()
                 if curr_len == last_len:
-                    self.app_logger.app_log_debug(f'Clear RX queue ({curr_len})')
+                    self.app_log_debug(
+                        f'Clear RX queue ({curr_len})')
                     self.clear_rx_queue()
                     # TODO: Instead of clearing the queue, see if a packet can be parsed and fire an event
                 else:
-                    self.app_logger.app_log_debug(f'RX queue len: {curr_len}')
+                    self.app_log_debug(f'RX queue len: {curr_len}')
                 last_len = curr_len
             time.sleep(CLEAR_QUEUE_TIMEOUT)
 
@@ -60,7 +60,7 @@ class EzSerialPort(AppLogging):
                 bytes = self.port.read(1)
                 for byte in bytes:
                     self.rx_queue.put(byte)
-                    self.app_logger.app_log_debug(f'RX: {hex(byte)}')
+                    self.app_log_debug(f'RX: {hex(byte)}')
             except:
                 pass
 
