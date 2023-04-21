@@ -1,6 +1,6 @@
 *** Settings ***
 Documentation       System Command Tests.
-...                 Will loop both central and perhipheral devcies and api modes.                              
+...                 Will loop both central and perhipheral devcies and api modes.
 
 Resource            serial_port.robot
 Resource            system_command_defs.robot
@@ -28,11 +28,11 @@ Get MAC Addr
     Send Command    ${API_CMD_GET_BT_ADDR}
 
 Get ECO Params
-    #get uart params is not working Bug L220D100-30
+    # not working Bug L220D100-30
     Send Command    ${API_CMD_GET_ECO_PARAMS}
 
 Get WCO Params
-    #get uart params is not working Bug L220D100-31
+    # not working Bug L220D100-31
     Send Command    ${API_CMD_GET_WCO_PARAMS}
 
 Get Sleep Params
@@ -42,7 +42,7 @@ Get Tx Power
     Send Command    ${API_CMD_GET_TX_POWER}
 
 Get Uart Params
-    #get uart params is not working in binary mode Bug L220D100-32
+    # not working in binary mode Bug L220D100-32
     Send Command    ${API_CMD_GET_UART_PARAMS}
 
 Get Transport
@@ -52,10 +52,10 @@ Factory Reset
     FOR    ${api_mode}    IN    @{API_MODES}
         FOR    ${device}    IN    @{DUTS}
             serial_port.Send    api_cmd=${API_CMD_FACTORY_RESET}    device=${device}    api_format=${api_mode}
-            ${res} =    serial_port.Wait For Event   ${EVENT_SYSTEM_BOOT}    ${DEV_PERIPHERAL}
+            ${res} =    serial_port.Wait For Event   ${EVENT_SYSTEM_BOOT}    ${device}
             Fail on error    ${res[0]}
         END
-    END    
+    END
 
 *** Keywords ***
 Test Setup
@@ -66,8 +66,8 @@ Test Setup
         IF     ${result} == ${true}
             Log  "Test Setup Complete"
         ELSE
-            Fail  "Cannot Open Peripheral Device."    
-        END    
+            Fail  "Cannot Open Peripheral Device."
+        END
     END
 
 Test Teardown
