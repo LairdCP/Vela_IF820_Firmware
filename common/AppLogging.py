@@ -1,5 +1,4 @@
 import logging
-import sys
 
 
 class AppLogging():
@@ -28,27 +27,41 @@ class AppLogging():
     def NOTSET(self):
         return logging.NOTSET
 
-    def configure_app_logging(self,
-                              root_level: int = logging.DEBUG,
-                              stdout_level: int = logging.NOTSET,
-                              file_level: int = logging.NOTSET,
-                              log_file_name: str = "log.log"):
+    @property
+    def LOGGER_NAME(self):
+        return self.logger.name
 
-        self.logger = logging.getLogger()
-        self.logger.setLevel(root_level)
-        formatter = logging.Formatter(
-            '%(asctime)s | %(levelname)s | %(message)s')
-        if (stdout_level):
-            stdout_handler = logging.StreamHandler(sys.stdout)
-            stdout_handler.setLevel(stdout_level)
-            stdout_handler.setFormatter(formatter)
-            self.logger.addHandler(stdout_handler)
-        if (file_level):
-            file_handler = logging.FileHandler(log_file_name)
-            file_handler.setLevel(file_level)
-            file_handler.setFormatter(formatter)
-            file_handler.flush()
-            self.logger.addHandler(file_handler)
+    @property
+    def LOG_FILE_FORMAT(self) -> str:
+        return '%(asctime)s | %(name)s | %(levelname)s | %(message)s'
+
+    def __init__(self, name: str):
+        self.logger = logging.getLogger(name)
+        self.log_file_handler = logging.FileHandler(
+            f'{self.LOGGER_NAME}.log', mode='a')
+
+    def configure_app_logging(self,
+                              level: int = logging.NOTSET,
+                              file_level: int = logging.NOTSET):
+        """Configure the log level of the module
+
+        Args:
+            level (int, optional): std out log level. NOTSET disables logging. Defaults to logging.NOTSET.
+            file_level (int, optional): file log level. NOTSET disables logging. Defaults to logging.NOTSET.
+        """
+        self.logger.setLevel(level)
+        if level == self.NOTSET:
+            self.logger.disabled = True
+        else:
+            self.logger.disabled = False
+
+        if file_level:
+            self.log_file_handler.setLevel(file_level)
+            self.log_file_handler.setFormatter(
+                logging.Formatter(self.LOG_FILE_FORMAT))
+            self.log_file_handler.flush()
+            self.logger.removeHandler(self.log_file_handler)
+            self.logger.addHandler(self.log_file_handler)
 
     def app_log_critical(self, msg: str):
         self.logger.critical(msg)
@@ -66,9 +79,10 @@ class AppLogging():
         self.logger.debug(msg)
 
     def log_test(self):
-        # in order of severity
-        # this function is handy to have around to check logging levels are set properly
-        # after calling "configure_debug" function
+        """_summary_ This function is handy to have around to check logging levels are set properly
+        after calling "configure_debug" function
+        """
+        # In order of less severe to more
         self.logger.debug("Log Debug")
         self.logger.info("Log Info")
         self.logger.warning("Log Warning")
@@ -76,5 +90,4 @@ class AppLogging():
         self.logger.critical("Log Critical")
 
     def disable_logging(self):
-        # set root logger to not set to disable all logging
-        self.logger.setLevel(logging.NOTSET)
+        self.logger.disabled = True

@@ -83,8 +83,6 @@ Enable Serial Port Debugging
     [Arguments]    ${device}
     ${res}=    Set Variable    ${0}
 
-    ${AppLogging} =    Get Library Instance    AppLog
-    Log    ${AppLogging.DEBUG}
     IF     "${device}" == "${DEV_PERIPHERAL}"
         Peripheral.Configure App Logging    root_level=${AppLogging.NOTSET}    stdout_level=${AppLogging.NOTSET}    file_level=${AppLogging.NOTSET}    log_file_name=ezperipheral.log
     ELSE IF     "${device}" == "${DEV_CENTRAL}"
