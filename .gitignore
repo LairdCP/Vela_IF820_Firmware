@@ -7,7 +7,6 @@ temp/
 */.ipynb_checkpoints/*
 .virtual_documents/
 */.virtual_documents/*
-.vscode
 .DS_Store
 *.pyc
 *.zip
@@ -22,3 +21,5 @@ output.xml
 *.log
 
 interactive_console_output.xml
+
+.vscode/settings.json

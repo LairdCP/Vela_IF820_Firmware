@@ -1,0 +1,7 @@
+{
+  "peripheral_com_port": "/dev/cu.usbmodem334102",
+  "central_com_port": "/dev/cu.usbmodem334302",
+  "initial_baud": "115200",
+  "mini_driver": "${workspaceFolder}/files/minidriver-20820A1-uart-patchram.hex",
+  "ezserial_firmware": "${workspaceFolder}/files/20230412_ezserial_app_CYBT-243053-EVAL_140606_v1.4.6.6_download.hex"
+}
