@@ -12,8 +12,8 @@ Default Tags        Vela IF820
 
 
 *** Variables ***
-${PERIPHERAL_COM_PORT}              /dev/cu.usbmodem334203
-${CENTRAL_COM_PORT}                 /dev/cu.usbmodem334303
+${PERIPHERAL_COM_PORT}              /dev/cu.usbmodem334104
+${CENTRAL_COM_PORT}                 /dev/cu.usbmodem334304
 ${DEV_PERIPHERAL}                   Peripheral
 ${DEV_Central}                      Central
 ${BAUD_RATE}                        ${115200}
@@ -30,8 +30,11 @@ ${ADV_CHANNELS}                     ${0x07}
 ${ADV_TIMEOUT}                      ${0}
 ${ADV_FILTER}                       ${0}
 ${ADV_FLAGS_CUSTOM_DATA}            ${0x02}
-# Short name my_sensor, VS data uint16 LSB
+# Flags, short name my_sensor, VS data uint16 LSB
 @{ADV_DATA}
+...                                 ${0x02}
+...                                 ${0x01}
+...                                 ${0x06}
 ...                                 ${0x0a}
 ...                                 ${0x08}
 ...                                 ${0x6d}
@@ -150,9 +153,6 @@ Stop advertising
     ...    gap_stop_adv
     ...    rxtimeout=${RX_TIMEOUT}
     Fail on error    ${res[0]}
-    ${res}=    Peripheral.Wait Event
-    ...    gap_adv_state_changed
-    Fail on error    ${res[0]}
 
 Reboot the ${dev}
     ${res}=    Set Variable    (-1, None)
@@ -189,7 +189,7 @@ Scan for custom Peripheral
     ...    active=${0}
     ...    filter=${SCAN_FILTER_ACCEPT_ALL}
     ...    nodupe=${1}
-    ...    timeout=${0}
+    ...    timeout=${120}
     Fail on error    ${res[0]}
     WHILE    True
         ${res}=    Central.Wait Event
