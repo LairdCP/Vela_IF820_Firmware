@@ -287,6 +287,20 @@ class Protocol():
             1: {"name": "set_parameters", "textname": ".EDDYSP", "flashopt": 1, "parameters": [{"type": "uint8", "name": "enable", "textname": "E", "minimum": 0, "maximum": 2}, {"type": "uint16", "name": "interval", "textname": "I", "minimum": 160, "maximum": 16384}, {"type": "uint8", "name": "type", "textname": "T", "minimum": 0, "maximum": 255}, {"type": "uint8a", "name": "data", "textname": "D", "minlength": 1, "maxlength": 19}], "returns": []},
             2: {"name": "get_parameters", "textname": ".EDDYGP", "flashopt": 1, "parameters": [], "returns": [{"type": "uint8", "name": "enable", "textname": "E"}, {"type": "uint16", "name": "interval", "textname": "I"}, {"type": "uint8", "name": "type", "textname": "T"}, {"type": "uint8a", "name": "data", "textname": "D"}]},
         },
+        14: {
+            "name": "bt",
+            1: {"name": "start_inquiry", "textname": "/BTI", "flashopt": 1, "parameters": [{"type": "uint8", "name": "duration", "textname": "D", "minimum": 3, "maximum": 30}, {"type": "uint8", "name": "flags", "textname": "F", "minimum": 0, "maximum": 2}], "returns": []},
+            2: {"name": "cancel_inquiry", "textname": "/BTX", "flashopt": 1, "parameters": [], "returns": []},
+            3: {"name": "query_name", "textname": "/BTQN", "flashopt": 1, "parameters": [{"type": "macaddr", "name": "address", "textname": "A"}], "returns": []},
+            4: {"name": "connect", "textname": "/BTC", "flashopt": 1, "parameters": [{"type": "macaddr", "name": "address", "textname": "A"}, {"type": "uint8", "name": "type", "textname": "T", "minimum": 0, "maximum": 1}], "returns": [{"type": "uint8", "name": "conn_handle", "textname": "C"}]},
+            5: {"name": "cancel_connection", "textname": "/BTCX", "flashopt": 1, "parameters": [], "returns": []},
+            6: {"name": "disconnect", "textname": "/BTDIS", "flashopt": 1, "parameters": [{"type": "uint8", "name": "conn_handle", "textname": "C"}], "returns": [{"type": "uint8", "name": "count", "textname": "C"}]},
+            7: {"name": "query_connections", "textname": "/BTQC", "flashopt": 1, "parameters": [], "returns": []},
+            8: {"name": "query_peer_address", "textname": "/BTQPA", "flashopt": 1, "parameters": [{"type": "uint8", "name": "conn_handle", "textname": "C"}], "returns": [{"type": "macaddr", "name": "address", "textname": "A"}, {"type": "uint8", "name": "address_type", "textname": "T"}]},
+            9: {"name": "query_rssi", "textname": "/BTQSS", "flashopt": 1, "parameters": [{"type": "macaddr", "name": "address", "textname": "A"}], "returns": [{"type": "int8", "name": "Rssi", "textname": "R"}]},
+            10: {"name": "set_parameters", "textname": "SBTP", "flashopt": 1, "parameters": [{"type": "uint8", "name": "link_super_time_out", "textname": "T"}, {"type": "uint8", "name": "discoverable", "textname": "D"}, {"type": "uint8", "name": "connectable", "textname": "C"}, {"type": "uint8", "name": "flags", "textname": "F"}, {"type": "uint8", "name": "scn", "textname": "S"}, {"type": "uint8", "name": "active_bt_discoverability", "textname": "V"}, {"type": "uint8", "name": "active_bt_connectability", "textname": "N"}], "returns": []},
+            11: {"name": "get_parameters", "textname": "GBTP", "flashopt": 1, "parameters": [], "returns": [{"type": "uint8", "name": "link_super_time_out", "textname": "T"}, {"type": "uint8", "name": "discoverable", "textname": "D"}, {"type": "uint8", "name": "connectable", "textname": "C"}, {"type": "uint8", "name": "flags", "textname": "F"}, {"type": "uint8", "name": "scn", "textname": "S"}, {"type": "uint8", "name": "active_bt_discoverability", "textname": "V"}, {"type": "uint8", "name": "active_bt_connectability", "textname": "N"}]},
+        },
     }
 
     events = {
@@ -366,6 +380,16 @@ class Protocol():
         },
         13: {
             "name": "p_eddystone",
+        },
+        14: {
+            "name": "bt",
+            1: {"name": "inquiry_result", "textname": "BTIR", "parameters": [{"type": "macaddr", "name": "address", "textname": "A"}, {"type": "uint8", "name": "bond", "textname": "B"}, {"type": "uint32", "name": "cod", "textname": "C"}]},
+            2: {"name": "name_result", "textname": "BTINR", "parameters": [{"type": "macaddr", "name": "address", "textname": "A"}, {"type": "uint8", "name": "bond", "textname": "B"}, {"type": "uint8a", "name": "name", "textname": "N"}]},
+            3: {"name": "inquiry_complete", "textname": "BTIC", "parameters": []},
+            4: {"name": "connected", "textname": "BTCON", "parameters": [{"type": "uint8", "name": "conn_handle", "textname": "C"}, {"type": "macaddr", "name": "address", "textname": "A"}, {"type": "uint8", "name": "type", "textname": "T"}, {"type": "uint8", "name": "bond", "textname": "B"}]},
+            5: {"name": "connection_status", "textname": "BTCS", "parameters": [{"type": "uint8", "name": "conn_handle", "textname": "C"}, {"type": "macaddr", "name": "address", "textname": "A"}, {"type": "uint8", "name": "type", "textname": "T"}, {"type": "uint8", "name": "bond", "textname": "B"}, {"type": "uint8", "name": "role", "textname": "R"}, {"type": "uint8", "name": "sniff", "textname": "S"}]},
+            6: {"name": "connection_failed", "textname": "BTCF", "parameters": [{"type": "uint8", "name": "conn_handle", "textname": "C"}, {"type": "uint16", "name": "reason", "textname": "R"}]},
+            7: {"name": "disconnected", "textname": "BTDIS", "parameters": [{"type": "uint8", "name": "conn_handle", "textname": "C"}, {"type": "uint16", "name": "reason", "textname": "R"}]},
         },
     }
 
