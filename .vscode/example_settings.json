@@ -1,0 +1,8 @@
+{
+    "comport_IF820_device1": "/dev/cu.usbmodem33203",
+    "comport_IF820_device2": "/dev/cu.usbmodem33304",
+    "comport_BT900_device1": "/dev/cu.usbserial-AL04XL61",
+    "comport_BT900_device2": "/dev/cu.usbserial-AL04XL61",
+    "id_pico_probe_device1": "E6616407E37C5E31",
+    "id_pico_probe_device2": "E6616407E328642D"
+}

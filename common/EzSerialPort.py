@@ -7,16 +7,143 @@ import sys
 from common.AppLogging import AppLogging
 sys.path.append("..")  # Adds parent directory to python modules path
 
-CLEAR_QUEUE_TIMEOUT = 0.1
+CLEAR_QUEUE_TIMEOUT_DEFAULT = 0.1
 SUCCESS = 0
 ERROR_NO_RESPONSE = -1
 ERROR_RESPONSE = -2
 
 
-class EzSerialPort(AppLogging):
+class SystemCommands:
+    @property
+    def CMD_PING(self): return "system_ping"
+    @property
+    def CMD_REBOOT(self): return "system_reboot"
+    @property
+    def CMD_DUMP(self): return "system_dump"
+    @property
+    def CMD_STORE_CONFIG(self): return "system_store_config"
+    @property
+    def CMD_FACTORY_RESET(self): return "system_factory_reset"
+    @property
+    def CMD_QUERY_FW(self): return "system_query_firmware_version"
+    @property
+    def CMD_QUERY_UID(self): return "system_query_unique_id"
+    @property
+    def CMD_QUERY_RANDOM_NUM(self): return "system_query_random_number"
+    @property
+    def CMD_AES_ENCRYPT(self): return "system_aes_encrypt"
+    @property
+    def CMD_AES_DECRYPT(self): return "system_aes_decrypt"
+    @property
+    def CMD_WRITE_USER_DATA(self): return "system_write_user_data"
+    @property
+    def CMD_READ_USER_DATA(self): return "system_read_user_data"
+    @property
+    def CMD_SET_BT_ADDR(self): return "system_set_bluetooth_address"
+    @property
+    def CMD_GET_BT_ADDR(self): return "system_get_bluetooth_address"
+    @property
+    def CMD_SET_ECO_PARAMS(self): return "system_set_eco_parameters"
+    @property
+    def CMD_GET_ECO_PARAMS(self): return "system_get_eco_parameters"
+    @property
+    def CMD_SET_WCO_PARAMS(self): return "system_set_wco_parameters"
+    @property
+    def CMD_GET_WCO_PARAMS(self): return "system_get_wco_parameters"
+    @property
+    def CMD_SET_SLEEP_PARAMS(self): return "system_set_sleep_parameters"
+    @property
+    def CMD_GET_SLEEP_PARAMS(self): return "system_get_sleep_parameters"
+    @property
+    def CMD_SET_TX_POWER(self): return "system_set_tx_power"
+    @property
+    def CMD_GET_TX_POWER(self): return "system_get_tx_power"
+    @property
+    def CMD_SET_TRANSPORT(self): return "system_set_transport"
+    @property
+    def CMD_GET_TRANSPORT(self): return "system_get_transport"
+    @property
+    def CMD_SET_UART_PARAMS(self): return "system_set_uart_parameters"
+    @property
+    def CMD_GET_UART_PARAMS(self): return "system_get_uart_parameters"
+
+    @property
+    def EVENT_SYSTEM_BOOT(self): return "system_boot"
+    @property
+    def EVENT_SYSTEM_ERROR(self): return "system_error"
+
+    @property
+    def EVENT_SYSTEM_FACTORY_RESET_COMPLETE(
+        self): return "system_factory_reset_complete"
+
+    @property
+    def EVENT_SYSTEM_BOOT_FACTORY_TEST_ENTERED(
+        self): return "system_factory_test_entered"
+
+    @property
+    def EVENT_SYSTEM_BOOT_DUMP_BLOB(self): return "system_dump_blob"
+
+
+class BluetoothCommands:
+    @property
+    def CMD_START_INQUIRY(self): return "bt_start_inquiry"
+    @property
+    def CMD_CANCEL_INQUIRY(self): return "bt_cancel_inquiry"
+    @property
+    def CMD_QUERY_NAME(self): return "bt_query_name"
+    @property
+    def CMD_CONNECT(self): return "bt_connect"
+    @property
+    def CMD_CANCEL_CONNECTION(self): return "bt_cancel_connection"
+    @property
+    def CMD_DISCONNECT(self): return "bt_disconnect"
+    @property
+    def CMD_QUERY_CONNECTIONS(self): return "bt_query_connections"
+    @property
+    def CMD_QUERY_PEER_ADDR(self): return "bt_query_peer_address"
+    @property
+    def CMD_QUERY_RSSI(self): return "bt_query_rssi"
+    @property
+    def CMD_SET_DEVICE_CLASS(self): return "bt_set_device_class"
+    @property
+    def CMD_GET_DEVICE_CLASS(self): return "bt_get_device_class"
+    @property
+    def EVENT_INQUIRY_RESULT(self): return "bt_inquiry_result"
+    @property
+    def EVENT_NAME_RESULT(self): return "bt_name_result"
+    @property
+    def EVENT_INQUIRY_COMPLETE(self): return "bt_inquiry_complete"
+    @property
+    def EVENT_BT_CONNECTED(self): return "bt_connected"
+    @property
+    def EVENT_BT_CONN_STATUS(self): return "bt_connection_status"
+    @property
+    def EVENT_CONN_FAILED(self): return "bt_connection_failed"
+    @property
+    def EVENT_BT_DISCONNECTED(self): return "bt_disconnected"
+
+
+class SmpCommands:
+    @property
+    def EVENT_SMP_BOND_ENTRY(self): return "smp_bond_entry"
+    @property
+    def EVENT_SMP_PAIRING_REQUESTED(self): return "smp_pairing_requested"
+    @property
+    def EVENT_SMP_PAIRING_RESULT(self): return "smp_pairing_result"
+    @property
+    def EVENT_SMP_ENCRYPTION_STATUS(self): return "smp_encryption_status"
+
+    @property
+    def EVENT_SMP_PASSKEY_DISPLAY_REQUESTED(
+        self): return "smp_passkey_display_requested"
+
+
+class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands, SmpCommands):
     """Serial port implementation to communicate with EZ-Serial devices
     """
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
+
+    IF820_DEFAULT_BAUD = 115200
 
     def __init__(self):
         super().__init__('ez_serial_port')
@@ -24,6 +151,7 @@ class EzSerialPort(AppLogging):
         self.ez = None
         self.rx_queue = None
         self.stop_threads = False
+        self.clear_queue_timeout_sec = CLEAR_QUEUE_TIMEOUT_DEFAULT
         self.queue_monitor_event = threading.Event()
         self.configure_app_logging(self.NOTSET, self.NOTSET)
 
@@ -44,7 +172,7 @@ class EzSerialPort(AppLogging):
                 else:
                     self.app_log_debug(f'RX queue len: {curr_len}')
                 last_len = curr_len
-            time.sleep(CLEAR_QUEUE_TIMEOUT)
+            time.sleep(self.clear_queue_timeout_sec)
 
     def __pause_queue_monitor(self):
         self.queue_monitor_event.clear()
@@ -57,8 +185,8 @@ class EzSerialPort(AppLogging):
             if self.stop_threads:
                 break
             try:
-                bytes = self.port.read(1)
-                for byte in bytes:
+                data = self.port.read(1)
+                for byte in data:
                     self.rx_queue.put(byte)
                     self.app_log_debug(f'RX: {hex(byte)}')
             except:
@@ -80,6 +208,9 @@ class EzSerialPort(AppLogging):
         except queue.Empty:
             pass
         return (byte, res)
+
+    def set_queue_timeout(self, timeout_sec):
+        self.clear_queue_timeout_sec = timeout_sec
 
     def open(self, portName: str, baud: int) -> tuple:
         """Open the serial port and init the EZ-Serial API
@@ -118,7 +249,7 @@ class EzSerialPort(AppLogging):
         with self.rx_queue.mutex:
             self.rx_queue.queue.clear()
 
-    def send_and_wait(self, command: str, apiformat: int = None, rxtimeout: int = False, **kwargs) -> tuple:
+    def send_and_wait(self, command: str, apiformat: int = None, rxtimeout: int = 1, clear_queue: bool = True, **kwargs) -> tuple:
         """Send command and wait for a response
 
         Args:
@@ -130,6 +261,8 @@ class EzSerialPort(AppLogging):
             int: 0 for success, else error. This is the received packet result code.
         """
         self.__pause_queue_monitor()
+        if clear_queue:
+            self.clear_rx_queue()
         res = self.ez.sendAndWait(
             command=command, apiformat=apiformat, rxtimeout=rxtimeout, **kwargs)
         if res[0] == None:
@@ -187,3 +320,14 @@ class EzSerialPort(AppLogging):
             api (int): 0 = TEXT, 1 = BINARY
         """
         self.ez.defaults.apiformat = api
+
+    # these functions are needed to give the robot framework access
+    # to inherited classes
+    def get_sys_commands(self):
+        return SystemCommands()
+
+    def get_bluetooth_commands(self):
+        return BluetoothCommands()
+
+    def get_smp_commands(self):
+        return SmpCommands()

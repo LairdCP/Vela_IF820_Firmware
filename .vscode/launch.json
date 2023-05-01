@@ -4,6 +4,62 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+            {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["-c", "/dev/cu.usbmodem33303", "-d", "False"]
+            },
+            {
+                "name": "IF820 -> IF820",
+                "type": "python",
+                "request": "launch",
+                "program": "${workspaceFolder}/sample_spp_IF820-IF820.py",
+                "console": "integratedTerminal",
+                "justMyCode": true,
+                "args": ["-cp", "${config:comport_IF820_device1}",
+                        "-cc", "${config:comport_IF820_device2}",
+                        "-ppp", "${config:id_pico_probe_device1}",
+                        "-ppc", "${config:id_pico_probe_device2}",
+                        "-d"]
+            },
+            {
+                "name": "BT900 Single",
+                "type": "python",
+                "request": "launch",
+                "program": "${workspaceFolder}/sample_bt900_query_firmware.py",
+                "console": "integratedTerminal",
+                "justMyCode": true,
+                "args": ["-c", "${config:comport_BT900_device1}",
+                        "-d"]
+            },
+            {
+                "name": "IF820 -> BT900",
+                "type": "python",
+                "request": "launch",
+                "program": "${workspaceFolder}/sample_spp_IF820-BT900.py",
+                "console": "integratedTerminal",
+                "justMyCode": true,
+                "args": ["-cp", "${config:comport_BT900_device1}",
+                        "-cc", "${config:comport_IF820_device1}",
+                        "-ppc", "${config:id_pico_probe_device1}",
+                        "-d"]
+            },
+            {
+                "name": "BT900 -> IF820",
+                "type": "python",
+                "request": "launch",
+                "program": "${workspaceFolder}/sample_spp_BT900-IF820.py",
+                "console": "integratedTerminal",
+                "justMyCode": true,
+                "args": ["-cp", "${config:comport_IF820_device1}",
+                        "-cc", "${config:comport_BT900_device1}",
+                        "-ppc", "${config:id_pico_probe_device1}",
+                        "-d"]
+            },
         {
             "name": "Debug UART programmer",
             "type": "python",
