@@ -7,6 +7,15 @@ import common.PicoProbe as pico_probe
 from common.CommonLib import CommonLib
 from common.AppLogging import AppLogging
 
+"""
+Hardware Setup
+This sample requires the following hardware:
+-IF820 connected to PC via USB to act as a Bluetooth Peripheral
+-IF820 connected to PC via USB to act as a Bluetooth Central
+-PicoProbe connected to PC via USB.  GPIO16 of PicoProbe attached to P13 to IF820 Peripheral Device.
+-PicoProbe connected to PC via USB.  GPIO16 of PicoProbe attached to P13 to IF820 Central Device.
+"""
+
 FLAG_INQUIRY_NAME = 1
 SPP_DATA = "abcdefghijklmnop"
 
