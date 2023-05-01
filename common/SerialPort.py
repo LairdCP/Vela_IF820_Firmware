@@ -9,8 +9,9 @@ sys.path.append("..")  # Adds parent directory to python modules path
 
 CLEAR_QUEUE_TIMEOUT_DEFAULT = 5
 SUCCESS = 0
-ERROR_NO_RESPONSE   = -1
-ERROR_RESPONSE   = -2
+ERROR_NO_RESPONSE = -1
+ERROR_RESPONSE = -2
+
 
 class SerialPort(AppLogging):
     """Base serial port implementation
@@ -27,7 +28,6 @@ class SerialPort(AppLogging):
         self.queue_monitor_event = threading.Event()
         self.configure_app_logging(self.NOTSET, self.NOTSET)
 
-
     def __queue_monitor(self):
         last_len = 0
         curr_len = 0
@@ -38,11 +38,11 @@ class SerialPort(AppLogging):
             if not self.rx_queue.empty():
                 curr_len = self.rx_queue.qsize()
                 if curr_len == last_len:
-                    AppLogging.app_log_debug(f'Clear RX queue ({curr_len})')
+                    self.app_log_debug(f'Clear RX queue ({curr_len})')
                     self.clear_rx_queue()
                     # TODO: Instead of clearing the queue, see if a packet can be parsed and fire an event
                 else:
-                    AppLogging.app_log_debug(f'RX queue len: {curr_len}')
+                    self.app_log_debug(f'RX queue len: {curr_len}')
                 last_len = curr_len
             time.sleep(self.clear_queue_timeout_sec)
 
@@ -54,7 +54,7 @@ class SerialPort(AppLogging):
                 bytes = self.port.read(1)
                 for byte in bytes:
                     self.rx_queue.put(byte)
-                    AppLogging.app_log_debug(f'RX: {hex(byte)}')
+                    self.app_log_debug(f'RX: {hex(byte)}')
             except:
                 pass
 
@@ -102,7 +102,7 @@ class SerialPort(AppLogging):
         Returns:
             none
             """
-        self.app_log_info(bytearray(text, "utf-8"))
+        self.app_log_debug(bytearray(text, "utf-8"))
         self.port.write(bytearray(text, "utf-8"))
 
     def close(self):

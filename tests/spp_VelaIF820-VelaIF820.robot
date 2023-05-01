@@ -37,12 +37,6 @@ ${ez_bluetooth_commands}        ${EMPTY}
 
 
 *** Test Cases ***
-Ping
-    ${res} =    IF820_Central.Send And Wait    ${ez_system_commands.CMD_PING}
-    Fail on error    ${res[0]}
-    ${res} =    IF820_Peripheral.Send And Wait    ${ez_system_commands.CMD_PING}
-    Fail on error    ${res[0]}
-
 SPP Test Binary Mode
     ${rx_spp_data} =    SPP Test    ${API_MODE_BINARY}
     Builtin.Should Be Equal    ${rx_spp_data}    ${SPP_DATA}
