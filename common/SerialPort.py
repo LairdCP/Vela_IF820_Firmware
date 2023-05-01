@@ -9,9 +9,8 @@ sys.path.append("..")  # Adds parent directory to python modules path
 
 CLEAR_QUEUE_TIMEOUT_DEFAULT = 5
 SUCCESS = 0
-ERROR_NO_RESPONSE = -1
-ERROR_RESPONSE = -2
-
+ERROR_NO_RESPONSE   = -1
+ERROR_RESPONSE   = -2
 
 class SerialPort(AppLogging):
     """Base serial port implementation
@@ -27,6 +26,7 @@ class SerialPort(AppLogging):
         self.clear_queue_timeout_sec = CLEAR_QUEUE_TIMEOUT_DEFAULT
         self.queue_monitor_event = threading.Event()
         self.configure_app_logging(self.NOTSET, self.NOTSET)
+
 
     def __queue_monitor(self):
         last_len = 0
