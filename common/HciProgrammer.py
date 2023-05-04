@@ -14,7 +14,7 @@ class HciProgrammer():
     FLASH_SIZE = 256 * 1024
     LAUNCH_FIRMWARE_ADDR = 0x00000000
 
-    def __init__(self, mini_driver: str, port: str, baud_rate: int):
+    def __init__(self, mini_driver: str = '', port: str = '', baud_rate: int = 0):
         self.mini_driver_path = mini_driver
         self.hci_port = hci.HciSerialPort()
         self.hci_port.configure_app_logging(self.hci_port.INFO)
@@ -35,6 +35,9 @@ class HciProgrammer():
                                 minidriver_bin, self.hci_port.RAM_PAD)
         self.hci_port.send_launch_ram(self.MINIDRIVER_LOAD_ADDR)
         pass
+
+    def init(self, mini_driver: str, port: str, baud_rate: int):
+        self.__init__(mini_driver, port, baud_rate)
 
     def chip_erase(self, close_port: bool = True):
         """Erase entire flash contents

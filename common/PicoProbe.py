@@ -1,11 +1,13 @@
 import logging
-from pyocd.probe.pydapaccess import DAPAccess
+import time
+from pyocd.probe.pydapaccess import DAPAccessCMSISDAP
 
 SET_IO_DIR_CMD = 31
 SET_IO_CMD = 30
 READ_IO_CMD = 29
 HIGH = OUTPUT = 1
 LOW = INPUT = 0
+
 
 class PicoProbe:
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
@@ -38,17 +40,17 @@ class PicoProbe:
     GPIO_28 = 28
 
     def __init__(self):
-        for self.probe in DAPAccess.get_connected_devices():
+        for self.probe in DAPAccessCMSISDAP.get_connected_devices():
             logging.debug(f'Found probe: {self.probe.vendor_name}')
 
     def open(self, device_id: str):
-        self.probe = DAPAccess(device_id)
+        self.probe = DAPAccessCMSISDAP(device_id)
         self.probe.open()
 
     def is_open(self):
-        return self.probe.is_open    
+        return self.probe.is_open
 
-    def close(self):        
+    def close(self):
         self.probe.close()
 
     def gpio_read(self, gpio: int):
@@ -68,12 +70,18 @@ class PicoProbe:
         res = self.probe.vendor(SET_IO_CMD, [gpio, HIGH])
 
     def get_dap_info(self, id: int):
-        result = self.probe.identify(DAPAccess.ID(id))
+        result = self.probe.identify(DAPAccessCMSISDAP.ID(id))
         return result
-    
-    def get_dap_info1(self, id: DAPAccess.ID):
+
+    def get_dap_info1(self, id: DAPAccessCMSISDAP.ID):
         result = self.probe.identify(id)
         return result
-    
+
     def get_dap_ids(self):
-        return DAPAccess.ID
+        return DAPAccessCMSISDAP.ID
+
+    def reset_device(self):
+        self.probe.assert_reset(True)
+        time.sleep(0.050)
+        self.probe.assert_reset(False)
+        time.sleep(0.050)

@@ -70,7 +70,7 @@
             "args": [
                 "-d",
                 "-c",
-                "${config:peripheral_com_port}", // set peripheral_com_port in settings.json
+                "${config:hci_port_IF820_device1}",
                 "-b",
                 "${config:initial_baud}",
                 "-m",

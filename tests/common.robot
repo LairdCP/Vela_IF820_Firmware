@@ -3,22 +3,24 @@ Library     OperatingSystem
 
 
 *** Variables ***
-${API_MODE_TEXT}                        ${0}
-${API_MODE_BINARY}                      ${1}
-${DEFAULT_RX_TIMEOUT}                   ${1}
-${CLEAR_QUEUE_TIMEOUT_SEC}              ${2}
-${ERROR_DEVICE_TYPE}                    Error!    Device type not found!
-${BOOT_DELAY_SECONDS}                   ${3}
-@{API_MODES}                            ${API_MODE_TEXT}    ${API_MODE_BINARY}
-${settings}                             ${EMPTY}
+${API_MODE_TEXT}                            ${0}
+${API_MODE_BINARY}                          ${1}
+${DEFAULT_RX_TIMEOUT}                       ${1}
+${CLEAR_QUEUE_TIMEOUT_SEC}                  ${2}
+${ERROR_DEVICE_TYPE}                        Error! Device type not found!
+${BOOT_DELAY_SECONDS}                       ${3}
+@{API_MODES}                                ${API_MODE_TEXT}    ${API_MODE_BINARY}
+${settings}                                 ${EMPTY}
 
 #global variables
-${settings_comport_IF820_central}       ${EMPTY}
-${settings_comport_IF820_peripheral}    ${EMPTY}
-${settings_comport_BT900_central}       ${EMPTY}
-${settings_comport_BT900_peripheral}    ${EMPTY}
-${settings_id_pp_central}               ${EMPTY}
-${settings_id_pp_peripheral}            ${EMPTY}
+${settings_comport_IF820_central}           ${EMPTY}
+${settings_comport_IF820_peripheral}        ${EMPTY}
+${settings_hci_port_IF820_central}          ${EMPTY}
+${settings_hci_port_IF820_peripheral}       ${EMPTY}
+${settings_comport_BT900_central}           ${EMPTY}
+${settings_comport_BT900_peripheral}        ${EMPTY}
+${settings_id_pp_central}                   ${EMPTY}
+${settings_id_pp_peripheral}                ${EMPTY}
 
 
 *** Keywords ***
@@ -33,10 +35,12 @@ Fail if not equal
     END
 
 Read Settings File
-    ${settings_file}=    Get File    .vscode/settings.json
+    ${settings_file}=    Get File    ../.vscode/settings.json
     ${settings}=    Evaluate    json.loads('''${settings_file}''')    json
     Set Global Variable    ${settings_comport_IF820_central}    ${settings["comport_IF820_device1"]}
     Set Global Variable    ${settings_comport_IF820_peripheral}    ${settings["comport_IF820_device2"]}
+    Set Global Variable    ${settings_hci_port_IF820_central}    ${settings["hci_port_IF820_device1"]}
+    Set Global Variable    ${settings_hci_port_IF820_peripheral}    ${settings["hci_port_IF820_device2"]}
     Set Global Variable    ${settings_comport_BT900_central}    ${settings["comport_BT900_device1"]}
     Set Global Variable    ${settings_comport_BT900_peripheral}    ${settings["comport_BT900_device2"]}
     Set Global Variable    ${settings_id_pp_central}    ${settings["id_pico_probe_device1"]}

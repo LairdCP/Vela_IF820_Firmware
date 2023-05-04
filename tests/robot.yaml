@@ -5,6 +5,9 @@ tasks:
   Test BLE:
     shell: python -m robot --report NONE --outputdir output --logtitle "BLE" ble.robot
 
+  IF820 Manufacturing Test:
+    shell: python -m robot -T -L DEBUG:INFO --report NONE --outputdir mfg_output --logtitle "IF820 Manufacturing Test" if820_mfg_test.robot
+
   Ping Test:
     robotTaskName: Ping
 

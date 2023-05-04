@@ -277,7 +277,7 @@ class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands, SmpCommands):
                 self.__resume_queue_monitor()
                 return (SUCCESS, res[0])
 
-    def send(self, command: str, apiformat: int = None, rxtimeout: int = False, **kwargs):
+    def send(self, command: str, apiformat: int = None, rxtimeout: int = 1, **kwargs):
         """Send command
 
         Args:
@@ -289,7 +289,7 @@ class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands, SmpCommands):
             """
         self.ez.sendCommand(command=command, apiformat=apiformat, **kwargs)
 
-    def wait_event(self, event: str, rxtimeout: int = False) -> tuple:
+    def wait_event(self, event: str, rxtimeout: int = 1) -> tuple:
         """Wait for an event to be received
 
         Args:
