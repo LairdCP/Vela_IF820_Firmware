@@ -12,7 +12,7 @@
                 "-c",
                 "${config:hci_port_IF820_device1}",
                 "-b",
-                "${config:initial_baud}",
+                "${config:default_baud}",
                 "-m",
                 "${config:mini_driver}",
                 "-f",

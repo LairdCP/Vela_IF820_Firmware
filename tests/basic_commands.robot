@@ -2,15 +2,15 @@
 Documentation       Basic Commands Test Suite
 
 Library             ..${/}common${/}EzSerialPort.py
+Resource            common.robot
 
+Test Setup          Test Setup
 Test Timeout        2 minutes
 
 Default Tags        Vela IF820
 
 
 *** Variables ***
-${COM_PORT}                 /dev/cu.usbmodem334203
-${BAUD_RATE}                115200
 ${API_MODE_TEXT}            0
 ${API_MODE_BINARY}          1
 ${REBOOT_COUNT}             10
@@ -25,16 +25,16 @@ Ping
     Close the connection
 
 Query Firmware
-    Set Tags     L2VV-36
+    Set Tags    L2VV-36
     Open the connection
     Query Firmware Version
     Close the connection
 
 Factory Reset
-    Set Tags     L2VV-37
+    Set Tags    L2VV-37
     Open the connection
     Send Factory Reset
-    Close the connection  
+    Close the connection
 
 Reboot
     Set Tags    L2VV-9
@@ -57,8 +57,11 @@ Reboot Loop Binary Mode
 
 
 *** Keywords ***
+Test Setup
+    Read Settings File
+
 Open the connection
-    EzSerialPort.Open    ${COM_PORT}    ${BAUD_RATE}
+    EzSerialPort.Open    ${settings_comport_IF820_central}    ${settings_default_baud}
 
 Close the connection
     EzSerialPort.Close

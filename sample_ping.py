@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
+
 import argparse
 import logging
 import common.EzSerialPort as ez_port
 
-#sample cmd: python sample_ping.py -c /dev/cu.usbmodem33303  
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--connection',

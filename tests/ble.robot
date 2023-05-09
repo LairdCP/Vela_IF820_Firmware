@@ -5,18 +5,17 @@ Library             ..${/}common${/}EzSerialPort.py    WITH NAME    Peripheral
 Library             ..${/}common${/}EzSerialPort.py    WITH NAME    Central
 Library             String
 Library             Collections
+Resource            common.robot
 
+Test Setup          Test Setup
 Test Timeout        2 minutes
 
 Default Tags        Vela IF820
 
 
 *** Variables ***
-${PERIPHERAL_COM_PORT}              /dev/cu.usbmodem334104
-${CENTRAL_COM_PORT}                 /dev/cu.usbmodem334304
 ${DEV_PERIPHERAL}                   Peripheral
 ${DEV_Central}                      Central
-${BAUD_RATE}                        ${115200}
 ${BOOT_DELAY_SECONDS}               3
 ${API_MODE_TEXT}                    ${0}
 ${RX_TIMEOUT}                       ${1}
@@ -74,11 +73,14 @@ BLE Custom Advertiser
 
 
 *** Keywords ***
+Test Setup
+    Read Settings File
+
 Open the ${dev} connection
     IF    "${dev}" == "${DEV_PERIPHERAL}"
-        Peripheral.Open    ${PERIPHERAL_COM_PORT}    ${BAUD_RATE}
+        Peripheral.Open    ${settings_comport_IF820_peripheral}    ${settings_default_baud}
     ELSE
-        Central.Open    ${CENTRAL_COM_PORT}    ${BAUD_RATE}
+        Central.Open    ${settings_comport_IF820_central}    ${settings_default_baud}
     END
     Set API ${dev} format ${API_MODE_TEXT}
 

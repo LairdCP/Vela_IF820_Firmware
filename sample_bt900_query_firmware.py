@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import logging
 from common.BT900SerialPort import BT900SerialPort

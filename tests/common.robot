@@ -21,6 +21,7 @@ ${settings_comport_BT900_central}           ${EMPTY}
 ${settings_comport_BT900_peripheral}        ${EMPTY}
 ${settings_id_pp_central}                   ${EMPTY}
 ${settings_id_pp_peripheral}                ${EMPTY}
+${settings_default_baud}                    ${EMPTY}
 
 
 *** Keywords ***
@@ -45,6 +46,7 @@ Read Settings File
     Set Global Variable    ${settings_comport_BT900_peripheral}    ${settings["comport_BT900_device2"]}
     Set Global Variable    ${settings_id_pp_central}    ${settings["id_pico_probe_device1"]}
     Set Global Variable    ${settings_id_pp_peripheral}    ${settings["id_pico_probe_device2"]}
+    Set Global Variable    ${settings_default_baud}    ${settings["default_baud"]}
     RETURN    ${settings}
 
 UTF8 Bytes to String

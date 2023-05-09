@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import logging
 import time
@@ -7,8 +9,6 @@ import common.EzSerialPort as ez_port
 
 # Binary mode is unstable now, use text mode
 API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_TEXT
-
-#sample cmd: python sample_reboot_loop.py -c /dev/cu.usbmodem33303  
 
 def log_resp_err(resp: int):
     if resp != 0:

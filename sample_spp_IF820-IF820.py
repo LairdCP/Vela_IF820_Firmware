@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import time
 import sys
@@ -32,8 +34,8 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
     args, unknown = parser.parse_known_args()
+    app_logger = AppLogging("if820-if820")
     if args.debug:
-        app_logger = AppLogging("if820-if820")
         app_logger.configure_app_logging(
             level=app_logger.DEBUG, file_level=app_logger.NOTSET)
         app_logger.app_log_info("Debugging mode enabled")

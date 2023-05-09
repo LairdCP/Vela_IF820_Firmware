@@ -71,7 +71,7 @@ Test Setup
     #open the serial port
     IF820_Device.Close
     Sleep    ${1}
-    IF820_Device.open    ${settings_comport_IF820_peripheral}    ${lib_if820_device.IF820_DEFAULT_BAUD}
+    IF820_Device.open    ${settings_comport_IF820_central}    ${lib_if820_device.IF820_DEFAULT_BAUD}
     Sleep    ${1}
 
 Test Teardown
