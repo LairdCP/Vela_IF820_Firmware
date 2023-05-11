@@ -20,5 +20,18 @@
             ],
             "problemMatcher": []
         },
+        {
+            "label": "Run Sample Advertiser",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/sample_advertiser.py",
+                "-p",
+                "${config:comport_IF820_device2}",
+                "-c",
+                "${config:comport_IF820_device1}"
+            ],
+            "problemMatcher": []
+        },
     ]
 }
