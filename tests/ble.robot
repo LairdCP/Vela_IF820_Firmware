@@ -10,7 +10,7 @@ Resource            common.robot
 Test Setup          Test Setup
 Test Timeout        2 minutes
 
-Default Tags        Vela IF820
+Default Tags        vela if820
 
 
 *** Variables ***
@@ -22,8 +22,8 @@ ${RX_TIMEOUT}                       ${1}
 ${SLEEP_LEVEL_NORMAL}               ${1}
 ${CYSPP_FLAGS_RX_FLOW_CONTROL}      ${0x02}
 ${COMPANY_ID}                       ${0x0077}
-${ADV_MODE}                         ${2}
-${ADV_TYPE}                         ${3}
+${ADV_MODE}                         ${0}
+${ADV_TYPE}                         ${6}
 ${ADV_INTERVAL}                     ${1600}
 ${ADV_CHANNELS}                     ${0x07}
 ${ADV_TIMEOUT}                      ${0}
@@ -53,6 +53,7 @@ ${ADV_FLAGS_CUSTOM_DATA}            ${0x02}
 ...                                 ${0x00}
 ${SCAN_MODE_GENERAL_DISCOVERY}      ${2}
 ${SCAN_FILTER_ACCEPT_ALL}           ${0}
+@{DIRECT_ADDR}                      ${0}    ${0}    ${0}    ${0}    ${0}    ${0}
 
 
 *** Test Cases ***
@@ -126,9 +127,13 @@ Set advertising params
     ...    type=${ADV_TYPE}
     ...    interval=${ADV_INTERVAL}
     ...    channels=${ADV_CHANNELS}
-    ...    filter=${0x0800}
-    ...    timeout=${ADV_TIMEOUT}
+    ...    high_interval=${ADV_INTERVAL}
+    ...    high_duration=${0}
+    ...    low_interval=${ADV_INTERVAL}
+    ...    low_duration=${0}
     ...    flags=${ADV_FLAGS_CUSTOM_DATA}
+    ...    directAddr=${DIRECT_ADDR}
+    ...    directAddrType=${0}
     Fail on error    ${res[0]}
 
 Set advertising data
@@ -146,8 +151,13 @@ Start advertising
     ...    type=${ADV_TYPE}
     ...    interval=${ADV_INTERVAL}
     ...    channels=${ADV_CHANNELS}
-    ...    filter=${ADV_FILTER}
-    ...    timeout=${ADV_TIMEOUT}
+    ...    high_interval=${ADV_INTERVAL}
+    ...    high_duration=${0}
+    ...    low_interval=${ADV_INTERVAL}
+    ...    low_duration=${0}
+    ...    flags=${ADV_FLAGS_CUSTOM_DATA}
+    ...    directAddr=${DIRECT_ADDR}
+    ...    directAddrType=${0}
     Fail on error    ${res[0]}
 
 Stop advertising
