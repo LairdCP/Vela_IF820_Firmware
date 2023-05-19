@@ -21,17 +21,29 @@
             "problemMatcher": []
         },
         {
-            "label": "Run Sample Advertiser",
+            "label": "Run BLE Sample",
             "type": "shell",
             "command": "python3",
             "args": [
-                "${workspaceFolder}/sample_advertiser.py",
+                "${workspaceFolder}/sample_${input:ble_sample}.py",
                 "-p",
                 "${config:comport_IF820_device2}",
                 "-c",
                 "${config:comport_IF820_device1}"
             ],
             "problemMatcher": []
+        },
+    ],
+    "inputs": [
+        {
+            "id": "ble_sample",
+            "description": "The name of the BLE sample to run",
+            "type": "pickString",
+            "options": [
+                "advertiser",
+                "custom_gatt",
+            ],
+            "default": "advertiser",
         },
     ]
 }

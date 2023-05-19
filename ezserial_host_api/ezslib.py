@@ -194,7 +194,7 @@ class Protocol():
         },
         5: {
             "name": "gatts",
-            1: {"name": "create_attr", "textname": "/CAC", "flashopt": 0, "parameters": [{"type": "uint16", "name": "type", "textname": "T", "minimum": 0, "maximum": 65535}, {"type": "uint8", "name": "read_permissions", "textname": "R", "minimum": 0, "maximum": 255}, {"type": "uint8", "name": "write_permissions", "textname": "W", "minimum": 0, "maximum": 255}, {"type": "uint8", "name": "char_properties", "textname": "C", "minimum": 0, "maximum": 255}, {"type": "uint16", "name": "length", "textname": "L", "minimum": 0, "maximum": 512}, {"type": "longuint8a", "name": "data", "textname": "D", "minlength": 0, "maxlength": 512}], "returns": [{"type": "uint16", "name": "attr_handle", "textname": "H"}, {"type": "uint16", "name": "valid", "textname": "V"}]},
+            1: {"name": "create_attr", "textname": "/CAC", "flashopt": 0, "parameters": [{"type": "uint8", "name": "type", "textname": "T", "minimum": 0, "maximum": 1}, {"type": "uint8", "name": "perm", "textname": "P", "minimum": 0, "maximum": 255}, {"type": "uint16", "name": "length", "textname": "L", "minimum": 0, "maximum": 512}, {"type": "longuint8a", "name": "data", "textname": "D", "minlength": 0, "maxlength": 512}], "returns": [{"type": "uint16", "name": "handle", "textname": "H"}, {"type": "uint16", "name": "valid", "textname": "V"}]},
             2: {"name": "delete_attr", "textname": "/CAD", "flashopt": 0, "parameters": [{"type": "uint16", "name": "attr_handle", "textname": "H", "minimum": 1, "maximum": 65535}], "returns": [{"type": "uint16", "name": "count", "textname": "C"}, {"type": "uint16", "name": "next_handle", "textname": "H"}, {"type": "uint16", "name": "valid", "textname": "V"}]},
             3: {"name": "validate_db", "textname": "/VGDB", "flashopt": 0, "parameters": [], "returns": [{"type": "uint16", "name": "valid", "textname": "V"}]},
             4: {"name": "store_db", "textname": "/SGDB", "flashopt": 0, "parameters": [], "returns": []},
@@ -310,7 +310,7 @@ class Protocol():
         },
         2: {
             "name": "system",
-            1: {"name": "boot", "textname": "BOOT", "parameters": [{"type": "uint32", "name": "app", "textname": "E"}, {"type": "uint32", "name": "stack", "textname": "S"}, {"type": "uint16", "name": "protocol", "textname": "P"}, {"type": "uint8", "name": "hardware", "textname": "H"}, {"type": "uint8", "name": "cause", "textname": "C"}, {"type": "macaddr", "name": "address", "textname": "A"}]},
+            1: {"name": "boot", "textname": "BOOT", "parameters": [{"type": "uint32", "name": "app", "textname": "E"}, {"type": "uint32", "name": "stack", "textname": "S"}, {"type": "uint16", "name": "protocol", "textname": "P"}, {"type": "uint8", "name": "hardware", "textname": "H"}, {"type": "uint8", "name": "cause", "textname": "C"}, {"type": "macaddr", "name": "address", "textname": "A"}, {"type": "string", "name": "FW", "textname": "F"}]},
             2: {"name": "error", "textname": "ERR", "parameters": [{"type": "uint16", "name": "error", "textname": "E"}]},
             3: {"name": "factory_reset_complete", "textname": "RFAC", "parameters": []},
             4: {"name": "factory_test_entered", "textname": "TFAC", "parameters": [{"type": "uint32", "name": "app", "textname": "E"}, {"type": "uint32", "name": "stack", "textname": "S"}, {"type": "uint16", "name": "protocol", "textname": "P"}, {"type": "uint8", "name": "hardware", "textname": "H"}, {"type": "uint8", "name": "cause", "textname": "C"}]},

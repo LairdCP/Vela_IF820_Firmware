@@ -5,6 +5,7 @@ import threading
 import queue
 import sys
 from common.AppLogging import AppLogging
+from enum import Enum
 sys.path.append("..")  # Adds parent directory to python modules path
 
 CLEAR_QUEUE_TIMEOUT_DEFAULT = 0.1
@@ -138,7 +139,116 @@ class SmpCommands:
         self): return "smp_passkey_display_requested"
 
 
-class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands, SmpCommands):
+class GapCommands:
+    @property
+    def CMD_GAP_STOP_ADV(self): return "gap_stop_adv"
+    @property
+    def CMD_GAP_SET_ADV_PARAMETERS(self): return "gap_set_adv_parameters"
+    @property
+    def CMD_GAP_SET_ADV_DATA(self): return "gap_set_adv_data"
+    @property
+    def CMD_GAP_START_ADV(self): return "gap_start_adv"
+    @property
+    def CMD_GAP_START_SCAN(self): return "gap_start_scan"
+    @property
+    def EVENT_GAP_SCAN_RESULT(self): return "gap_scan_result"
+    @property
+    def CMD_GAP_STOP_SCAN(self): return "gap_stop_scan"
+    @property
+    def CMD_GAP_CONNECT(self): return "gap_connect"
+    @property
+    def EVENT_GAP_CONNECTED(self): return "gap_connected"
+
+
+class GattServerCommands:
+    @property
+    def CMD_GATTS_CREATE_ATTR(self): return "gatts_create_attr"
+    @property
+    def CMD_GATTS_WRITE_HANDLE(self): return "gatts_write_handle"
+    @property
+    def CMD_GATTS_NOTIFY_HANDLE(self): return "gatts_notify_handle"
+
+
+class GattClientCommands:
+    @property
+    def CMD_GATTC_READ_HANDLE(self): return "gattc_read_handle"
+    @property
+    def CMD_GATTC_WRITE_HANDLE(self): return "gattc_write_handle"
+    @property
+    def EVENT_GATTC_DATA_RECEIVED(self): return "gattc_data_received"
+
+
+class GapAdvertMode(Enum):
+    NA = 2  # TODO: This does not match the user guide
+
+
+class GapAdvertType(Enum):
+    STOP = 0
+    DIRECTED_HIGH_DUTY_CYCLE = 1
+    DIRECTED_LOW_DUTY_CYCLE = 2
+    UNDIRECTED_HIGH_DUTY_CYCLE = 3
+    UNDIRECTED_LOW_DUTY_CYCLE = 4
+    NON_CONNECTABLE_HIGH_DUTY_CYCLE = 5
+    NON_CONNECTABLE_LOW_DUTY_CYCLE = 6
+    DISCOVERABLE_HIGH_DUTY_CYCLE = 7
+    DISCOVERABLE_LOW_DUTY_CYCLE = 8
+
+
+class GapAdvertChannels(Enum):
+    CHANNEL_37 = 0x01
+    CHANNEL_38 = 0x02
+    CHANNEL_39 = 0x04
+    CHANNEL_ALL = 0x07
+
+
+class GapAdvertFlags(Enum):
+    AUTO_MODE = 0x01    # Enable automatic advertising mode upon boot/disconnection
+    CUSTOM_DATA = 0x02  # Use custom advertisement and scan response data
+    ALL = 0x03
+
+
+class GapAddressType(Enum):
+    PUBLIC = 0
+    RANDOM = 1
+
+
+class GapScanMode(Enum):
+    NA = 2  # TODO: This does not match the user guide
+
+
+class GapScanFilter(Enum):
+    NA = 0
+
+
+class GattAttrType(Enum):
+    STRUCTURE = 0
+    VALUE = 1
+
+
+class GattAttrPermission(Enum):
+    VAR_LEN = 0x01
+    READ = 0x02
+    WRITE_NO_ACK = 0x04
+    WRITE_ACK = 0x08
+    AUTH_READ = 0x10
+    RELIABLE_WRITE = 0x20
+    AUTH_WRITE = 0x40
+
+
+class GattAttrCharProps(Enum):
+    BROADCAST = 0x01
+    READ = 0x02
+    WRITE_NO_RESP = 0x04
+    WRITE = 0x08
+    NOTIFY = 0x10
+    INDICATE = 0x20
+    SIGNED_WRITE = 0x40
+    EXTENDED_PROPS = 0x80
+
+
+class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands,
+                   SmpCommands, GapCommands, GattServerCommands,
+                   GattClientCommands):
     """Serial port implementation to communicate with EZ-Serial devices
     """
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
@@ -270,9 +380,13 @@ class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands, SmpCommands):
             return (ERROR_NO_RESPONSE, None)
         else:
             error = res[0].payload.get('error', None)
+            result = res[0].payload.get('result', None)
             if error:
                 self.__resume_queue_monitor()
                 return (ERROR_RESPONSE, None)
+            elif result:
+                self.__resume_queue_monitor()
+                return (result, res[0])
             else:
                 self.__resume_queue_monitor()
                 return (SUCCESS, res[0])
