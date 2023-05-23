@@ -29,7 +29,7 @@
                 "-p",
                 "${config:comport_IF820_device2}",
                 "-c",
-                "${config:comport_IF820_device1}"
+                "${config:comport_IF820_device1}",
             ],
             "problemMatcher": []
         },
@@ -42,6 +42,7 @@
             "options": [
                 "advertiser",
                 "custom_gatt",
+                "advertiser_tx_power",
             ],
             "default": "advertiser",
         },

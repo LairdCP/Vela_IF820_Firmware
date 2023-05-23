@@ -145,6 +145,7 @@
             "options": [
                 "advertiser",
                 "custom_gatt",
+                "advertiser_tx_power",
             ],
             "default": "advertiser",
         },
