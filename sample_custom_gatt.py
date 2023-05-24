@@ -147,15 +147,17 @@ if __name__ == '__main__':
     peripheral.open(args.peripheral, peripheral.IF820_DEFAULT_BAUD)
     peripheral.set_api_format(API_FORMAT)
 
-    threading.Thread(target=scanner_thread,
-                     daemon=True).start()
-
     logging.info('Configure advertiser...')
     res = reboot_the_device(peripheral)
     logging.info(f'Advertiser: {res}')
     PERIPHERAL_ADDRESS = res.payload.address
     quit_on_resp_err(peripheral.send_and_wait(
         peripheral.CMD_GAP_STOP_ADV)[0])
+
+    # Start scanner thread
+    threading.Thread(target=scanner_thread,
+                    daemon=True).start()
+
     # Set advertising parameters
     quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_PARAMETERS,
                                               mode=ADV_MODE,
