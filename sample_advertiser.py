@@ -19,14 +19,16 @@ import common.EzSerialPort as ez_port
 API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_BINARY
 BOOT_DELAY_SECONDS = 3
 ADV_MODE = ez_port.GapAdvertMode.NA.value
-ADV_TYPE = ez_port.GapAdvertType.NON_CONNECTABLE_LOW_DUTY_CYCLE.value
+ADV_TYPE = ez_port.GapAdvertType.UNDIRECTED_HIGH_DUTY_CYCLE.value
 ADV_INTERVAL = 0x40
 ADV_CHANNELS = ez_port.GapAdvertChannels.CHANNEL_ALL.value
 ADV_TIMEOUT = 0
 ADV_FLAGS = ez_port.GapAdvertFlags.ALL.value
 ADV_DATA = [0x02, 0x01, 0x06, 0x0a, 0x08, 0x6d, 0x79, 0x5f, 0x73, 0x65, 0x6e,
             0x73, 0x6f, 0x72, 0x04, 0xff, 0x77, 0x00, 0x01]
-SCAN_MODE_GENERAL_DISCOVERY = ez_port.GapScanMode.NA.value
+SCAN_MODE = ez_port.GapScanMode.NA.value
+SCAN_INTERVAL = 0x40
+SCAN_WINDOW = 0x40
 SCAN_FILTER_ACCEPT_ALL = ez_port.GapScanFilter.NA.value
 PERIPHERAL_ADDRESS = None
 
@@ -64,29 +66,37 @@ def scanner_thread():
     logging.info('Configure scanner...')
     res = reboot_the_device(central)
     logging.info(f'Scanner: {res}')
+    logging.info(
+        f'Scan mode: {SCAN_MODE}, interval: {SCAN_INTERVAL}, window: {SCAN_WINDOW}')
     quit_on_resp_err(central.send_and_wait(central.CMD_GAP_START_SCAN,
-                                           mode=SCAN_MODE_GENERAL_DISCOVERY,
-                                           interval=0x400,
-                                           window=0x400,
+                                           mode=SCAN_MODE,
+                                           interval=SCAN_INTERVAL,
+                                           window=SCAN_WINDOW,
                                            active=0,
                                            filter=SCAN_FILTER_ACCEPT_ALL,
                                            nodupe=0,
                                            timeout=0)[0])
     while True:
-        res = central.wait_event(central.EVENT_GAP_SCAN_RESULT)
-        quit_on_resp_err(res[0])
-        packet = res[1]
-        logging.debug(f'Received {packet}')
-        received_addr = packet.payload.address
-        if received_addr == PERIPHERAL_ADDRESS:
-            counter = packet.payload.data[-1]
-            if counter != last_counter:
-                last_counter = counter
-                logging.info(f'Received value {counter}')
+        try:
+            res = central.wait_event(central.EVENT_GAP_SCAN_RESULT)
+            quit_on_resp_err(res[0])
+            packet = res[1]
+            logging.debug(f'Received {packet}')
+            received_addr = packet.payload.address
+            if received_addr == PERIPHERAL_ADDRESS:
+                counter = packet.payload.data[-1]
+                if counter != last_counter:
+                    last_counter = counter
+                    logging.info(f'Received value {counter}')
+                else:
+                    logging.debug('Received duplicate advert')
             else:
-                logging.debug('Received duplicate advert')
-        else:
-            logging.debug(f'Not looking for {received_addr}')
+                logging.debug(f'Not looking for {received_addr}')
+        except Exception as e:
+            logging.warning(f'Scanner: {e}')
+            central.close()
+            time.sleep(0.5)
+            central.open(args.central, central.IF820_DEFAULT_BAUD)
 
 
 if __name__ == '__main__':
@@ -102,8 +112,6 @@ if __name__ == '__main__':
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.info("Debugging mode disabled")
 
     central = ez_port.EzSerialPort()
     central.open(args.central, central.IF820_DEFAULT_BAUD)
@@ -112,13 +120,14 @@ if __name__ == '__main__':
     peripheral.open(args.peripheral, peripheral.IF820_DEFAULT_BAUD)
     peripheral.set_api_format(API_FORMAT)
 
-    threading.Thread(target=scanner_thread,
-                     daemon=True).start()
-
     logging.info('Configure advertiser...')
     res = reboot_the_device(peripheral)
     logging.info(f'Advertiser: {res}')
     PERIPHERAL_ADDRESS = res.payload.address
+
+    threading.Thread(target=scanner_thread,
+                     daemon=True).start()
+
     quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_STOP_ADV)[0])
     quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_PARAMETERS,
                                               mode=ADV_MODE,
@@ -131,6 +140,8 @@ if __name__ == '__main__':
                                               flags=ADV_FLAGS,
                                               directAddr=[0, 0, 0, 0, 0, 0],
                                               directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
+    logging.info(
+        f'Advert mode: {ADV_MODE}, type:{ADV_TYPE}, high_interval: {ADV_INTERVAL}, high_duration:{ADV_TIMEOUT}, flags:{ADV_FLAGS}')
     quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_DATA,
                                               data=ADV_DATA)[0])
     quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_START_ADV,

@@ -179,7 +179,7 @@ class GattClientCommands:
 
 
 class GapAdvertMode(Enum):
-    NA = 2  # TODO: This does not match the user guide
+    NA = 0  # TODO: This does not match the user guide
 
 
 class GapAdvertType(Enum):
@@ -213,7 +213,7 @@ class GapAddressType(Enum):
 
 
 class GapScanMode(Enum):
-    NA = 2  # TODO: This does not match the user guide
+    NA = 1  # TODO: This does not match the user guide
 
 
 class GapScanFilter(Enum):
