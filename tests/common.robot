@@ -36,7 +36,7 @@ Fail if not equal
     END
 
 Read Settings File
-    ${settings_file}=    Get File    ../.vscode/settings.json
+    ${settings_file}=    Get File    .vscode/settings.json
     ${settings}=    Evaluate    json.loads('''${settings_file}''')    json
     Set Global Variable    ${settings_comport_IF820_central}    ${settings["comport_IF820_device1"]}
     Set Global Variable    ${settings_comport_IF820_peripheral}    ${settings["comport_IF820_device2"]}

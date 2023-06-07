@@ -26,6 +26,9 @@ tasks:
   BLE Custom Advertiser:
     robotTaskName: BLE Custom Advertiser
 
+  BLE Custom GATT:
+    robotTaskName: BLE Custom GATT
+
 condaConfigFile: conda.yaml
 
 environmentConfigs:
