@@ -19,38 +19,38 @@ ${BOOT_DELAY_SECONDS}       3
 
 *** Test Cases ***
 Ping
-    Set Tags    L2VV-3
+    Set Tags    L2-70
     Open the connection
     Send Ping
     Close the connection
 
 Query Firmware
-    Set Tags    L2VV-36
+    Set Tags    L2-71
     Open the connection
     Query Firmware Version
     Close the connection
 
 Factory Reset
-    Set Tags    L2VV-37
+    Set Tags    L2-65
     Open the connection
     Send Factory Reset
     Close the connection
 
 Reboot
-    Set Tags    L2VV-9
+    Set Tags    L2-66
     Open the connection
     Reboot the device
     Close the connection
     Sleep    ${BOOT_DELAY_SECONDS}
 
 Reboot Loop Text Mode
-    Set Tags    L2VV-12
+    Set Tags    L2-72
     Open the connection
     Reboot Loop
     Close the connection
 
 Reboot Loop Binary Mode
-    Set Tags    L2VV-13
+    Set Tags    L2-73
     Open the connection
     Reboot Loop    arg_api_mode=${API_MODE_BINARY}
     Close the connection

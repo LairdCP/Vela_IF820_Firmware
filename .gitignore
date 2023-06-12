@@ -25,3 +25,4 @@ interactive_console_output.xml
 .vscode/settings.json
 
 mfg_output/
+*mfg_results*.txt

@@ -23,7 +23,7 @@ ${lib_if820_device}             ${EMPTY}
 ${ez_system_commands}           ${EMPTY}
 ${MINI_DRIVER}                  ../files/minidriver-20820A1-uart-patchram.hex
 ${FIRMWARE}
-...                             ../files/20230412_ezserial_app_CYBT-243053-EVAL_140606_v1.4.6.6_download.hex
+...                             ../files/20230609_ezserial_app_CYBT-243053-EVAL_140808_v1.4.8.8_download.hex
 ${PROGRAM_BAUD_RATE}            3000000
 ${PROGRAM_FIRMWARE_TIMEOUT}     30 seconds
 ${TEST_TIMEOUT_SHORT}           2 seconds
@@ -34,7 +34,7 @@ ${result_file}                  ${EMPTY}
 
 *** Test Cases ***
 MFG Test
-    Set Tags    L2VV-40
+    Set Tags    L2-67
     Manufacturing Test Loop
 
 
