@@ -49,3 +49,11 @@ The [tests/robot.yaml](tests/robot.yaml) file specifies all tests that can be ru
 
 ![Robot Tests](docs/images/robot_tests.png)  
 _Robot Tests_
+
+## BT900 Setup
+
+1. Install UWFlashX from here (non-ssl version): https://github.com/LairdCP/UwFlashX/releases
+2. Download the latest BT900 firmware from here: https://www.lairdconnect.com/documentation/firmware-version-911214zip-0
+3. Use these instructions to program the firmware on the BT900: https://github.com/LairdCP/UwFlashX/wiki/Upgrading-BT900-firmware
+4. Download the BT900 command manager (cmd.manager.sb) sample app from here: https://github.com/LairdCP/BT900-Applications
+5. Use these instructions to run the command manager sample app on the BT900: https://www.lairdconnect.com/documentation/application-note-multiple-concurrent-spp-and-vsp-connections-command-managerpdf
