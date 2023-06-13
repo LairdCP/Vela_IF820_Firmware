@@ -31,6 +31,16 @@ ${TEST_TIMEOUT_SHORT}           2 seconds
 ${RESULTE_FILE_NAME}            if820_mfg_results
 ${result_file}                  ${EMPTY}
 
+# Pairs of GPIO pins for loopback testing. First pin in the pair is the output.
+# TODO: Need different GPIO pairs for integrated antenna module and external antenna module
+@{GPIO_SETS}                    ${EMPTY}
+
+@{GPIO_TEST_STATES}             ${1}    ${0}
+${GPIO_CONFIG_OUTPUT}           ${0x4000}
+${GPIO_CONFIG_INPUT}            ${0x0000}
+${GPIO_OP_IMMEDIATE}            ${0}
+${GPIO_OP_RELEASE}              ${4}
+
 
 *** Test Cases ***
 MFG Test
@@ -54,6 +64,10 @@ Test Setup
     ${result_file} =    Set Variable    ${OUTPUT_DIR}${/}${RESULTE_FILE_NAME}_${current_time}.txt
     Set Global Variable    ${result_file}    ${result_file}
     Create File    path=${result_file}
+
+    # Setup GPIO pairs for integrated antenna module
+    ${gpio_sets} =    Evaluate    [[15, 8], [2, 3], [6, 17], [13, 9]]    # TODO: Need to add all pairs
+    Set Global Variable    ${GPIO_SETS}    ${gpio_sets}
 
 Test Teardown
     IF820_Device.Close
@@ -109,6 +123,53 @@ Query Bluetooth Address
     Log Result    ${mac_string}
     Log    Bluetooth address: ${mac_string}
 
+Test GPIO
+    [Timeout]    ${PROGRAM_FIRMWARE_TIMEOUT}
+    FOR    ${pins}    IN    @{GPIO_SETS}
+        # Config output pin
+        ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_DRIVE}
+        ...    pin=${pins[0]}
+        ...    pin_config=${GPIO_CONFIG_OUTPUT}
+        ...    pin_out_value=${0}
+        ...    pin_operation=${GPIO_OP_IMMEDIATE}
+        Fail on error    ${res[0]}
+        # Config input pin
+        ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_DRIVE}
+        ...    pin=${pins[1]}
+        ...    pin_config=${GPIO_CONFIG_INPUT}
+        ...    pin_out_value=${0}
+        ...    pin_operation=${GPIO_OP_IMMEDIATE}
+        Fail on error    ${res[0]}
+        # Set and read state
+        FOR    ${state}    IN    @{GPIO_TEST_STATES}
+            ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_LOGIC}
+            ...    pin=${pins[0]}
+            ...    pin_out_value=${state}
+            Fail on error    ${res[0]}
+            ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_GET_LOGIC}
+            ...    pin=${pins[1]}
+            ...    direction=${0}
+            Fail on error    ${res[0]}
+            Log    ${res}
+            IF    ${res[1].payload.logic} != ${state}
+                Fail    GPIO ${pins[0]} state ${res[1].payload.logic} should be ${state}
+            END
+        END
+        # Release pins from control
+        ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_DRIVE}
+        ...    pin=${pins[0]}
+        ...    pin_config=${0}
+        ...    pin_out_value=${0}
+        ...    pin_operation=${GPIO_OP_RELEASE}
+        Fail on error    ${res[0]}
+        ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_DRIVE}
+        ...    pin=${pins[1]}
+        ...    pin_config=${0}
+        ...    pin_out_value=${0}
+        ...    pin_operation=${GPIO_OP_RELEASE}
+        Fail on error    ${res[0]}
+    END
+
 Record Result
     Log    ${module_result}
     ${result_string} =    Set Variable    ${EMPTY}
@@ -137,5 +198,8 @@ Manufacturing Test Loop
         Program firmware
         Query Bluetooth Address
         Query Firmware Version
+        Test GPIO
+        # TODO: Set TX power and start advertising
+        # TODO: Measure TX power
         Record Result
     END

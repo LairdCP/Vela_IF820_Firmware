@@ -177,6 +177,13 @@ class GattClientCommands:
     @property
     def EVENT_GATTC_DATA_RECEIVED(self): return "gattc_data_received"
 
+class GpioCommands:
+    @property
+    def CMD_GPIO_SET_DRIVE(self): return "gpio_set_drive"
+    @property
+    def CMD_GPIO_SET_LOGIC(self): return "gpio_set_logic"
+    @property
+    def CMD_GPIO_GET_LOGIC(self): return "gpio_get_logic"
 
 class GapAdvertMode(Enum):
     NA = 0  # TODO: This does not match the user guide
@@ -248,7 +255,7 @@ class GattAttrCharProps(Enum):
 
 class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands,
                    SmpCommands, GapCommands, GattServerCommands,
-                   GattClientCommands):
+                   GattClientCommands, GpioCommands):
     """Serial port implementation to communicate with EZ-Serial devices
     """
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
