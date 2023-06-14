@@ -180,6 +180,8 @@ class GapCommands:
     def CMD_GAP_CONNECT(self): return "gap_connect"
     @property
     def EVENT_GAP_CONNECTED(self): return "gap_connected"
+    @property
+    def EVENT_GAP_CONNECTION_UPDATED(self): return "gap_connection_updated"
 
 
 class GattServerCommands:
@@ -189,6 +191,8 @@ class GattServerCommands:
     def CMD_GATTS_WRITE_HANDLE(self): return "gatts_write_handle"
     @property
     def CMD_GATTS_NOTIFY_HANDLE(self): return "gatts_notify_handle"
+    @property
+    def EVENT_GATTS_DATA_WRITTEN(self): return "gatts_data_written"
 
 
 class GattClientCommands:
