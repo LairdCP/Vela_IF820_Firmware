@@ -1,11 +1,12 @@
 #!/bin/bash
-
+set -x
+set -v
 # XRAY_CLIENT_ID and XRAY_CLIENT_SECRET need to be set in your environment
 XRAY_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST --data '{ "client_id": "'$XRAY_CLIENT_ID'","client_secret": "'$XRAY_CLIENT_SECRET'" }' https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
 # Set project
 PROJECT_KEY='L2'
 # Set test plan
-TEST_PLAN='L2-76'
+TEST_PLAN='L2-77'
 # Test output to upload
 OUTPUT_FILE=../output.xml
 

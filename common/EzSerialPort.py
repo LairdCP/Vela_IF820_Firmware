@@ -124,6 +124,28 @@ class BluetoothCommands:
     def EVENT_BT_DISCONNECTED(self): return "bt_disconnected"
 
 
+class CYSPPCommands:
+    @property
+    def CMD_P_CYSPP_CHECK(self): return "p_cyspp_check"
+    @property
+    def CMD_P_CYSPP_START(self): return "p_cyspp_start"
+    @property
+    def CMD_P_CYSPP_SET_PARAMETERS(self): return "p_cyspp_set_parameters"
+    @property
+    def CMD_P_CYSPP_GET_PARAMETERS(self): return "p_cyspp_get_parameters"
+
+    @property
+    def CMD_P_CYSPP_SET_PACKETIZATION(
+        self): return "p_cyspp_set_packetization"
+
+    @property
+    def CMD_P_CYSPP_GET_PACKETIZATION(
+        self): return "p_cyspp_get_packetization"
+
+    @property
+    def EVENT_P_CYSPP_STATUS(self): return "p_cyspp_status"
+
+
 class SmpCommands:
     @property
     def EVENT_SMP_BOND_ENTRY(self): return "smp_bond_entry"
@@ -255,7 +277,7 @@ class GattAttrCharProps(Enum):
 
 class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands,
                    SmpCommands, GapCommands, GattServerCommands,
-                   GattClientCommands, GpioCommands):
+                   GattClientCommands, GpioCommands, CYSPPCommands):
     """Serial port implementation to communicate with EZ-Serial devices
     """
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
