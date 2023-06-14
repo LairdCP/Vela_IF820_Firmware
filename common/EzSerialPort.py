@@ -481,3 +481,9 @@ class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands,
 
     def get_cyspp_commands(self):
         return CYSPPCommands()
+
+    def get_gatt_server_commands(self):
+        return GattServerCommands()
+
+    def get_gap_commands(self):
+        return GapCommands()

@@ -33,9 +33,11 @@ class BT900SerialPort(AppLogging):
     BT900_SPP_CONNECT = "SPP Connect:"
     BT900_SPP_CONNECT_REQ = "spp connect "
     BT900_CYSPP_CONNECT = "connect "
-    BT900_GATTC_OPEN = "gattc open 512 0"
-    BT900_ENABLE_CYSPP_NOT = "gattc write 1 18 0100"
+    BT900_GATTC_OPEN = "gattc open 512 0" + CR
+    BT900_GATTC_CLOSE = "gattc close" + CR
+    BT900_ENABLE_CYSPP_NOT = "gattc write 1 18 0100" + CR
     BT900_CYSPP_WRITE_DATA_STRING = "gattc writecmd$ 1 17 "
+    BT900_CYSPP_DISCONNECT = "disconnect" + CR
 
     BT900_Periperhal = None
     BT900_Central = None

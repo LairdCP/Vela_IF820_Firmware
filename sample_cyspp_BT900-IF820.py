@@ -139,12 +139,12 @@ if __name__ == '__main__':
 
     # bt900 open gattc
     response = bt900_central.send_and_wait_for_response(
-        bt900_central.BT900_GATTC_OPEN + bt900_central.CR)
+        bt900_central.BT900_GATTC_OPEN)
     common_lib.check_bt900_response(response[0])
 
     # bt900 enable notifications
     response = bt900_central.send_and_wait_for_response(
-        bt900_central.BT900_ENABLE_CYSPP_NOT + bt900_central.CR)
+        bt900_central.BT900_ENABLE_CYSPP_NOT)
     common_lib.check_bt900_response(response[0])
 
     # IF820 Event (Text Info contains "W" for gatts data written)
