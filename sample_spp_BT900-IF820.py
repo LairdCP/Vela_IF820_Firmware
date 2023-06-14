@@ -16,7 +16,6 @@ Hardware Setup
 This sample requires the following hardware:
 -BT900 connected to PC via USB to act as a Bluetooth Central
 -IF820 connected to PC via USB to act as a Bluetooth Peripheral
--PicoProbe connected to PC via USB.  GPIO16 of PicoProbe attached to P13 to IF820 Peripheral Device.
 """
 
 INQUIRY_DURATION_SEC = 15
@@ -70,8 +69,7 @@ if __name__ == '__main__':
         app_logger.app_log_critical("Unable to open Pico Probe.")
 
     # ensure SPP enable on module by setting pico gpio to input
-    # PicoProbe GPIO16 -> IF820 P13
-    pp_peripheral.gpio_to_input(pp_peripheral.GPIO_16)
+    pp_peripheral.gpio_to_input(pp_peripheral.GPIO_19)
 
     # bt900 query firmware version
     response = bt900_central.get_bt900_fw_ver()
@@ -203,9 +201,9 @@ if __name__ == '__main__':
     app_logger.app_log_info(f"BT900->IF820 Data = {string_utf8}")
 
     # End SPP Mode on both devices, and close open connections.
-    pp_peripheral.gpio_to_output(pp_peripheral.GPIO_16)
-    pp_peripheral.gpio_to_output_high(pp_peripheral.GPIO_16)
-    pp_peripheral.gpio_to_input(pp_peripheral.GPIO_16)
+    pp_peripheral.gpio_to_output(pp_peripheral.GPIO_19)
+    pp_peripheral.gpio_to_output_high(pp_peripheral.GPIO_19)
+    pp_peripheral.gpio_to_input(pp_peripheral.GPIO_19)
     pp_peripheral.close()
     bt900_central.device.send(bt900_central.BT900_SPP_DISCONNECT)
     time.sleep(0.5)

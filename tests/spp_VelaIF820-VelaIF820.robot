@@ -37,11 +37,13 @@ ${ez_bluetooth_commands}        ${EMPTY}
 
 
 *** Test Cases ***
-SPP Test Binary Mode
+SPP IF820->IF820 Binary Mode
+    Set Tags    L2-122
     ${rx_spp_data} =    SPP Test    ${API_MODE_BINARY}
     Builtin.Should Be Equal    ${rx_spp_data}    ${SPP_DATA}
 
-Spp Test Text Mode
+SPP IF820->IF820 Text Mode
+    Set Tags    L2-124
     ${rx_spp_data} =    SPP Test    ${API_MODE_TEXT}
     Builtin.Should Be Equal    ${rx_spp_data}    ${SPP_DATA}
 
@@ -52,7 +54,7 @@ Test Setup
     IF820_Central.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
     IF820_Peripheral.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
 
-    #Get instances of python libraries needed
+    # Get instances of python libraries needed
     ${lib_if820_central} =    Builtin.Get Library Instance    IF820_Central
     ${lib_if820_peripheral} =    Builtin.Get Library Instance    IF820_Peripheral
     ${lib_pp_central} =    Builtin.Get Library Instance    PP_Central
@@ -78,7 +80,7 @@ Test Setup
     ${fw_ver_peripheral} =    Get Pico Probe Firmware Version    ${DEV_PERIPHERAL}
     Log    ${fw_ver_peripheral}
 
-    #open the serial ports for devices in test
+    # open the serial ports for devices in test
     IF820_Central.Close
     IF820_Peripheral.Close
     Sleep    ${1}
@@ -86,18 +88,22 @@ Test Setup
     IF820_Peripheral.open    ${settings_comport_IF820_peripheral}    ${lib_if820_peripheral.IF820_DEFAULT_BAUD}
     Sleep    ${1}
 
-    #IF820 Factory Reset
-    IF820_Central.send    ${ez_system_commands.CMD_FACTORY_RESET}
-    ${response} =    IF820_central.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
+    # IF820 Factory Reset
+    IF820_Central.Clear Rx Queue
+    ${response} =    IF820_Central.Send And Wait    ${ez_system_commands.CMD_FACTORY_RESET}
+    Fail on error    ${response[0]}
+    ${response} =    IF820_Central.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
 
-    IF820_Peripheral.send    ${ez_system_commands.CMD_FACTORY_RESET}
+    IF820_Peripheral.Clear Rx Queue
+    ${response} =    IF820_Peripheral.Send And Wait    ${ez_system_commands.CMD_FACTORY_RESET}
+    Fail on error    ${response[0]}
     ${response} =    IF820_Peripheral.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
 
 Test Teardown
     Close Pico Probes
     IF820_Central.close
     IF820_Peripheral.close
-    Log    "Test Teardown Complete"
+    Log    Test Teardown Complete
 
 Get Peripheral Bluetooth Address
     [Arguments]    ${api_format}
@@ -123,20 +129,20 @@ Connect to Peripheral
 
 Open Pico Probes
     PP_Central.Open    ${settings_id_pp_central}
-    PP_Central.Gpio To Input    ${lib_pp_central.GPIO_16}
+    PP_Central.Gpio To Input    ${lib_pp_central.GPIO_19}
     PP_Peripheral.Open    ${settings_id_pp_peripheral}
-    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_16}
+    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_19}
 
 Close Pico Probes
-    #Setting high will terminate SPP
-    PP_Central.Gpio To Output    ${lib_pp_central.GPIO_16}
-    PP_Central.Gpio To Output High    ${lib_pp_central.GPIO_16}
-    PP_Central.Gpio To Input    ${lib_pp_central.GPIO_16}
+    # Setting high will terminate SPP
+    PP_Central.Gpio To Output    ${lib_pp_central.GPIO_19}
+    PP_Central.Gpio To Output High    ${lib_pp_central.GPIO_19}
+    PP_Central.Gpio To Input    ${lib_pp_central.GPIO_19}
     PP_Central.Close
 
-    PP_Peripheral.Gpio To Output    ${lib_pp_peripheral.GPIO_16}
-    PP_Peripheral.Gpio To Output High    ${lib_pp_peripheral.GPIO_16}
-    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_16}
+    PP_Peripheral.Gpio To Output    ${lib_pp_peripheral.GPIO_19}
+    PP_Peripheral.Gpio To Output High    ${lib_pp_peripheral.GPIO_19}
+    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_19}
     PP_Peripheral.Close
 
 Get Pico Probe Firmware Version
@@ -167,12 +173,12 @@ SPP Test
     IF820_Peripheral.Close
 
     # The IO should be low when a SPP Connection is active
-    ${io_state_p} =    PP_Peripheral.Gpio Read    ${lib_pp_peripheral.GPIO_16}
-    ${io_state_c} =    PP_Central.Gpio Read    ${lib_pp_central.GPIO_16}
+    ${io_state_p} =    PP_Peripheral.Gpio Read    ${lib_pp_peripheral.GPIO_19}
+    ${io_state_c} =    PP_Central.Gpio Read    ${lib_pp_central.GPIO_19}
     Builtin.Should Be Equal    ${0}    ${io_state_p}
     Builtin.Should Be Equal    ${0}    ${io_state_c}
 
-    #send data from central to peripheral
+    # send data from central to peripheral
     ${open_result} =    IF820_Central_SPP.open
     ...    ${settings_comport_IF820_central}
     ...    ${lib_if820_central.IF820_DEFAULT_BAUD}
@@ -190,7 +196,7 @@ SPP Test
         Sleep    20ms
     END
 
-    #read data from BT900 Rx Queue
+    # read data from BT900 Rx Queue
     Sleep    ${1}
     ${rx_data} =    IF820_Peripheral_SPP.Get Rx Queue
     ${utf8_string} =    UTF8 Bytes to String    ${rx_data}

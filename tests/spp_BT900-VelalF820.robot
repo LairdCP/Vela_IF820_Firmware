@@ -34,12 +34,14 @@ ${OK}                           OK
 
 
 *** Test Cases ***
-SPP Test Binary Mode
+SPP BT900->IF820 Binary Mode
+    Set Tags    L2-111
     ${rx_spp_data} =    SPP Test    ${API_MODE_BINARY}
     Builtin.Should Not Be Empty    ${rx_spp_data[0]}
     Builtin.Should Not Be Empty    ${rx_spp_data[1]}
 
-Spp Test Text Mode
+SPP BT900->IF820 Text Mode
+    Set Tags    L2-116
     ${rx_spp_data} =    SPP Test    ${API_MODE_TEXT}
     Builtin.Should Not Be Empty    ${rx_spp_data[0]}
     Builtin.Should Not Be Empty    ${rx_spp_data[1]}
@@ -50,7 +52,7 @@ Test Setup
     Read Settings File
     IF820_Peripheral.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
 
-    #Get instances of python libraries needed
+    # Get instances of python libraries needed
     ${lib_bt900_central} =    Builtin.Get Library Instance    BT900_Central
     ${lib_if820_peripheral} =    Builtin.Get Library Instance    IF820_Peripheral
     ${lib_pp_peripheral} =    Builtin.Get Library Instance    PP_Peripheral
@@ -66,10 +68,10 @@ Test Setup
     Set Global Variable    ${ez_bluetooth_commands}    ${ez_bluetooth_commands}
     Set Global Variable    ${ez_smp_commands}    ${ez_smp_commands}
 
-    #Open the Pico Probe used on the Central so we can terminate SPP mode via a gpio pin
+    # Open the Pico Probe used on the Central so we can terminate SPP mode via a gpio pin
     Open Pico Probe
 
-    #open the serial ports for devices in test
+    # open the serial ports for devices in test
     IF820_Peripheral.close
     Call Method    ${bt900_central_device}    close
     Sleep    ${1}
@@ -80,8 +82,10 @@ Test Setup
     ...    ${settings_comport_BT900_central}
     ...    ${lib_bt900_central.BT900_DEFAULT_BAUD}
 
-    #IF820 Factory Reset
-    IF820_Peripheral.send    ${ez_system_commands.CMD_FACTORY_RESET}
+    # IF820 Factory Reset
+    IF820_Peripheral.Clear Rx Queue
+    ${response} =    IF820_Peripheral.Send And Wait    ${ez_system_commands.CMD_FACTORY_RESET}
+    Fail on error    ${response[0]}
     ${response} =    IF820_Peripheral.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
     Log    ${response}
     IF820_Peripheral.Clear Rx Queue
@@ -101,13 +105,13 @@ Disconnect BT900
 
 Open Pico Probe
     PP_Peripheral.Open    ${settings_id_pp_peripheral}
-    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_16}
+    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_19}
 
 Close Pico Probe
-    #Setting high will terminate SPP
-    PP_Peripheral.Gpio To Output    ${lib_pp_peripheral.GPIO_16}
-    PP_Peripheral.Gpio To Output High    ${lib_pp_peripheral.GPIO_16}
-    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_16}
+    # Setting high will terminate SPP
+    PP_Peripheral.Gpio To Output    ${lib_pp_peripheral.GPIO_19}
+    PP_Peripheral.Gpio To Output High    ${lib_pp_peripheral.GPIO_19}
+    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_19}
     PP_Peripheral.Close
 
 SPP Test
@@ -124,46 +128,46 @@ SPP Test
     ${response} =    BT900_Central.Send And Wait For Response    ${lib_bt900_central.BT900_CMD_MODE}
     Should Contain    ${response[1]}    ${OK}
 
-    #bt900 delete all previous bonds
+    # bt900 delete all previous bonds
     ${response} =    BT900_Central.Send And Wait For Response    ${lib_bt900_central.BT900_CMD_BTC_BOND_DEL}
     Should Contain    ${response[1]}    ${OK}
 
-    #bt900 set io cap
+    # bt900 set io cap
     ${response} =    BT900_Central.Send And Wait For Response    ${lib_bt900_central.BT900_CMD_BTC_IOCAP}
     Should Contain    ${response[1]}    ${OK}
 
-    #bt900 set pairable
+    # bt900 set pairable
     ${response} =    BT900_Central.Send And Wait For Response    ${lib_bt900_central.BT900_CMD_SET_BTC_PAIRABLE}
     Should Contain    ${response[1]}    ${OK}
 
-    #bt900 connect spp port
+    # bt900 connect spp port
     ${connect_command} =    Set Variable    ${lib_bt900_central.BT900_SPP_CONNECT_REQ}${str_mac}${lib_bt900_central.CR}
     ${response} =    BT900_Central.Send And Wait For Response    ${connect_command}
     Should Contain    ${response[1]}    ${OK}
 
-    #IF820 Event (Text Info contains "P")
+    # IF820 Event (Text Info contains "P")
     ${response} =    IF820_Peripheral.Wait Event    event=${ez_smp_commands.EVENT_SMP_PAIRING_REQUESTED}
     Fail if not equal    ${response[0]}    ${0}
 
-    #bt900 event (Text Info contains "Pair Req")
+    # bt900 event (Text Info contains "Pair Req")
     ${bt900_event} =    BT900_Central.Wait For Response    rx_timeout_sec=${lib_bt900_central.DEFAULT_WAIT_TIME_SEC}
     ${string_event} =    BT900_Central.Response To String    ${bt900_event}
     Should Contain    ${string_event}    ${lib_bt900_central.BT900_PAIR_REQ}
     Call Method    ${bt900_central_device}    clear_rx_queue
 
-    #bt900 set pairable (Response is "OK")
+    # bt900 set pairable (Response is "OK")
     Log    Send Pair Response
     ${response} =    BT900_Central.Send And Wait For Response    ${lib_bt900_central.BT900_CMD_BTC_PAIR_RESPONSE}
     Should Contain    ${response[1]}    ${OK}
     Log    ${response[1]}
 
-    #IF820 Event (Text Info contains "PR")
+    # IF820 Event (Text Info contains "PR")
     Log    Wait for PR
     ${response} =    IF820_Peripheral.Wait Event    event=${ez_smp_commands.EVENT_SMP_PAIRING_RESULT}
     Log    ${response}
     Fail if not equal    ${response[0]}    ${0}
 
-    #bt900 event (Text Info contains "Pair Result")
+    # bt900 event (Text Info contains "Pair Result")
     Log    Wait for Pair Result
     ${bt900_event} =    BT900_Central.Wait For Response    rx_timeout_sec=${lib_bt900_central.DEFAULT_WAIT_TIME_SEC}
     Log    ${bt900_event}
@@ -171,15 +175,15 @@ SPP Test
     Log    ${string_event}
     Should Contain    ${string_event}    ${lib_bt900_central.BT900_PAIR_RESULT}
 
-    #IF820 Event (Text Info contains "ENC")
+    # IF820 Event (Text Info contains "ENC")
     ${response} =    IF820_Peripheral.Wait Event    event=${ez_smp_commands.EVENT_SMP_ENCRYPTION_STATUS}
     Fail if not equal    ${response[0]}    ${0}
 
-    #IF820 Event
+    # IF820 Event
     ${response} =    IF820_Peripheral.Wait Event    event=${ez_bluetooth_commands.EVENT_BT_CONNECTED}
     Fail if not equal    ${response[0]}    ${0}
 
-    #bt900 event
+    # bt900 event
     Log    Wait for SPP Connect
     ${bt900_event} =    BT900_Central.Wait For Response    rx_timeout_sec=${10}
     Log    ${bt900_event}
@@ -187,13 +191,13 @@ SPP Test
     Log    ${string_event}
     Should Contain    ${string_event}    ${lib_bt900_central.BT900_SPP_CONNECT}
 
-    #The two devices are connected.    We can now send data on SPP.
-    #For the IF820 we need to close the ez_serial port instance and
-    #then open a base serial port so we can send raw data with no processing.
+    # The two devices are connected.    We can now send data on SPP.
+    # For the IF820 we need to close the ez_serial port instance and
+    # then open a base serial port so we can send raw data with no processing.
     IF820_Peripheral.close
     IF820_SPP.open    ${settings_comport_IF820_central}    ${lib_if820_peripheral.IF820_DEFAULT_BAUD}
 
-    #send data from IF820 -> BT900
+    # send data from IF820 -> BT900
     Log    Send BT900->IF820
     ${length} =    Get Length    ${SPP_DATA}
     FOR    ${index}    IN RANGE    ${length}
@@ -202,13 +206,13 @@ SPP Test
         Sleep    20ms
     END
 
-    #read data from BT900 Rx Queue
+    # read data from BT900 Rx Queue
     Sleep    ${1}
     ${rx_data} =    Call Method    ${bt900_central_device}    get_rx_queue
     ${utf8_string_bt900} =    UTF8 Bytes to String    ${rx_data}
     Log    rx_data = ${utf8_string_bt900}
 
-    #send data from BT900 -> IF820
+    # send data from BT900 -> IF820
     Log    Send IF820->BT900
     ${data_to_send} =    Builtin.Catenate
     ...    ${lib_bt900_central.BT900_SPP_WRITE_PREFIX}

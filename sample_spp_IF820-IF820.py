@@ -14,8 +14,6 @@ Hardware Setup
 This sample requires the following hardware:
 -IF820 connected to PC via USB to act as a Bluetooth Peripheral
 -IF820 connected to PC via USB to act as a Bluetooth Central
--PicoProbe connected to PC via USB.  GPIO16 of PicoProbe attached to P13 to IF820 Peripheral Device.
--PicoProbe connected to PC via USB.  GPIO16 of PicoProbe attached to P13 to IF820 Central Device.
 """
 
 FLAG_INQUIRY_NAME = 1
@@ -66,9 +64,8 @@ if __name__ == '__main__':
         app_logger.app_log_critical("Unable to open Pico Probe.")
 
     # ensure SPP enable on module by setting pico gpio to input
-    # PicoProbe GPIO16 -> IF820 P13
-    pp_peripheral.gpio_to_input(pp_peripheral.GPIO_16)
-    pp_central.gpio_to_input(pp_peripheral.GPIO_16)
+    pp_peripheral.gpio_to_input(pp_peripheral.GPIO_19)
+    pp_central.gpio_to_input(pp_peripheral.GPIO_19)
 
     # Send Ping just to verify coms before proceeding
     ez_rsp = ezp_peripheral.send_and_wait(ezp_peripheral.CMD_PING)
@@ -142,13 +139,13 @@ if __name__ == '__main__':
 
     # clean everything up
     # disable spp mode by changing state of P13 of IF820
-    pp_peripheral.gpio_to_output(pp_peripheral.GPIO_16)
-    pp_peripheral.gpio_to_output_high(pp_peripheral.GPIO_16)
-    pp_peripheral.gpio_to_input(pp_peripheral.GPIO_16)
+    pp_peripheral.gpio_to_output(pp_peripheral.GPIO_19)
+    pp_peripheral.gpio_to_output_high(pp_peripheral.GPIO_19)
+    pp_peripheral.gpio_to_input(pp_peripheral.GPIO_19)
     pp_peripheral.close()
-    pp_central.gpio_to_output(pp_peripheral.GPIO_16)
-    pp_central.gpio_to_output_high(pp_peripheral.GPIO_16)
-    pp_central.gpio_to_input(pp_peripheral.GPIO_16)
+    pp_central.gpio_to_output(pp_peripheral.GPIO_19)
+    pp_central.gpio_to_output_high(pp_peripheral.GPIO_19)
+    pp_central.gpio_to_input(pp_peripheral.GPIO_19)
     pp_central.close()
     # close the open com ports
     sp_peripheral.close()
