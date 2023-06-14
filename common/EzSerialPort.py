@@ -474,3 +474,6 @@ class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands,
 
     def get_smp_commands(self):
         return SmpCommands()
+
+    def get_cyspp_commands(self):
+        return CYSPPCommands()
