@@ -43,8 +43,14 @@ Get Tx Power
     Send Command    ${ez_system_commands.CMD_GET_TX_POWER}
 
 Get Uart Params
-    # not working in binary mode Bug L220D100-32
-    Send Command    ${ez_system_commands.CMD_GET_UART_PARAMS}
+    # not working in binary mode Bug L2-46
+    FOR    ${api_mode}    IN    @{API_MODES}
+        ${res} =    IF820_Device.Send And Wait
+        ...    command=${ez_system_commands.CMD_GET_UART_PARAMS}
+        ...    apiformat=${api_mode}
+        ...    uart_type=${0}
+        Fail on error    ${res[0]}
+    END
 
 Get Transport
     Send Command    ${ez_system_commands.CMD_GET_TRANSPORT}
@@ -61,14 +67,14 @@ Factory Reset
 Test Setup
     Read Settings File
 
-    #Get instances of python libraries needed
+    # Get instances of python libraries needed
     ${lib_if820_device} =    Builtin.Get Library Instance    IF820_Device
     Set Global Variable    ${lib_if820_device}    ${lib_if820_device}
 
     ${ez_system_commands} =    IF820_Device.Get Sys Commands
     Set Global Variable    ${ez_system_commands}    ${ez_system_commands}
 
-    #open the serial port
+    # open the serial port
     IF820_Device.Close
     Sleep    ${1}
     IF820_Device.open    ${settings_comport_IF820_central}    ${lib_if820_device.IF820_DEFAULT_BAUD}
