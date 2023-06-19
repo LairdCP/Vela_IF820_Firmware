@@ -28,10 +28,6 @@ Query Firmware
 Get MAC Addr
     Send Command    ${ez_system_commands.CMD_GET_BT_ADDR}
 
-Get WCO Params
-    # not working Bug L220D100-31
-    Send Command    ${ez_system_commands.CMD_GET_WCO_PARAMS}
-
 Get Sleep Params
     Send Command    ${ez_system_commands.CMD_GET_SLEEP_PARAMS}
 
