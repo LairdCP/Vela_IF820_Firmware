@@ -28,10 +28,6 @@ Query Firmware
 Get MAC Addr
     Send Command    ${ez_system_commands.CMD_GET_BT_ADDR}
 
-Get ECO Params
-    # not working Bug L220D100-30
-    Send Command    ${ez_system_commands.CMD_GET_ECO_PARAMS}
-
 Get WCO Params
     # not working Bug L220D100-31
     Send Command    ${ez_system_commands.CMD_GET_WCO_PARAMS}
