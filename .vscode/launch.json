@@ -121,6 +121,23 @@
             ]
         },
         {
+            "name": "CYSPP IF820 -> BT900",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/sample_cyspp_IF820-BT900.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "-cp",
+                "${config:comport_BT900_device1}",
+                "-cc",
+                "${config:comport_IF820_device1}",
+                "-ppc",
+                "${config:id_pico_probe_device1}",
+                "-d"
+            ]
+        },
+        {
             "name": "Debug UART programmer",
             "type": "python",
             "request": "launch",

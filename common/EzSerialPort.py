@@ -202,6 +202,13 @@ class GattClientCommands:
     def CMD_GATTC_WRITE_HANDLE(self): return "gattc_write_handle"
     @property
     def EVENT_GATTC_DATA_RECEIVED(self): return "gattc_data_received"
+    @property
+    def EVENT_GATTC_DISCOVER_RESULT(self): return "gattc_discover_result"
+
+    @property
+    def EVENT_GATTC_REMOTE_PROCEDURE_COMPLETE(
+        self): return "gattc_remote_procedure_complete"
+
 
 class GpioCommands:
     @property
@@ -210,6 +217,7 @@ class GpioCommands:
     def CMD_GPIO_SET_LOGIC(self): return "gpio_set_logic"
     @property
     def CMD_GPIO_GET_LOGIC(self): return "gpio_get_logic"
+
 
 class GapAdvertMode(Enum):
     NA = 0  # TODO: This does not match the user guide
