@@ -16,26 +16,33 @@ Default Tags        vela if820
 ${MAC_ADDR_LEN}             ${6}
 ${lib_if820_device}         ${EMPTY}
 ${ez_system_commands}       ${EMPTY}
+${REBOOT_COUNT}             10
+${BOOT_DELAY_SECONDS}       3
 
 
 *** Test Cases ***
 Ping
+    Set Tags    L2-70
     Send Command    ${ez_system_commands.CMD_PING}
 
 Query Firmware
+    Set Tags    L2-71
     Send Command    ${ez_system_commands.CMD_QUERY_FW}
 
 Get MAC Addr
+    Set Tags    L2-162
     Send Command    ${ez_system_commands.CMD_GET_BT_ADDR}
 
 Get Sleep Params
+    Set Tags    L2-163
     Send Command    ${ez_system_commands.CMD_GET_SLEEP_PARAMS}
 
 Get Tx Power
+    Set Tags    L2-164
     Send Command    ${ez_system_commands.CMD_GET_TX_POWER}
 
 Get Uart Params
-    # not working in binary mode Bug L2-46
+    Set Tags    L2-165
     FOR    ${api_mode}    IN    @{API_MODES}
         ${res} =    IF820_Device.Send And Wait
         ...    command=${ez_system_commands.CMD_GET_UART_PARAMS}
@@ -45,13 +52,43 @@ Get Uart Params
     END
 
 Get Transport
+    Set Tags    L2-166
     Send Command    ${ez_system_commands.CMD_GET_TRANSPORT}
 
 Factory Reset
+    Set Tags    L2-65
     FOR    ${api_mode}    IN    @{API_MODES}
-        IF820_Device.Send    command=${ez_system_commands.CMD_FACTORY_RESET}    apiformat=${api_mode}
+        ${res} =    IF820_Device.Send And Wait
+        ...    command=${ez_system_commands.CMD_FACTORY_RESET}
+        ...    apiformat=${api_mode}
+        Fail on error    ${res[0]}
         ${res} =    IF820_Device.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
         Fail on error    ${res[0]}
+    END
+
+Reboot
+    Set Tags    L2-66
+    FOR    ${api_mode}    IN    @{API_MODES}
+        ${res} =    IF820_Device.Send And Wait
+        ...    command=${ez_system_commands.CMD_REBOOT}
+        ...    apiformat=${api_mode}
+        Fail on error    ${res[0]}
+        ${res} =    IF820_Device.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
+        Fail on error    ${res[0]}
+    END
+
+Reboot Loop
+    Set Tags    L2-167
+    FOR    ${api_mode}    IN    @{API_MODES}
+        FOR    ${counter}    IN RANGE    ${REBOOT_COUNT}
+            ${res} =    IF820_Device.Send And Wait
+            ...    command=${ez_system_commands.CMD_REBOOT}
+            ...    apiformat=${api_mode}
+            Fail on error    ${res[0]}
+            ${res} =    IF820_Device.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
+            Fail on error    ${res[0]}
+            Sleep    ${BOOT_DELAY_SECONDS}
+        END
     END
 
 
