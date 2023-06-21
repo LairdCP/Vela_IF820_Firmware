@@ -188,6 +188,21 @@
                 "-c",
                 "${config:comport_IF820_device1}"
             ],
+        },
+        {
+            "name": "Sleep Sample",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/sample_sleep.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "-cp",
+                "${config:comport_IF820_device1}",
+                "-ppp",
+                "${config:id_pico_probe_device2}",
+                "-d"
+            ],
         }
     ],
     "inputs": [
