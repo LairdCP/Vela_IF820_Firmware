@@ -363,7 +363,7 @@ class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands,
     def set_queue_timeout(self, timeout_sec):
         self.clear_queue_timeout_sec = timeout_sec
 
-    def open(self, portName: str, baud: int) -> tuple:
+    def open(self, portName: str, baud: int, ctsrts: bool = False) -> tuple:
         """Open the serial port and init the EZ-Serial API
 
         Args:
@@ -381,6 +381,7 @@ class EzSerialPort(AppLogging, SystemCommands, BluetoothCommands,
         self.ez = ez_serial.API(hardwareOutput=self.__write_bytes,
                                 hardwareInput=self.__read_bytes)
         self.port = serial.Serial(portName, baud)
+        self.port.rtscts = ctsrts
         self.port.timeout = None
         self.port.reset_input_buffer()
         self.port.reset_output_buffer()

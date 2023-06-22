@@ -5,14 +5,17 @@ Library     OperatingSystem
 *** Variables ***
 ${API_MODE_TEXT}                            ${0}
 ${API_MODE_BINARY}                          ${1}
+${UART_FLOW_CNTRL_NONE}                     ${0}
+${UART_FLOW_CNTRL_ENABLE}                   ${1}
 ${DEFAULT_RX_TIMEOUT}                       ${1}
 ${CLEAR_QUEUE_TIMEOUT_SEC}                  ${2}
 ${ERROR_DEVICE_TYPE}                        Error! Device type not found!
 ${BOOT_DELAY_SECONDS}                       ${3}
 @{API_MODES}                                ${API_MODE_TEXT}    ${API_MODE_BINARY}
+@{UART_FLOW_TYPES}                          ${UART_FLOW_CNTRL_NONE}    ${UART_FLOW_CNTRL_ENABLE}
 ${settings}                                 ${EMPTY}
 
-#global variables
+# global variables
 ${settings_comport_IF820_central}           ${EMPTY}
 ${settings_comport_IF820_peripheral}        ${EMPTY}
 ${settings_hci_port_IF820_central}          ${EMPTY}
