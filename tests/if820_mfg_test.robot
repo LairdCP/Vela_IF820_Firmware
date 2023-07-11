@@ -96,7 +96,7 @@ Program firmware
         ...    ${MINI_DRIVER}
         ...    ${settings_hci_port_IF820_central}
         ...    ${lib_if820_device.IF820_DEFAULT_BAUD}
-        IF820_Programmer.Program Firmware    ${PROGRAM_BAUD_RATE}    ${FIRMWARE}
+        IF820_Programmer.Program Firmware    ${PROGRAM_BAUD_RATE}    ${FIRMWARE}    ${True}
     END
     # Reset the module to boot the firmware
     PicoProbe.Reset Device

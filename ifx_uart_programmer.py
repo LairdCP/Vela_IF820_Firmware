@@ -16,11 +16,13 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--minidriver',
                         required=True, help="minidriver hex file")
     parser.add_argument('-f', '--file',
-                        required=True, help="hex file to program")
+                        required=False, help="hex file to program")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
     parser.add_argument('--flash_baud', type=int, default=3000000,
                         help="Baud rate used to flash firmware")
+    parser.add_argument('-ce', '--chip_erase', required=False, default=False, action='store_true',
+                        help="perform full chip erase.")
 
     logging.basicConfig(
         format='%(asctime)s | %(name)s | %(levelname)s | %(message)s', level=logging.INFO)
@@ -36,8 +38,9 @@ if __name__ == '__main__':
     baud = args.baud
     firmware = args.file
     flash_baud = args.flash_baud
+    chip_erase = args.chip_erase
 
-    p = programmer.HciProgrammer(mini_driver, com_port, baud)
+    p = programmer.HciProgrammer(mini_driver, com_port, baud, chip_erase)
     if args.debug:
         logging.getLogger(LOG_MODULE_HCI_PORT).setLevel(logging.DEBUG)
-    p.program_firmware(flash_baud, firmware)
+    p.program_firmware(flash_baud, firmware, chip_erase)

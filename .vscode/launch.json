@@ -138,7 +138,7 @@
             ]
         },
         {
-            "name": "Debug UART programmer",
+            "name": "UART programmer, chip erase",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/ifx_uart_programmer.py",
@@ -154,10 +154,11 @@
                 "${config:mini_driver}",
                 "-f",
                 "${config:ezserial_firmware}",
+                "-ce"
             ]
         },
         {
-            "name": "Debug UART programmer",
+            "name": "UART programmer, no chip erase",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/ifx_uart_programmer.py",
@@ -172,7 +173,25 @@
                 "-m",
                 "${config:mini_driver}",
                 "-f",
-                "${config:ezserial_firmware}",
+                "${config:ezserial_firmware}"
+            ]
+        },
+        {
+            "name": "Chip erase",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/ifx_uart_programmer.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "-d",
+                "-c",
+                "${config:hci_port_IF820_device1}",
+                "-b",
+                "${config:default_baud}",
+                "-m",
+                "${config:mini_driver}",
+                "-ce"
             ]
         },
         {
@@ -216,6 +235,6 @@
                 "advertiser_tx_power",
             ],
             "default": "advertiser",
-        },
+        }
     ]
 }

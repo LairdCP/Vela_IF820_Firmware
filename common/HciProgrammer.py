@@ -14,12 +14,13 @@ class HciProgrammer():
     FLASH_SIZE = 256 * 1024
     LAUNCH_FIRMWARE_ADDR = 0x00000000
 
-    def __init__(self, mini_driver: str = '', port: str = '', baud_rate: int = 0):
+    def __init__(self, mini_driver: str = '', port: str = '', baud_rate: int = 0, chip_erase: bool = False):
         self.mini_driver_path = mini_driver
         self.hci_port = hci.HciSerialPort()
         self.hci_port.configure_app_logging(self.hci_port.INFO)
         self.com_port = port
         self.baud_rate = baud_rate
+        self.chip_erase_enable = chip_erase
 
     def __load_mini_driver(self):
         """Loads the mini driver into RAM to provide chip erase, change baud and CRC functions
@@ -36,24 +37,21 @@ class HciProgrammer():
         self.hci_port.send_launch_ram(self.MINIDRIVER_LOAD_ADDR)
         pass
 
-    def init(self, mini_driver: str, port: str, baud_rate: int):
-        self.__init__(mini_driver, port, baud_rate)
+    def init(self, mini_driver: str, port: str, baud_rate: int, chip_erase: bool = False):
+        self.__init__(mini_driver, port, baud_rate, chip_erase)
 
-    def chip_erase(self, close_port: bool = True):
-        """Erase entire flash contents
-
-        Args:
-            close_port (bool, optional): close the COM port after erasing. Defaults to True.
-        """
-        logging.info('Performing chip erase...')
+    def open_com_init_mini_driver(self):
         self.hci_port.open(self.com_port, self.baud_rate)
         self.__load_mini_driver()
+
+    def chip_erase(self):
+        """Erase entire flash contents
+        """
+        logging.info('Performing chip erase...')
         self.hci_port.send_chip_erase()
-        if close_port:
-            self.hci_port.close()
         logging.info('Chip erase finished')
 
-    def program_firmware(self, baud_rate: int, file_path: str):
+    def program_firmware(self, baud_rate: int, file_path: str, chip_erase_enable: bool = False):
         """Program the firmware file
 
         Args:
@@ -64,21 +62,31 @@ class HciProgrammer():
             Exception: raise exception on error
         """
         logging.info('Programming firmware...')
-        self.chip_erase(False)
-        logging.info('Writing firmware...')
-        self.hci_port.change_baud_rate(baud_rate)
-        # Write SS section
-        ss_bin = io.BytesIO()
-        if intelhex.hex2bin(file_path, ss_bin, start=self.SS_ADDR, size=self.SS_LEN, pad=self.hci_port.FLASH_PAD):
-            raise Exception('Could not create SS binary')
-        self.hci_port.write_ram(self.SS_ADDR, ss_bin, verify=True)
-        # Write DS section
-        ds_bin = io.BytesIO()
-        ds_len = self.FLASH_SIZE-self.SS_LEN
-        if intelhex.hex2bin(file_path, ds_bin, start=self.DS_ADDR, size=ds_len, pad=self.hci_port.FLASH_PAD):
-            raise Exception('Could not create DS binary')
-        self.hci_port.write_ram(self.DS_ADDR, ds_bin, verify=True)
+        self.open_com_init_mini_driver()
 
-        self.hci_port.send_launch_ram(self.LAUNCH_FIRMWARE_ADDR)
-        logging.info('Finished programming firmware')
-        self.hci_port.close()
+        if chip_erase_enable:
+            logging.info('Erasing chip...')
+            self.chip_erase()
+
+        if file_path:
+            logging.info('Changing baud to 3mbps...')
+            self.hci_port.change_baud_rate(baud_rate)
+
+            # Write SS section
+            if chip_erase_enable:
+                logging.info("Writing SS section...")
+                ss_bin = io.BytesIO()
+                if intelhex.hex2bin(file_path, ss_bin, start=self.SS_ADDR, size=self.SS_LEN, pad=self.hci_port.FLASH_PAD):
+                    raise Exception('Could not create SS binary')
+                self.hci_port.write_ram(self.SS_ADDR, ss_bin, verify=True)
+
+            # Write DS section
+            logging.info("Writing DS section...")
+            ds_bin = io.BytesIO()
+            ds_len = self.FLASH_SIZE-self.SS_LEN
+            if intelhex.hex2bin(file_path, ds_bin, start=self.DS_ADDR, size=ds_len, pad=self.hci_port.FLASH_PAD):
+                raise Exception('Could not create DS binary')
+            self.hci_port.write_ram(self.DS_ADDR, ds_bin, verify=True)
+            self.hci_port.send_launch_ram(self.LAUNCH_FIRMWARE_ADDR)
+            logging.info('Finished programming firmware')
+            self.hci_port.close()
