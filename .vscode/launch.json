@@ -70,7 +70,7 @@
             ]
         },
         {
-            "name": "IF820 -> BT900",
+            "name": "SPP IF820 -> BT900",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/sample_spp_IF820-BT900.py",

@@ -1,3 +1,4 @@
 hci==0.0.8
 intelhex==2.3.0
 pyserial==3.5
+pyocd==0.35.1

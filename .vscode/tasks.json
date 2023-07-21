@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run UART programmer",
+            "label": "Run UART programmer no chip erase",
             "type": "shell",
             "command": "python3",
             "args": [
@@ -21,6 +21,40 @@
             "problemMatcher": []
         },
         {
+            "label": "Run UART programmer with chip erase",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/ifx_uart_programmer.py",
+                "-c",
+                "${config:hci_port_IF820_device1}",
+                "-b",
+                "${config:default_baud}",
+                "-m",
+                "${config:mini_driver}",
+                "-f",
+                "${config:ezserial_firmware}",
+                "-ce"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run chip erase",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/ifx_uart_programmer.py",
+                "-c",
+                "${config:hci_port_IF820_device1}",
+                "-b",
+                "${config:default_baud}",
+                "-m",
+                "${config:mini_driver}",
+                "-ce"
+            ],
+            "problemMatcher": []
+        },
+        {
             "label": "Run BLE Sample",
             "type": "shell",
             "command": "python3",
@@ -33,6 +67,117 @@
             ],
             "problemMatcher": []
         },
+        {
+            "label": "Run CYSPP IF820->IF820",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/sample_cyspp_IF820-IF820.py",
+                "-cp",
+                "${config:comport_IF820_device1}",
+                "-cc",
+                "${config:comport_IF820_device2}",
+                "-ppp",
+                "${config:id_pico_probe_device1}",
+                "-ppc",
+                "${config:id_pico_probe_device2}",
+                "-d"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run CYSPP BT900 -> IF820",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/sample_cyspp_BT900-IF820.py",
+                "-cp",
+                "${config:comport_IF820_device1}",
+                "-cc",
+                "${config:comport_BT900_device1}",
+                "-ppc",
+                "${config:id_pico_probe_device1}",
+                "-d"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run CYSPP IF820 -> BT900",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/sample_cyspp_IF820-BT900.py",
+                "-cp",
+                "${config:comport_BT900_device1}",
+                "-cc",
+                "${config:comport_IF820_device1}",
+                "-ppc",
+                "${config:id_pico_probe_device1}",
+                "-d"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run SPP IF820->IF820",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/sample_spp_IF820-IF820.py",
+                "-cp",
+                "${config:comport_IF820_device1}",
+                "-cc",
+                "${config:comport_IF820_device2}",
+                "-ppp",
+                "${config:id_pico_probe_device1}",
+                "-ppc",
+                "${config:id_pico_probe_device2}",
+                "-d"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run SPP IF820 -> BT900",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/sample_spp_IF820-BT900.py",
+                "-cp",
+                "${config:comport_BT900_device1}",
+                "-cc",
+                "${config:comport_IF820_device1}",
+                "-ppc",
+                "${config:id_pico_probe_device1}",
+                "-d"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run SPP BT900 -> IF820",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/sample_spp_BT900-IF820.py",
+                "-cp",
+                "${config:comport_IF820_device1}",
+                "-cc",
+                "${config:comport_BT900_device1}",
+                "-ppc",
+                "${config:id_pico_probe_device1}",
+                "-d"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Ping",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/sample_ping.py",
+                "-c",
+                "${config:comport_IF820_device1}"
+            ],
+            "problemMatcher": []
+        }
     ],
     "inputs": [
         {
