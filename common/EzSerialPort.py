@@ -3,10 +3,8 @@ import time
 import serial
 import threading
 import queue
-import sys
 from common.AppLogging import AppLogging
 from enum import Enum
-sys.path.append("..")  # Adds parent directory to python modules path
 
 CLEAR_QUEUE_TIMEOUT_DEFAULT = 0.1
 SUCCESS = 0

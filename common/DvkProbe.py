@@ -2,6 +2,8 @@ import logging
 import time
 import ctypes as c
 from pyocd.probe.pydapaccess import DAPAccessCMSISDAP
+import serial.tools.list_ports as list_ports
+import operator
 
 SET_IO_DIR_CMD = 31
 SET_IO_CMD = 30
@@ -19,6 +21,8 @@ PROBE_SETTING_TARGET_DEVICE_VENDOR = 'ARM'
 PROBE_SETTING_TARGET_DEVICE_NAME = 'cortex_m'
 PROBE_SETTING_BOARD_VENDOR = 'Laird Connectivity'
 PROBE_SETTING_BOARD_NAME = 'IF820'
+PROBE_VENDOR_STRING = 'Laird Connectivity'
+PROBE_PRODUCT_STRING = 'DVK Probe CMSIS-DAP'
 
 
 class ProbeSettings(c.Structure):
@@ -62,11 +66,80 @@ class DvkProbe:
     GPIO_28 = 28
 
     def __init__(self):
-        for probe in DAPAccessCMSISDAP.get_connected_devices():
-            logging.debug(f'Found probe: {probe.vendor_name}')
+        self._id = None
+        self._ports = []
 
-    def open(self, device_id: str):
-        self.probe = DAPAccessCMSISDAP(device_id)
+    @staticmethod
+    def get_connected_probes() -> list['DvkProbe']:
+        """Get a list of all connected probes.
+
+        Returns:
+            List: List of DVK probes
+        """
+        probes = []
+        for dap_probe in DAPAccessCMSISDAP.get_connected_devices():
+            if dap_probe.vendor_name == PROBE_VENDOR_STRING and dap_probe.product_name == PROBE_PRODUCT_STRING:
+                com_ports = list()
+                probe = DvkProbe()
+                probe.id = dap_probe._unique_id
+                logging.debug(f'Found probe {probe.id}')
+
+                for comport in list_ports.comports():
+                    if probe.id == comport.serial_number:
+                        logging.debug(
+                            f'Found probe COM port {comport.device} [{comport.serial_number}]')
+                        com_ports.append(comport)
+                    else:
+                        logging.debug(
+                            f'COM port {comport.device} [{comport.serial_number}]')
+
+                com_ports.sort(key=operator.attrgetter('location', 'device'))
+                if len(com_ports) < 2:
+                    logging.warning(
+                        f'No COM ports found for probe {probe.id}, skipping this probe')
+                    continue
+
+                probe.ports = com_ports
+                probes.append(probe)
+        return probes
+
+    @property
+    def id(self):
+        """Unique ID/Serial number of the probe
+
+        Returns:
+            string: serial number
+        """
+        return self._id
+
+    @id.setter
+    def id(self, i: str):
+        self._id = i
+
+    @property
+    def ports(self):
+        """List of COM ports associated with the probe
+
+        Returns:
+            List: COM port information
+        """
+        return self._ports
+
+    @ports.setter
+    def ports(self, p: list):
+        self._ports = p
+
+    def open(self, device_id: str = str()):
+        """Open the connection to communicate over USB
+
+        Args:
+            device_id (str, optional): Unique ID of the device. Defaults to str().
+            If not specified, use the ID already assigned to the probe.
+        """
+        if not device_id:
+            self.probe = DAPAccessCMSISDAP(self.id)
+        else:
+            self.probe = DAPAccessCMSISDAP(device_id)
         self.probe.open()
 
     def is_open(self):
@@ -82,17 +155,21 @@ class DvkProbe:
         res = self.probe.vendor(READ_IO_CMD, [gpio])
         return res[0]
 
-    def gpio_to_input(self,  gpio: int):
+    def gpio_to_input(self, gpio: int):
         res = self.probe.vendor(SET_IO_DIR_CMD, [gpio, INPUT])
+        return res[0]
 
-    def gpio_to_output(self,  gpio: int):
+    def gpio_to_output(self, gpio: int):
         res = self.probe.vendor(SET_IO_DIR_CMD, [gpio, OUTPUT])
+        return res[0]
 
-    def gpio_to_output_low(self,  gpio: int):
+    def gpio_to_output_low(self, gpio: int):
         res = self.probe.vendor(SET_IO_CMD, [gpio, LOW])
+        return res[0]
 
-    def gpio_to_output_high(self,  gpio: int):
+    def gpio_to_output_high(self, gpio: int):
         res = self.probe.vendor(SET_IO_CMD, [gpio, HIGH])
+        return res[0]
 
     def get_dap_info(self, id: int):
         result = self.probe.identify(DAPAccessCMSISDAP.ID(id))

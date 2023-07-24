@@ -2,15 +2,12 @@ import time
 import serial
 import threading
 import queue
-import sys
 import io
 import zlib
 import hci
 import hci.command
 import hci.event
 from common.AppLogging import AppLogging
-
-sys.path.append("..")  # Adds parent directory to python modules path
 
 
 class HciSerialPort(AppLogging):
