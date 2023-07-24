@@ -5,7 +5,7 @@ import time
 import sys
 import common.EzSerialPort as ez_port
 import common.SerialPort as serial_port
-import common.PicoProbe as pico_probe
+import common.DvkProbe as pico_probe
 from common.CommonLib import CommonLib
 from common.AppLogging import AppLogging
 from ezserial_host_api.ezslib import Packet
@@ -53,7 +53,7 @@ if __name__ == '__main__':
         raise Exception(
             f"Error!  Unable to open ez_peripheral at {args.connection_p}")
 
-    pp_peripheral = pico_probe.PicoProbe()
+    pp_peripheral = pico_probe.DvkProbe()
     pp_peripheral.open(args.picoprobe_p)
     if (not pp_peripheral.is_open):
         app_logger.app_log_critical("Unable to open Pico Probe.")

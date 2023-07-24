@@ -2,7 +2,7 @@
 Documentation       IF820 Manufacturing Test
 ...                 This test will continue to loop to test IF820 modules
 
-Library             ..${/}common${/}PicoProbe.py
+Library             ..${/}common${/}DvkProbe.py
 Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Device
 Library             ..${/}common${/}HciProgrammer.py    WITH NAME    IF820_Programmer
 Library             ..${/}common${/}HciSerialPort.py    WITH NAME    IF820_HciPort
@@ -84,12 +84,12 @@ Log Result
 Program firmware
     [Timeout]    ${PROGRAM_FIRMWARE_TIMEOUT}
     [Arguments]    ${skip}=${False}
-    PicoProbe.Open    ${settings_id_pp_central}
+    DvkProbe.Open    ${settings_id_pp_central}
     IF    not ${skip}
         # Set module HCI CTS low to enter programming mode
         IF820_HciPort.open    ${settings_hci_port_IF820_central}    ${lib_if820_device.IF820_DEFAULT_BAUD}
         # Reset the module to enter programming mode
-        PicoProbe.Reset Device
+        DvkProbe.Reset Device
         # Close the HCI serial port so the programmer can open it
         IF820_HciPort.Close
         IF820_Programmer.Init
@@ -99,8 +99,8 @@ Program firmware
         IF820_Programmer.Program Firmware    ${PROGRAM_BAUD_RATE}    ${FIRMWARE}    ${True}
     END
     # Reset the module to boot the firmware
-    PicoProbe.Reset Device
-    PicoProbe.Close
+    DvkProbe.Reset Device
+    DvkProbe.Close
     # Open the serial connection to communicate with EZ-Serial
     IF820_Device.Open    ${settings_comport_IF820_central}    ${lib_if820_device.IF820_DEFAULT_BAUD}
     # Wait for the module to boot

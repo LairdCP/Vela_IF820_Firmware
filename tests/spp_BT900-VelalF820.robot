@@ -2,7 +2,7 @@
 Documentation       SPP tests with Vela IF820 devices.
 
 Library             OperatingSystem
-Library             ..${/}common${/}PicoProbe.py    WITH NAME    PP_Peripheral
+Library             ..${/}common${/}DvkProbe.py    WITH NAME    PP_Peripheral
 Library             ..${/}common${/}BT900SerialPort.py    WITH NAME    BT900_Central
 Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
 Library             ..${/}common${/}SerialPort.py    WITH NAME    IF820_SPP

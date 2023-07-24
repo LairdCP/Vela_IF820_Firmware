@@ -31,7 +31,7 @@ class ProbeSettings(c.Structure):
     ]
 
 
-class PicoProbe:
+class DvkProbe:
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
 
     GPIO_00 = 0

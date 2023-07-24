@@ -1,8 +1,8 @@
 *** Settings ***
 Documentation       CYSPP tests with Vela IF820 devices.
 
-Library             ..${/}common${/}PicoProbe.py    WITH NAME    PP_Peripheral
-Library             ..${/}common${/}PicoProbe.py    WITH NAME    PP_Central
+Library             ..${/}common${/}DvkProbe.py    WITH NAME    PP_Peripheral
+Library             ..${/}common${/}DvkProbe.py    WITH NAME    PP_Central
 Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Central
 Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
 Library             ..${/}common${/}SerialPort.py    WITH NAME    IF820_Central_CYSPP

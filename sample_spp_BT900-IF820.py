@@ -5,7 +5,7 @@ import logging
 import time
 import common.EzSerialPort as ez_port
 import common.SerialPort as serial_port
-import common.PicoProbe as pico_probe
+import common.DvkProbe as pico_probe
 from common.BT900SerialPort import BT900SerialPort
 from common.AppLogging import AppLogging
 from common.CommonLib import CommonLib
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     if820_peripheral.set_queue_timeout(5)
 
     # Pico Probe attached to peripheral
-    pp_peripheral = pico_probe.PicoProbe()
+    pp_peripheral = pico_probe.DvkProbe()
     pp_peripheral.open(args.picoprobe_c)
     if (not pp_peripheral.is_open):
         app_logger.app_log_critical("Unable to open Pico Probe.")
