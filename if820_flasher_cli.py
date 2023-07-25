@@ -2,45 +2,74 @@
 
 import argparse
 import logging
+import textwrap
+import os
+import sys
 
-import common.HciProgrammer as programmer
+from common.HciProgrammer import HciProgrammer
+from common.If820Board import If820Board
 
 LOG_MODULE_HCI_PORT = 'hci_port'
 
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(
+        os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='if820_flasher_cli',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=textwrap.dedent('''\
+        CLI tool to flash an IF820 board (or compatible boards) with new firmware.
+        If no COM port is specified, the tool will automatically detect the board and flash it.
+        If there is more than one board detected, the user will be prompted to select the board to flash.
+        The CLI supports chip erase, firmware update, and flashing firmware with chip erase.
+                                        '''))
     parser.add_argument('-c', '--connection',
-                        required=True, help="COM port to use")
-    parser.add_argument('-b', '--baud', type=int,
-                        required=True, help="Initial baud rate to start communication")
-    parser.add_argument('-m', '--minidriver',
-                        required=True, help="minidriver hex file")
-    parser.add_argument('-f', '--file',
-                        required=False, help="hex file to program")
+                        type=str, default=str(), help="HCI COM port")
+    parser.add_argument('-ce', '--chip_erase', action='store_true',
+                        help="perform full chip erase.")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    parser.add_argument('--flash_baud', type=int, default=3000000,
-                        help="Baud rate used to flash firmware")
-    parser.add_argument('-ce', '--chip_erase', required=False, default=False, action='store_true',
-                        help="perform full chip erase.")
+    parser.add_argument('-f', '--file',
+                        help="application hex file to flash")
 
     logging.basicConfig(
-        format='%(asctime)s | %(name)s | %(levelname)s | %(message)s', level=logging.INFO)
+        format='%(asctime)s | %(levelname)s | %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.info("Debugging mode disabled")
 
-    mini_driver = args.minidriver
+    mini_driver = resource_path(
+        'files/minidriver-20820A1-uart-patchram.hex')
     com_port = args.connection
-    baud = args.baud
     firmware = args.file
-    flash_baud = args.flash_baud
     chip_erase = args.chip_erase
 
-    p = programmer.HciProgrammer(mini_driver, com_port, baud, chip_erase)
-    if args.debug:
-        logging.getLogger(LOG_MODULE_HCI_PORT).setLevel(logging.DEBUG)
-    p.program_firmware(flash_baud, firmware, chip_erase)
+    # If the user specifies a COM port, flash firmware in manual mode
+    if com_port:
+        input("Ensure the board is in HCI download mode and press enter to continue...")
+        p = HciProgrammer(mini_driver, com_port,
+                          HciProgrammer.HCI_DEFAULT_BAUDRATE, chip_erase)
+        if args.debug:
+            logging.getLogger(LOG_MODULE_HCI_PORT).setLevel(logging.DEBUG)
+        p.program_firmware(
+            HciProgrammer.HCI_FLASH_FIRMWARE_BAUDRATE, firmware, chip_erase)
+    else:
+        boards = If820Board.get_connected_boards()
+        if len(boards) == 0:
+            logging.error("No boards found")
+            exit(1)
+
+        choice = 0
+        if len(boards) > 1:
+            print("Which board do you want to flash?")
+            for i, board in enumerate(boards):
+                print(f"{i}: {board.probe.id}")
+            choice = int(input("Enter the number of the board: "))
+        board = boards[choice]
+        board.flash_firmware(mini_driver, firmware, chip_erase)

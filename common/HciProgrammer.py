@@ -13,6 +13,8 @@ class HciProgrammer():
     DS_ADDR = 0x501400
     FLASH_SIZE = 256 * 1024
     LAUNCH_FIRMWARE_ADDR = 0x00000000
+    HCI_DEFAULT_BAUDRATE = 115200
+    HCI_FLASH_FIRMWARE_BAUDRATE = 3000000
 
     def __init__(self, mini_driver: str = '', port: str = '', baud_rate: int = 0, chip_erase: bool = False):
         self.mini_driver_path = mini_driver
@@ -61,8 +63,12 @@ class HciProgrammer():
         Raises:
             Exception: raise exception on error
         """
-        logging.info('Programming firmware...')
-        self.open_com_init_mini_driver()
+        if chip_erase_enable or file_path:
+            logging.info('Programming firmware...')
+            self.open_com_init_mini_driver()
+        else:
+            logging.info('No firmware or chip erase specified, exiting')
+            return
 
         if chip_erase_enable:
             logging.info('Erasing chip...')

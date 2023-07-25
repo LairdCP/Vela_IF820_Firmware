@@ -1,8 +1,7 @@
 import logging
 from common.DvkProbe import DvkProbe
 from common.HciSerialPort import HciSerialPort
-
-HCI_DEFAULT_BAUDRATE = 115200
+from common.HciProgrammer import HciProgrammer
 
 ERR_OK = 0
 ERR_BOARD_NOT_FOUND = -1
@@ -92,9 +91,20 @@ class If820Board(DvkProbe):
 
         hci = HciSerialPort()
         logging.debug(f"Opening HCI port {board.hci_port}")
-        hci.open(board.hci_port, HCI_DEFAULT_BAUDRATE)
+        hci.open(board.hci_port, HciProgrammer.HCI_DEFAULT_BAUDRATE)
         board.probe.open()
         board.probe.reset_device()
         board.probe.close()
         hci.close()
+        return ERR_OK
+
+    def flash_firmware(self, minidriver: str, firmware: str, chip_erase: bool = False) -> int:
+        res = self.enter_hci_download_mode()
+        if res != ERR_OK:
+            raise Exception("Failed to enter HCI download mode")
+
+        p = HciProgrammer(minidriver, self.hci_port,
+                          HciProgrammer.HCI_DEFAULT_BAUDRATE, chip_erase)
+        p.program_firmware(
+            HciProgrammer.HCI_FLASH_FIRMWARE_BAUDRATE, firmware, chip_erase)
         return ERR_OK
