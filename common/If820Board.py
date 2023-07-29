@@ -103,8 +103,11 @@ class If820Board(DvkProbe):
         if res != ERR_OK:
             raise Exception("Failed to enter HCI download mode")
 
-        p = HciProgrammer(minidriver, self.hci_port,
-                          HciProgrammer.HCI_DEFAULT_BAUDRATE, chip_erase)
-        p.program_firmware(
+        self.hci_programmer = HciProgrammer(minidriver, self.hci_port,
+                                            HciProgrammer.HCI_DEFAULT_BAUDRATE, chip_erase)
+        self.hci_programmer.program_firmware(
             HciProgrammer.HCI_FLASH_FIRMWARE_BAUDRATE, firmware, chip_erase)
         return ERR_OK
+
+    def cancel_flash_firmware(self):
+        self.hci_programmer.hci_port.close()
