@@ -146,12 +146,6 @@
             "justMyCode": true,
             "args": [
                 "-d",
-                "-c",
-                "${config:hci_port_IF820_device1}",
-                "-b",
-                "${config:default_baud}",
-                "-m",
-                "${config:mini_driver}",
                 "-f",
                 "${config:ezserial_firmware}",
                 "-ce"
@@ -166,12 +160,6 @@
             "justMyCode": true,
             "args": [
                 "-d",
-                "-c",
-                "${config:hci_port_IF820_device1}",
-                "-b",
-                "${config:default_baud}",
-                "-m",
-                "${config:mini_driver}",
                 "-f",
                 "${config:ezserial_firmware}"
             ]
@@ -185,12 +173,6 @@
             "justMyCode": true,
             "args": [
                 "-d",
-                "-c",
-                "${config:hci_port_IF820_device1}",
-                "-b",
-                "${config:default_baud}",
-                "-m",
-                "${config:mini_driver}",
                 "-ce"
             ]
         },

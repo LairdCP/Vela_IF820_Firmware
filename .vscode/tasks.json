@@ -4,34 +4,22 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run UART programmer no chip erase",
+            "label": "Flash EZ-Serial [no chip erase]",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
-                "${workspaceFolder}/ifx_uart_programmer.py",
-                "-c",
-                "${config:hci_port_IF820_device1}",
-                "-b",
-                "${config:default_baud}",
-                "-m",
-                "${config:mini_driver}",
+                "if820_flasher_cli.py",
                 "-f",
                 "${config:ezserial_firmware}",
             ],
             "problemMatcher": []
         },
         {
-            "label": "Run UART programmer with chip erase",
+            "label": "Flash EZ-Serial [with chip erase]",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
-                "${workspaceFolder}/ifx_uart_programmer.py",
-                "-c",
-                "${config:hci_port_IF820_device1}",
-                "-b",
-                "${config:default_baud}",
-                "-m",
-                "${config:mini_driver}",
+                "${workspaceFolder}/if820_flasher_cli.py",
                 "-f",
                 "${config:ezserial_firmware}",
                 "-ce"
@@ -41,15 +29,9 @@
         {
             "label": "Run chip erase",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
-                "${workspaceFolder}/ifx_uart_programmer.py",
-                "-c",
-                "${config:hci_port_IF820_device1}",
-                "-b",
-                "${config:default_baud}",
-                "-m",
-                "${config:mini_driver}",
+                "${workspaceFolder}/if820_flasher_cli.py",
                 "-ce"
             ],
             "problemMatcher": []
@@ -57,7 +39,7 @@
         {
             "label": "Run BLE Sample",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
                 "${workspaceFolder}/sample_${input:ble_sample}.py",
                 "-p",
@@ -70,7 +52,7 @@
         {
             "label": "Run CYSPP IF820->IF820",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
                 "${workspaceFolder}/sample_cyspp_IF820-IF820.py",
                 "-cp",
@@ -88,7 +70,7 @@
         {
             "label": "Run CYSPP BT900 -> IF820",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
                 "${workspaceFolder}/sample_cyspp_BT900-IF820.py",
                 "-cp",
@@ -104,7 +86,7 @@
         {
             "label": "Run CYSPP IF820 -> BT900",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
                 "${workspaceFolder}/sample_cyspp_IF820-BT900.py",
                 "-cp",
@@ -120,7 +102,7 @@
         {
             "label": "Run SPP IF820->IF820",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
                 "${workspaceFolder}/sample_spp_IF820-IF820.py",
                 "-cp",
@@ -138,8 +120,8 @@
         {
             "label": "Run SPP IF820 -> BT900",
             "type": "shell",
-            "command": "python3",
-            "args": [
+            "command": "python",
+           "args": [
                 "${workspaceFolder}/sample_spp_IF820-BT900.py",
                 "-cp",
                 "${config:comport_BT900_device1}",
@@ -154,7 +136,7 @@
         {
             "label": "Run SPP BT900 -> IF820",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
                 "${workspaceFolder}/sample_spp_BT900-IF820.py",
                 "-cp",
@@ -170,9 +152,9 @@
         {
             "label": "Ping",
             "type": "shell",
-            "command": "python3",
+            "command": "python",
             "args": [
-                "${workspaceFolder}/sample_ping.py",
+                "sample_ping.py",
                 "-c",
                 "${config:comport_IF820_device1}"
             ],

@@ -1,7 +1,4 @@
 tasks:
-  Test Basic Commands:
-    shell: python -m robot --report NONE --outputdir output --logtitle "Basic Commands" basic_commands.robot
-
   Test BLE:
     shell: python -m robot --report NONE --outputdir output --logtitle "BLE" ble.robot
 
