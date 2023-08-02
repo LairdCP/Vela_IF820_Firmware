@@ -10,6 +10,32 @@ ERR_BOARD_NOT_FOUND = -1
 class If820Board(DvkProbe):
 
     @staticmethod
+    def get_board():
+        """Helper method to get a single board, or prompt user to select a board
+        in the case of multiples.
+
+        Returns:
+        Board to connect to.
+        """
+        board = None
+        boards = If820Board.get_connected_boards()
+        if len(boards) == 0:
+            raise Exception(
+                f"Error!  No Boards found.")
+
+        choice = 0
+        if len(boards) > 1:
+            print("Which board do you want to use?")
+            for i, board in enumerate(boards):
+                print(f"{i}: {board.probe.id}")
+            choice = int(input("Enter the number of the board: "))
+        if choice > (len(boards) - 1):
+            raise Exception(
+                f"Error!  Invalid Board Number.")
+
+        return boards[choice]
+
+    @staticmethod
     def get_connected_boards() -> list['If820Board']:
         """Get a list of all connected boards.
 

@@ -121,7 +121,7 @@
             "label": "Run SPP IF820 -> BT900",
             "type": "shell",
             "command": "python",
-           "args": [
+            "args": [
                 "${workspaceFolder}/sample_spp_IF820-BT900.py",
                 "-cp",
                 "${config:comport_BT900_device1}",
@@ -154,9 +154,7 @@
             "type": "shell",
             "command": "python",
             "args": [
-                "sample_ping.py",
-                "-c",
-                "${config:comport_IF820_device1}"
+                "sample_ping.py"
             ],
             "problemMatcher": []
         }

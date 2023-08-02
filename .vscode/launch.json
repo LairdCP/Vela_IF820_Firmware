@@ -19,6 +19,17 @@
             ]
         },
         {
+            "name": "Ping",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/sample_ping.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "-d"
+            ]
+        },
+        {
             "name": "SPP IF820->IF820",
             "type": "python",
             "request": "launch",

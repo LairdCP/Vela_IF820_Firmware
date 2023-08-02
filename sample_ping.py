@@ -1,13 +1,17 @@
-#!/usr/bin/env python3
-
 import argparse
 import logging
 import common.EzSerialPort as ez_port
+from common.If820Board import If820Board
+
+"""
+Hardware Setup
+This sample requires the following hardware:
+-IF820 connected to PC via USB
+-Jumpers on PUART_TXD, PUART_RXD must be installed.
+"""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--connection',
-                        required=True, help="COM port to use")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
     logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
@@ -18,10 +22,17 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
+    board = If820Board.get_board()
+    logging.info(f'Port Name: {board.puart_port}')
+
     ezp = ez_port.EzSerialPort()
-    ezp.open(args.connection, 115200)
-    res = ezp.send_and_wait('system_ping')
+    open_result = ezp.open(board.puart_port, ezp.IF820_DEFAULT_BAUD)
+    if (not open_result):
+        raise Exception(
+            f"Error!  Unable to open ez_peripheral at {board.puart_port}")
+
+    res = ezp.send_and_wait(ezp.CMD_PING)
     if res[0] == 0:
-        logging.info(f'Ping result: {res}')
+        logging.info(f'Ping result success: {res}')
     else:
-        logging.error(f'Response err: {res}')
+        logging.error(f'Ping result error: {res}')
