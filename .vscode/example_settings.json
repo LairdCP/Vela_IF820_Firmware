@@ -2,12 +2,5 @@
     "default_baud": "115200",
     "mini_driver": "${workspaceFolder}/files/minidriver-20820A1-uart-patchram.hex",
     "ezserial_firmware": "${workspaceFolder}/files/20230609_ezserial_app_CYBT-243053-EVAL_140808_v1.4.8.8_download.hex",
-    "id_pico_probe_device1": "E6616407E37C5E31",
-    "id_pico_probe_device2": "E6616407E328642D",
-    "hci_port_IF820_device1": "/dev/cu.usbmodem33203",
-    "hci_port_IF820_device2": "/dev/cu.usbmodem33203",
-    "comport_IF820_device1": "/dev/cu.usbmodem33203",
-    "comport_IF820_device2": "/dev/cu.usbmodem33304",
-    "comport_BT900_device1": "/dev/cu.usbserial-AL04XL61",
-    "comport_BT900_device2": "/dev/cu.usbserial-AL04XL61"
+    "comport_BT900_device1": "/dev/cu.usbserial-AL04XL61"
 }
