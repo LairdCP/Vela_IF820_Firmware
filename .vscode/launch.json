@@ -30,6 +30,17 @@
             ]
         },
         {
+            "name": "Reboot Loop",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/sample_reboot_loop.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "-d"
+            ]
+        },
+        {
             "name": "SPP IF820->IF820",
             "type": "python",
             "request": "launch",

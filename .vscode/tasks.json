@@ -157,6 +157,15 @@
                 "sample_ping.py"
             ],
             "problemMatcher": []
+        },
+        {
+            "label": "Reboot Loop",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "sample_reboot_loop.py"
+            ],
+            "problemMatcher": []
         }
     ],
     "inputs": [
