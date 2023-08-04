@@ -2,6 +2,8 @@ import logging
 from common.DvkProbe import DvkProbe
 from common.HciSerialPort import HciSerialPort
 from common.HciProgrammer import HciProgrammer
+from common.EzSerialPort import EzSerialPort
+from common.CommonLib import CommonLib
 
 ERR_OK = 0
 ERR_BOARD_NOT_FOUND = -1
@@ -50,8 +52,8 @@ class If820Board(DvkProbe):
                 logging.warning(
                     f'No COM port location found for board {probe.id}, assuming HCI port {probe.ports[0].device}')
 
-            board.hci_port = probe.ports[0].device
-            board.puart_port = probe.ports[1].device
+            board.hci_port_name = probe.ports[0].device
+            board.puart_port_name = probe.ports[1].device
             boards.append(board)
         return boards
 
@@ -63,17 +65,63 @@ class If820Board(DvkProbe):
             If820Board: IF820 board or None if not found
         """
         for board in If820Board.get_connected_boards():
-            if board.hci_port == com_port or board.puart_port == com_port:
+            if board.hci_port_name == com_port or board.puart_port_name == com_port:
                 return board
         return None
 
+    def open_and_init_board(self):
+        """
+        Opens the IF820 PUART at the default baud rate,
+        opens the DvkProbe, and resets the IF280 Module.
+
+        The PUART can then be accessed via instance.p_uart.
+        The DvkProbe can then be accessed via instance.probe.
+        """
+        common_lib = CommonLib()
+        # open ez-serial port
+        self.p_uart = EzSerialPort()
+        logging.info(f'Port Name: {self.puart_port_name}')
+        open_result = self.p_uart.open(
+            self.puart_port_name, self.p_uart.IF820_DEFAULT_BAUD)
+        if (not open_result[1]):
+            raise Exception(
+                f"Error!  Unable to open device at {self.puart_port_name}")
+
+        # open dvk probe
+        logging.info(f"Opening Dvk Probe ID {self.probe.id}")
+        self.probe.open(self.probe.id)
+        if (not self.probe.is_open):
+            raise Exception(
+                f"Unable to open Dvk Probe at {self.probe.id}")
+
+        # reset dvk and module
+        self.probe.reset_device()
+        ez_rsp = self.p_uart.wait_event(self.p_uart.EVENT_SYSTEM_BOOT)
+        common_lib.check_if820_response(self.p_uart.EVENT_SYSTEM_BOOT, ez_rsp)
+
+    def close_ports_and_reset(self):
+        """
+        Close all puart and reset the probe and module
+        Note:  Resetting the probe resets the IO and the module.
+        """
+        if self.p_uart:
+            self.p_uart.close()
+        if self.probe:
+            self.probe.reboot()
+            self.probe.close()
+        if self.hci_uart:
+            self.hci_uart.close()
+
     def __init__(self):
         self._probe = super().__init__()
-        self._hci_port = ""
-        self._puart_port = ""
+        self._hci_port_name = ""
+        self._puart_port_name = ""
+        self._hci_uart = ""
+        self._p_uart = ""
 
     @property
     def probe(self):
+        """Pico Probe / Dvk Probe"""
         return self._probe
 
     @probe.setter
@@ -81,20 +129,40 @@ class If820Board(DvkProbe):
         self._probe = p
 
     @property
-    def hci_port(self):
-        return self._hci_port
+    def hci_port_name(self):
+        """HCI UART Port Name (i.e. COM10)"""
+        return self._hci_port_name
 
-    @hci_port.setter
-    def hci_port(self, p: str):
-        self._hci_port = p
+    @hci_port_name.setter
+    def hci_port_name(self, p: str):
+        self._hci_port_name = p
 
     @property
-    def puart_port(self):
-        return self._puart_port
+    def puart_port_name(self):
+        """PUART Port Name (i.e. COM10)"""
+        return self._puart_port_name
 
-    @puart_port.setter
-    def puart_port(self, p: str):
-        self._puart_port = p
+    @puart_port_name.setter
+    def puart_port_name(self, p: str):
+        self._puart_port_name = p
+
+    @property
+    def hci_uart(self):
+        """HCI UART Port Instance"""
+        return self._hci_uart
+
+    @hci_uart.setter
+    def hci_uart(self, u: HciSerialPort):
+        self._hci_uart = u
+
+    @property
+    def p_uart(self):
+        """PUART Port Instance"""
+        return self._p_uart
+
+    @p_uart.setter
+    def p_uart(self, u: EzSerialPort):
+        self._p_uart = u
 
     def enter_hci_download_mode(self, port: str = str()) -> int:
         """Put the board into HCI download mode.
@@ -115,13 +183,14 @@ class If820Board(DvkProbe):
                 logging.error(f"Board not found with port {port}")
                 return ERR_BOARD_NOT_FOUND
 
-        hci = HciSerialPort()
-        logging.debug(f"Opening HCI port {board.hci_port}")
-        hci.open(board.hci_port, HciProgrammer.HCI_DEFAULT_BAUDRATE)
+        self.hci_uart = HciSerialPort()
+        logging.debug(f"Opening HCI port {board.hci_port_name}")
+        self.hci_uart.open(board.hci_port_name,
+                           HciProgrammer.HCI_DEFAULT_BAUDRATE)
         board.probe.open()
         board.probe.reset_device()
         board.probe.close()
-        hci.close()
+        self.hci_uart.close()
         return ERR_OK
 
     def flash_firmware(self, minidriver: str, firmware: str, chip_erase: bool = False) -> int:
@@ -129,7 +198,7 @@ class If820Board(DvkProbe):
         if res != ERR_OK:
             raise Exception("Failed to enter HCI download mode")
 
-        self.hci_programmer = HciProgrammer(minidriver, self.hci_port,
+        self.hci_programmer = HciProgrammer(minidriver, self.hci_port_name,
                                             HciProgrammer.HCI_DEFAULT_BAUDRATE, chip_erase)
         self.hci_programmer.program_firmware(
             HciProgrammer.HCI_FLASH_FIRMWARE_BAUDRATE, firmware, chip_erase)
