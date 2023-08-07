@@ -56,17 +56,7 @@
             "program": "${workspaceFolder}/sample_cyspp_IF820-IF820.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": [
-                "-cp",
-                "${config:comport_IF820_device1}",
-                "-cc",
-                "${config:comport_IF820_device2}",
-                "-ppp",
-                "${config:id_pico_probe_device1}",
-                "-ppc",
-                "${config:id_pico_probe_device2}",
-                "-d"
-            ]
+            "args": ["-d"]
         },
         {
             "name": "BT900 Single",
