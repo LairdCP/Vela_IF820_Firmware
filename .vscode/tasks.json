@@ -119,12 +119,8 @@
             "command": "python",
             "args": [
                 "${workspaceFolder}/sample_spp_BT900-IF820.py",
-                "-cp",
-                "${config:comport_IF820_device1}",
                 "-cc",
                 "${config:comport_BT900_device1}",
-                "-ppc",
-                "${config:id_pico_probe_device1}",
                 "-d"
             ],
             "problemMatcher": []
