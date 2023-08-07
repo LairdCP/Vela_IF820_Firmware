@@ -15,6 +15,7 @@ import sys
 import threading
 import ezserial_host_api.ezslib as ez_serial
 import common.EzSerialPort as ez_port
+from common.If820Board import If820Board
 
 API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_BINARY
 BOOT_DELAY_SECONDS = 3
@@ -64,21 +65,22 @@ def scanner_thread():
     """
     last_counter = -1
     logging.info('Configure scanner...')
-    res = reboot_the_device(central)
+    res = reboot_the_device(if820_board_c.p_uart)
     logging.info(f'Scanner: {res}')
     logging.info(
         f'Scan mode: {SCAN_MODE}, interval: {SCAN_INTERVAL}, window: {SCAN_WINDOW}')
-    quit_on_resp_err(central.send_and_wait(central.CMD_GAP_START_SCAN,
-                                           mode=SCAN_MODE,
-                                           interval=SCAN_INTERVAL,
-                                           window=SCAN_WINDOW,
-                                           active=0,
-                                           filter=SCAN_FILTER_ACCEPT_ALL,
-                                           nodupe=0,
-                                           timeout=0)[0])
+    quit_on_resp_err(if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_START_SCAN,
+                                                        mode=SCAN_MODE,
+                                                        interval=SCAN_INTERVAL,
+                                                        window=SCAN_WINDOW,
+                                                        active=0,
+                                                        filter=SCAN_FILTER_ACCEPT_ALL,
+                                                        nodupe=0,
+                                                        timeout=0)[0])
     while True:
         try:
-            res = central.wait_event(central.EVENT_GAP_SCAN_RESULT)
+            res = if820_board_c.p_uart.wait_event(
+                if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT)
             quit_on_resp_err(res[0])
             packet = res[1]
             logging.debug(f'Received {packet}')
@@ -94,67 +96,73 @@ def scanner_thread():
                 logging.debug(f'Not looking for {received_addr}')
         except Exception as e:
             logging.warning(f'Scanner: {e}')
-            central.close()
+            if820_board_c.p_uart.close()
             time.sleep(0.5)
-            central.open(args.central, central.IF820_DEFAULT_BAUD)
+            if820_board_c.p_uart.open(
+                if820_board_c.puart_port_name, if820_board_c.p_uart.IF820_DEFAULT_BAUD)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--central',
-                        required=True, help="COM port for central device")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    parser.add_argument('-p', '--peripheral',
-                        required=True, help="COM port for peripheral device")
     logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
 
-    central = ez_port.EzSerialPort()
-    central.open(args.central, central.IF820_DEFAULT_BAUD)
-    central.set_api_format(API_FORMAT)
-    peripheral = ez_port.EzSerialPort()
-    peripheral.open(args.peripheral, peripheral.IF820_DEFAULT_BAUD)
-    peripheral.set_api_format(API_FORMAT)
+    boards = If820Board.get_connected_boards()
+    if len(boards) < 2:
+        logging.critical(
+            "Two IF820 boards required for this sample.")
+        exit(1)
+
+    if820_board_p = boards[0]
+    if820_board_c = boards[1]
+    if820_board_p.open_and_init_board()
+    if820_board_c.open_and_init_board()
+    if820_board_c.p_uart.set_api_format(API_FORMAT)
+    if820_board_p.p_uart.set_api_format(API_FORMAT)
 
     logging.info('Configure advertiser...')
-    res = reboot_the_device(peripheral)
+    res = reboot_the_device(if820_board_p.p_uart)
     logging.info(f'Advertiser: {res}')
     PERIPHERAL_ADDRESS = res.payload.address
 
     threading.Thread(target=scanner_thread,
                      daemon=True).start()
 
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_STOP_ADV)[0])
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_PARAMETERS,
-                                              mode=ADV_MODE,
-                                              type=ADV_TYPE,
-                                              channels=ADV_CHANNELS,
-                                              high_interval=ADV_INTERVAL,
-                                              high_duration=ADV_TIMEOUT,
-                                              low_interval=ADV_INTERVAL,
-                                              low_duration=ADV_TIMEOUT,
-                                              flags=ADV_FLAGS,
-                                              directAddr=[0, 0, 0, 0, 0, 0],
-                                              directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GAP_STOP_ADV)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_PARAMETERS,
+                                                        mode=ADV_MODE,
+                                                        type=ADV_TYPE,
+                                                        channels=ADV_CHANNELS,
+                                                        high_interval=ADV_INTERVAL,
+                                                        high_duration=ADV_TIMEOUT,
+                                                        low_interval=ADV_INTERVAL,
+                                                        low_duration=ADV_TIMEOUT,
+                                                        flags=ADV_FLAGS,
+                                                        directAddr=[
+                                                            0, 0, 0, 0, 0, 0],
+                                                        directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
     logging.info(
         f'Advert mode: {ADV_MODE}, type:{ADV_TYPE}, high_interval: {ADV_INTERVAL}, high_duration:{ADV_TIMEOUT}, flags:{ADV_FLAGS}')
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_DATA,
-                                              data=ADV_DATA)[0])
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_START_ADV,
-                                              mode=ADV_MODE,
-                                              type=ADV_TYPE,
-                                              channels=ADV_CHANNELS,
-                                              high_interval=ADV_INTERVAL,
-                                              high_duration=ADV_TIMEOUT,
-                                              low_interval=ADV_INTERVAL,
-                                              low_duration=ADV_TIMEOUT,
-                                              flags=ADV_FLAGS,
-                                              directAddr=[0, 0, 0, 0, 0, 0],
-                                              directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_DATA,
+                                                        data=ADV_DATA)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_START_ADV,
+                                                        mode=ADV_MODE,
+                                                        type=ADV_TYPE,
+                                                        channels=ADV_CHANNELS,
+                                                        high_interval=ADV_INTERVAL,
+                                                        high_duration=ADV_TIMEOUT,
+                                                        low_interval=ADV_INTERVAL,
+                                                        low_duration=ADV_TIMEOUT,
+                                                        flags=ADV_FLAGS,
+                                                        directAddr=[
+                                                            0, 0, 0, 0, 0, 0],
+                                                        directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
 
     while (True):
         time.sleep(2)
@@ -164,5 +172,5 @@ if __name__ == '__main__':
             counter = 0
         ADV_DATA[-1] = counter
         logging.info(f'Advertising value {counter}')
-        quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_DATA,
-                                                  data=ADV_DATA)[0])
+        quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_DATA,
+                                                            data=ADV_DATA)[0])

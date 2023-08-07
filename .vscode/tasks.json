@@ -41,8 +41,7 @@
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/sample_${input:ble_sample}.py",
-                "-d"
+                "${workspaceFolder}/sample_${input:ble_sample}.py"
             ],
             "problemMatcher": []
         },
