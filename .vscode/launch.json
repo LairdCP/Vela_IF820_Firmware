@@ -124,10 +124,6 @@
             "args": [
                 "-cp",
                 "${config:comport_BT900_device1}",
-                "-cc",
-                "${config:comport_IF820_device1}",
-                "-ppc",
-                "${config:id_pico_probe_device1}",
                 "-d"
             ]
         },

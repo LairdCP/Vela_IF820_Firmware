@@ -50,7 +50,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Run CYSPP IF820->IF820",
+            "label": "Run CYSPP IF820 -> IF820",
             "type": "shell",
             "command": "python",
             "args": [
@@ -83,16 +83,12 @@
                 "${workspaceFolder}/sample_cyspp_IF820-BT900.py",
                 "-cp",
                 "${config:comport_BT900_device1}",
-                "-cc",
-                "${config:comport_IF820_device1}",
-                "-ppc",
-                "${config:id_pico_probe_device1}",
                 "-d"
             ],
             "problemMatcher": []
         },
         {
-            "label": "Run SPP IF820->IF820",
+            "label": "Run SPP IF820 -> IF820",
             "type": "shell",
             "command": "python",
             "args": [
