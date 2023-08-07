@@ -15,6 +15,7 @@ import sys
 import threading
 import ezserial_host_api.ezslib as ez_serial
 import common.EzSerialPort as ez_port
+from common.If820Board import If820Board
 
 API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_BINARY
 BOOT_DELAY_SECONDS = 3
@@ -66,18 +67,19 @@ def scanner_thread():
     """Thread to scan for the peripheral device and connect to it.
     """
     logging.info('Configure scanner...')
-    res = reboot_the_device(central)
+    res = reboot_the_device(if820_board_c.p_uart)
     logging.info(f'Scanner: {res}')
-    quit_on_resp_err(central.send_and_wait(central.CMD_GAP_START_SCAN,
-                                           mode=SCAN_MODE_GENERAL_DISCOVERY,
-                                           interval=0x400,
-                                           window=0x400,
-                                           active=0,
-                                           filter=SCAN_FILTER_ACCEPT_ALL,
-                                           nodupe=1,
-                                           timeout=30)[0])
+    quit_on_resp_err(if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_START_SCAN,
+                                                        mode=SCAN_MODE_GENERAL_DISCOVERY,
+                                                        interval=0x400,
+                                                        window=0x400,
+                                                        active=0,
+                                                        filter=SCAN_FILTER_ACCEPT_ALL,
+                                                        nodupe=1,
+                                                        timeout=30)[0])
     while True:
-        res = central.wait_event(central.EVENT_GAP_SCAN_RESULT)
+        res = if820_board_c.p_uart.wait_event(
+            if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT)
         quit_on_resp_err(res[0])
         packet = res[1]
         logging.debug(f'Received {packet}')
@@ -88,33 +90,36 @@ def scanner_thread():
         else:
             logging.debug(f'Not looking for {received_addr}')
 
-    quit_on_resp_err(central.send_and_wait(central.CMD_GAP_STOP_SCAN)[0])
+    quit_on_resp_err(if820_board_c.p_uart.send_and_wait(
+        if820_board_c.p_uart.CMD_GAP_STOP_SCAN)[0])
 
-    quit_on_resp_err(central.send_and_wait(central.CMD_GAP_CONNECT,
-                                           address=received_addr,
-                                           type=address_type,
-                                           interval=6,
-                                           slave_latency=0,
-                                           supervision_timeout=100,
-                                           scan_interval=0x0100,
-                                           scan_window=0x0100,
-                                           scan_timeout=0)[0])
+    quit_on_resp_err(if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_CONNECT,
+                                                        address=received_addr,
+                                                        type=address_type,
+                                                        interval=6,
+                                                        slave_latency=0,
+                                                        supervision_timeout=100,
+                                                        scan_interval=0x0100,
+                                                        scan_window=0x0100,
+                                                        scan_timeout=0)[0])
 
     logging.info('Found peripheral device, connecting...')
-    res = central.wait_event(central.EVENT_GAP_CONNECTED)
+    res = if820_board_c.p_uart.wait_event(
+        if820_board_c.p_uart.EVENT_GAP_CONNECTED)
     quit_on_resp_err(res[0])
     logging.info('Connected!')
 
     # Enable notifications for battery level
-    res = central.send_and_wait(central.CMD_GATTC_WRITE_HANDLE,
-                                conn_handle=0,
-                                attr_handle=batter_level_ccc_handle,
-                                type=0,
-                                data=[0x01, 0x00])
+    res = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GATTC_WRITE_HANDLE,
+                                             conn_handle=0,
+                                             attr_handle=batter_level_ccc_handle,
+                                             type=0,
+                                             data=[0x01, 0x00])
 
     while True:
         try:
-            res = central.wait_event(central.EVENT_GATTC_DATA_RECEIVED)
+            res = if820_board_c.p_uart.wait_event(
+                if820_board_c.p_uart.EVENT_GATTC_DATA_RECEIVED)
             if res[0] == 0 and res[1].payload.attr_handle == battery_level_handle:
                 logging.info(
                     f'Received battery level {res[1].payload.data[0]}')
@@ -126,12 +131,8 @@ def scanner_thread():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--central',
-                        required=True, help="COM port for central device")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    parser.add_argument('-p', '--peripheral',
-                        required=True, help="COM port for peripheral device")
     logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
@@ -140,58 +141,68 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    central = ez_port.EzSerialPort()
-    central.open(args.central, central.IF820_DEFAULT_BAUD)
-    central.set_api_format(API_FORMAT)
-    peripheral = ez_port.EzSerialPort()
-    peripheral.open(args.peripheral, peripheral.IF820_DEFAULT_BAUD)
-    peripheral.set_api_format(API_FORMAT)
+    boards = If820Board.get_connected_boards()
+    if len(boards) < 2:
+        logging.critical(
+            "Two IF820 boards required for this sample.")
+        exit(1)
+
+    if820_board_p = boards[0]
+    if820_board_c = boards[1]
+
+    if820_board_p = boards[0]
+    if820_board_c = boards[1]
+    if820_board_p.open_and_init_board()
+    if820_board_c.open_and_init_board()
+    if820_board_c.p_uart.set_api_format(API_FORMAT)
+    if820_board_p.p_uart.set_api_format(API_FORMAT)
 
     logging.info('Configure advertiser...')
-    res = reboot_the_device(peripheral)
+    res = reboot_the_device(if820_board_p.p_uart)
     logging.info(f'Advertiser: {res}')
     PERIPHERAL_ADDRESS = res.payload.address
-    quit_on_resp_err(peripheral.send_and_wait(
-        peripheral.CMD_GAP_STOP_ADV)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GAP_STOP_ADV)[0])
 
     # Start scanner thread
     threading.Thread(target=scanner_thread,
-                    daemon=True).start()
+                     daemon=True).start()
 
     # Set advertising parameters
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_PARAMETERS,
-                                              mode=ADV_MODE,
-                                              type=ADV_TYPE,
-                                              channels=ADV_CHANNELS,
-                                              high_interval=ADV_INTERVAL,
-                                              high_duration=ADV_TIMEOUT,
-                                              low_interval=ADV_INTERVAL,
-                                              low_duration=ADV_TIMEOUT,
-                                              flags=ADV_FLAGS,
-                                              directAddr=[0, 0, 0, 0, 0, 0],
-                                              directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_PARAMETERS,
+                                                        mode=ADV_MODE,
+                                                        type=ADV_TYPE,
+                                                        channels=ADV_CHANNELS,
+                                                        high_interval=ADV_INTERVAL,
+                                                        high_duration=ADV_TIMEOUT,
+                                                        low_interval=ADV_INTERVAL,
+                                                        low_duration=ADV_TIMEOUT,
+                                                        flags=ADV_FLAGS,
+                                                        directAddr=[
+                                                            0, 0, 0, 0, 0, 0],
+                                                        directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
     # Set custom advertising data
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_DATA,
-                                              data=ADV_DATA)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_DATA,
+                                                        data=ADV_DATA)[0])
 
     # Setup Battery Service
     # Create battery service descriptor
-    quit_on_resp_err(peripheral.send_and_wait(
-        peripheral.CMD_GATTS_CREATE_ATTR,
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GATTS_CREATE_ATTR,
         type=ez_port.GattAttrType.STRUCTURE.value,
         perm=ez_port.GattAttrPermission.READ.value,
         length=4,
         data=bytearray.fromhex('00280F18'))[0])
     # Create battery level characteristic descriptor
-    quit_on_resp_err(peripheral.send_and_wait(
-        peripheral.CMD_GATTS_CREATE_ATTR,
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GATTS_CREATE_ATTR,
         type=ez_port.GattAttrType.STRUCTURE.value,
         perm=ez_port.GattAttrPermission.READ.value,
         length=7,
         data=bytearray.fromhex('0328121800192A'))[0])
     # Create battery level characteristic value descriptor
-    res = peripheral.send_and_wait(
-        peripheral.CMD_GATTS_CREATE_ATTR,
+    res = if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GATTS_CREATE_ATTR,
         type=ez_port.GattAttrType.VALUE.value,
         perm=ez_port.GattAttrPermission.READ.value | ez_port.GattAttrPermission.AUTH_WRITE.value,
         length=1,
@@ -199,8 +210,8 @@ if __name__ == '__main__':
     quit_on_resp_err(res[0])
     battery_level_handle = res[1].payload.handle
     # Create battery level Client Characteristic Configuration descriptor
-    res = peripheral.send_and_wait(
-        peripheral.CMD_GATTS_CREATE_ATTR,
+    res = if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GATTS_CREATE_ATTR,
         type=ez_port.GattAttrType.STRUCTURE.value,
         perm=ez_port.GattAttrPermission.READ.value | ez_port.GattAttrPermission.WRITE_ACK.value,
         length=4,
@@ -209,17 +220,18 @@ if __name__ == '__main__':
     batter_level_ccc_handle = res[1].payload.handle
 
     # Start advertising
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_START_ADV,
-                                              mode=ADV_MODE,
-                                              type=ADV_TYPE,
-                                              channels=ADV_CHANNELS,
-                                              high_interval=ADV_INTERVAL,
-                                              high_duration=0,
-                                              low_interval=ADV_INTERVAL,
-                                              low_duration=0,
-                                              flags=ADV_FLAGS,
-                                              directAddr=[0, 0, 0, 0, 0, 0],
-                                              directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_START_ADV,
+                                                        mode=ADV_MODE,
+                                                        type=ADV_TYPE,
+                                                        channels=ADV_CHANNELS,
+                                                        high_interval=ADV_INTERVAL,
+                                                        high_duration=0,
+                                                        low_interval=ADV_INTERVAL,
+                                                        low_duration=0,
+                                                        flags=ADV_FLAGS,
+                                                        directAddr=[
+                                                            0, 0, 0, 0, 0, 0],
+                                                        directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
 
     while (True):
         time.sleep(5)
@@ -228,9 +240,9 @@ if __name__ == '__main__':
             battery_level = 100
 
         try:
-            res = peripheral.send_and_wait(peripheral.CMD_GATTS_WRITE_HANDLE,
-                                           attr_handle=battery_level_handle,
-                                           data=[battery_level])
+            res = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GATTS_WRITE_HANDLE,
+                                                     attr_handle=battery_level_handle,
+                                                     data=[battery_level])
             if res[0] == 0:
                 logging.info(f'Changed battery level: {battery_level}')
             else:
@@ -239,10 +251,10 @@ if __name__ == '__main__':
                 continue
 
             # Notify that battery level has changed to any connected device subscribed to notifications
-            res = peripheral.send_and_wait(peripheral.CMD_GATTS_NOTIFY_HANDLE,
-                                           conn_handle=0,
-                                           attr_handle=battery_level_handle,
-                                           data=[battery_level])
+            res = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GATTS_NOTIFY_HANDLE,
+                                                     conn_handle=0,
+                                                     attr_handle=battery_level_handle,
+                                                     data=[battery_level])
             if res[0] != 0:
                 logging.error(
                     f'Failed to notify battery level {battery_level} [{hex(res[0])}]')
