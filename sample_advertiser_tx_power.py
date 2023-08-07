@@ -11,6 +11,8 @@ import time
 import sys
 import ezserial_host_api.ezslib as ez_serial
 import common.EzSerialPort as ez_port
+from common.If820Board import If820Board
+
 
 API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_TEXT
 BOOT_DELAY_SECONDS = 3
@@ -55,8 +57,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    parser.add_argument('-p', '--peripheral',
-                        required=True, help="COM port for peripheral device")
     parser.add_argument('-t', '--tx_power', type=int, default=2,
                         help="TX power level index (1-8)")
     logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
@@ -68,28 +68,34 @@ if __name__ == '__main__':
         logging.info("Debugging mode disabled")
 
     tx_power = args.tx_power
-    peripheral = ez_port.EzSerialPort()
-    peripheral.open(args.peripheral, peripheral.IF820_DEFAULT_BAUD)
-    peripheral.set_api_format(API_FORMAT)
+
+    # IF820
+    if820_board_p = If820Board.get_board()
+    logging.info(f'Port Name: {if820_board_p.puart_port_name}')
+    if820_board_p.open_and_init_board()
+    if820_board_p.p_uart.set_api_format(API_FORMAT)
 
     logging.info('Configure advertiser...')
-    res = reboot_the_device(peripheral)
+    res = reboot_the_device(if820_board_p.p_uart)
     logging.info(f'Advertiser: {res}')
     PERIPHERAL_ADDRESS = res.payload.address
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_STOP_ADV)[0])
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_PARAMETERS,
-                                              mode=ADV_MODE,
-                                              type=ADV_TYPE,
-                                              channels=ADV_CHANNELS,
-                                              high_interval=ADV_INTERVAL,
-                                              high_duration=ADV_TIMEOUT,
-                                              low_interval=ADV_INTERVAL,
-                                              low_duration=ADV_TIMEOUT,
-                                              flags=ADV_FLAGS,
-                                              directAddr=[0, 0, 0, 0, 0, 0],
-                                              directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GAP_STOP_ADV)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_PARAMETERS,
+                                                        mode=ADV_MODE,
+                                                        type=ADV_TYPE,
+                                                        channels=ADV_CHANNELS,
+                                                        high_interval=ADV_INTERVAL,
+                                                        high_duration=ADV_TIMEOUT,
+                                                        low_interval=ADV_INTERVAL,
+                                                        low_duration=ADV_TIMEOUT,
+                                                        flags=ADV_FLAGS,
+                                                        directAddr=[
+                                                            0, 0, 0, 0, 0, 0],
+                                                        directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
 
-    res = peripheral.send_and_wait(peripheral.CMD_GET_TX_POWER)
+    res = if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GET_TX_POWER)
     power_tables = res[1].payload.power_array
     logging.debug(f'TX power tables: {power_tables}')
 
@@ -97,24 +103,25 @@ if __name__ == '__main__':
     logging.debug(f'BLE TX power table: {ble_tx_power_table}')
 
     # Set TX power
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_SET_TX_POWER,
-                                              power=tx_power,
-                                              power_array=[])[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_SET_TX_POWER,
+                                                        power=tx_power,
+                                                        power_array=[])[0])
     # Set TX power in advertisement data
     power = ble_tx_power_table[tx_power - 1]
     ADV_DATA[-1] = power
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_SET_ADV_DATA,
-                                              data=ADV_DATA)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_DATA,
+                                                        data=ADV_DATA)[0])
     # Start advertising
-    quit_on_resp_err(peripheral.send_and_wait(peripheral.CMD_GAP_START_ADV,
-                                              mode=ADV_MODE,
-                                              type=ADV_TYPE,
-                                              channels=ADV_CHANNELS,
-                                              high_interval=ADV_INTERVAL,
-                                              high_duration=ADV_TIMEOUT,
-                                              low_interval=ADV_INTERVAL,
-                                              low_duration=ADV_TIMEOUT,
-                                              flags=ADV_FLAGS,
-                                              directAddr=[0, 0, 0, 0, 0, 0],
-                                              directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_START_ADV,
+                                                        mode=ADV_MODE,
+                                                        type=ADV_TYPE,
+                                                        channels=ADV_CHANNELS,
+                                                        high_interval=ADV_INTERVAL,
+                                                        high_duration=ADV_TIMEOUT,
+                                                        low_interval=ADV_INTERVAL,
+                                                        low_duration=ADV_TIMEOUT,
+                                                        flags=ADV_FLAGS,
+                                                        directAddr=[
+                                                            0, 0, 0, 0, 0, 0],
+                                                        directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
     logging.info(f'Advertising at power level {power} dBm')

@@ -169,12 +169,7 @@
             "program": "${workspaceFolder}/sample_${input:ble_sample}.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": [
-                "-p",
-                "${config:comport_IF820_device2}",
-                "-c",
-                "${config:comport_IF820_device1}"
-            ],
+            "args": ["-d"]
         },
         {
             "name": "Sleep Sample",

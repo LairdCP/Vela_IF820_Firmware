@@ -42,10 +42,7 @@
             "command": "python",
             "args": [
                 "${workspaceFolder}/sample_${input:ble_sample}.py",
-                "-p",
-                "${config:comport_IF820_device2}",
-                "-c",
-                "${config:comport_IF820_device1}",
+                "-d"
             ],
             "problemMatcher": []
         },
