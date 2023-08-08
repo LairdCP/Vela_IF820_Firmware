@@ -1,6 +1,7 @@
+#!/usr/bin/env python3
+
 import argparse
 import logging
-import common.EzSerialPort as ez_port
 from common.If820Board import If820Board
 
 """
@@ -22,16 +23,11 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    board = If820Board.get_board()
-    logging.info(f'Port Name: {board.puart_port}')
+    if820_board_p = If820Board.get_board()
+    logging.info(f'Port Name: {if820_board_p.puart_port_name}')
+    if820_board_p.open_and_init_board()
 
-    ezp = ez_port.EzSerialPort()
-    open_result = ezp.open(board.puart_port, ezp.IF820_DEFAULT_BAUD)
-    if (not open_result):
-        raise Exception(
-            f"Error!  Unable to open ez_peripheral at {board.puart_port}")
-
-    res = ezp.send_and_wait(ezp.CMD_PING)
+    res = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
     if res[0] == 0:
         logging.info(f'Ping result success: {res}')
     else:
