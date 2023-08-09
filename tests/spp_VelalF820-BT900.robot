@@ -78,7 +78,7 @@ Test Setup
     Call Method
     ...    ${bt900_peripheral_device}
     ...    open
-    ...    ${settings_comport_BT900_peripheral}
+    ...    ${settings_comport_BT900}
     ...    ${lib_bt900_peripheral.BT900_DEFAULT_BAUD}
 
     # IF820 Factory Reset

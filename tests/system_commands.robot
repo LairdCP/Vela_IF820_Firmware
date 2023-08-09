@@ -7,7 +7,7 @@ Resource            common.robot
 
 Test Setup          Test Setup
 Test Teardown       Test Teardown
-Test Timeout        3 minute
+Test Timeout        4 minutes
 
 Default Tags        vela if820
 

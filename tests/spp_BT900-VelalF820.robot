@@ -79,7 +79,7 @@ Test Setup
     Call Method
     ...    ${bt900_central_device}
     ...    open
-    ...    ${settings_comport_BT900_central}
+    ...    ${settings_comport_BT900}
     ...    ${lib_bt900_central.BT900_DEFAULT_BAUD}
 
     # IF820 Factory Reset

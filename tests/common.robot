@@ -1,5 +1,6 @@
 *** Settings ***
 Library     OperatingSystem
+Library     ..${/}common${/}If820Board.py    WITH NAME    IF820_Board
 
 
 *** Variables ***
@@ -20,8 +21,7 @@ ${settings_comport_IF820_central}           ${EMPTY}
 ${settings_comport_IF820_peripheral}        ${EMPTY}
 ${settings_hci_port_IF820_central}          ${EMPTY}
 ${settings_hci_port_IF820_peripheral}       ${EMPTY}
-${settings_comport_BT900_central}           ${EMPTY}
-${settings_comport_BT900_peripheral}        ${EMPTY}
+${settings_comport_BT900}                   ${EMPTY}
 ${settings_id_pp_central}                   ${EMPTY}
 ${settings_id_pp_peripheral}                ${EMPTY}
 ${settings_default_baud}                    ${EMPTY}
@@ -41,15 +41,26 @@ Fail if not equal
 Read Settings File
     ${settings_file}=    Get File    ${CURDIR}${/}..${/}.vscode${/}settings.json
     ${settings}=    Evaluate    json.loads('''${settings_file}''')    json
-    Set Global Variable    ${settings_comport_IF820_central}    ${settings["comport_IF820_device1"]}
-    Set Global Variable    ${settings_comport_IF820_peripheral}    ${settings["comport_IF820_device2"]}
-    Set Global Variable    ${settings_hci_port_IF820_central}    ${settings["hci_port_IF820_device1"]}
-    Set Global Variable    ${settings_hci_port_IF820_peripheral}    ${settings["hci_port_IF820_device2"]}
-    Set Global Variable    ${settings_comport_BT900_central}    ${settings["comport_BT900_device1"]}
-    Set Global Variable    ${settings_comport_BT900_peripheral}    ${settings["comport_BT900_device2"]}
-    Set Global Variable    ${settings_id_pp_central}    ${settings["id_pico_probe_device1"]}
-    Set Global Variable    ${settings_id_pp_peripheral}    ${settings["id_pico_probe_device2"]}
+
+    @{if820_boards}=    IF820_Board.Get Connected Boards
+    ${num_boards}=    Get Length    ${if820_boards}
+    Log    ${num_boards} IF820 Boards Found!
+
     Set Global Variable    ${settings_default_baud}    ${settings["default_baud"]}
+    Set Global Variable    ${settings_comport_BT900}    ${settings["comport_BT900_device1"]}
+
+    IF    ${num_boards} != ${0}
+        Set Global Variable    ${settings_comport_IF820_central}    ${if820_boards[0].puart_port_name}
+        Set Global Variable    ${settings_hci_port_IF820_central}    ${if820_boards[0].hci_port_name}
+        Set Global Variable    ${settings_id_pp_central}    ${if820_boards[0].probe.id}
+    END
+
+    IF    ${num_boards} == ${2}
+        Set Global Variable    ${settings_comport_IF820_peripheral}    ${if820_boards[1].puart_port_name}
+        Set Global Variable    ${settings_hci_port_IF820_peripheral}    ${if820_boards[1].hci_port_name}
+        Set Global Variable    ${settings_id_pp_peripheral}    ${if820_boards[1].probe.id}
+    END
+
     RETURN    ${settings}
 
 UTF8 Bytes to String
