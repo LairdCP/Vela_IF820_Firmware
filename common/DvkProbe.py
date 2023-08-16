@@ -155,12 +155,12 @@ class DvkProbe:
         res = self.probe.vendor(READ_IO_CMD, [gpio])
         return res[0]
 
-    def gpio_to_input(self, gpio: int):
-        res = self.probe.vendor(SET_IO_DIR_CMD, [gpio, INPUT])
+    def gpio_to_input(self, gpio: int, option: int = 0):
+        res = self.probe.vendor(SET_IO_DIR_CMD, [gpio, INPUT, option])
         return res[0]
 
-    def gpio_to_output(self, gpio: int):
-        res = self.probe.vendor(SET_IO_DIR_CMD, [gpio, OUTPUT])
+    def gpio_to_output(self, gpio: int, option: int = 0):
+        res = self.probe.vendor(SET_IO_DIR_CMD, [gpio, OUTPUT, option])
         return res[0]
 
     def gpio_to_output_low(self, gpio: int):

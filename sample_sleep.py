@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 
+import logging
 import argparse
 import time
-import sys
-import common.EzSerialPort as ez_port
-import common.SerialPort as serial_port
-import common.DvkProbe as pico_probe
 from common.CommonLib import CommonLib
-from common.AppLogging import AppLogging
 from ezserial_host_api.ezslib import Packet
+from common.If820Board import If820Board
 
 # GPIO20 is LP_MODE I/O Control
 # LOW_POWER_ENABLE = 0
@@ -19,6 +16,8 @@ from ezserial_host_api.ezslib import Packet
 # DEV_WAKE_DISABLE = 0
 
 SYS_DEEP_SLEEP_LEVEL = 2
+HIBERNATE = False
+SLEEP_TIME = 15
 
 """
 Hardware Setup
@@ -31,74 +30,83 @@ This sample requires the following hardware:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-cp', '--connection_p',
-                        required=True, help="Peripheral COM port")
-    parser.add_argument('-ppp', '--picoprobe_p',
-                        required=True, help="Pico Probe Id Perhipheral")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
+    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
-    app_logger = AppLogging("sleep sample")
     if args.debug:
-        app_logger.configure_app_logging(
-            level=app_logger.DEBUG, file_level=app_logger.NOTSET)
-        app_logger.app_log_info("Debugging mode enabled")
+        logging.info("Debugging mode enabled")
+        logging.getLogger().setLevel(logging.DEBUG)
+    else:
+        logging.info("Debugging mode disabled")
+
+    if820_board_p = If820Board.get_board()
+    logging.info(f'Port Name: {if820_board_p.puart_port_name}')
+    if820_board_p.open_and_init_board()
 
     common_lib = CommonLib()
 
-    ezp_peripheral = ez_port.EzSerialPort()
-    open_result = ezp_peripheral.open(
-        args.connection_p, ezp_peripheral.IF820_DEFAULT_BAUD)
-    if (not open_result[1]):
-        raise Exception(
-            f"Error!  Unable to open ez_peripheral at {args.connection_p}")
-
-    pp_peripheral = pico_probe.DvkProbe()
-    pp_peripheral.open(args.picoprobe_p)
-    if (not pp_peripheral.is_open):
-        app_logger.app_log_critical("Unable to open Pico Probe.")
-
     # Disable sleep via gpio
-    pp_peripheral.gpio_to_output(pp_peripheral.GPIO_20)
-    pp_peripheral.gpio_to_output_high(pp_peripheral.GPIO_20)
-
-    # DEV_WAKE
-    pp_peripheral.gpio_to_output(pp_peripheral.GPIO_16)
-    pp_peripheral.gpio_to_output_high(pp_peripheral.GPIO_16)
+    if820_board_p.probe.gpio_to_output(if820_board_p.probe.GPIO_20)
+    if820_board_p.probe.gpio_to_output_high(if820_board_p.probe.GPIO_20)
 
     # Allow the device some time to wake from sleep
-    time.sleep(1)
+    time.sleep(0.5)
 
     # Send Ping just to verify coms before proceeding
-    ez_rsp = ezp_peripheral.send_and_wait(ezp_peripheral.CMD_PING)
-    common_lib.check_if820_response(ezp_peripheral.CMD_PING, ez_rsp)
+    ez_rsp = if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_PING)
+    common_lib.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
 
-    # Factory Reset Peripheral
-    app_logger.app_log_info("Factory reset device.")
-    ezp_peripheral.send_and_wait(ezp_peripheral.CMD_FACTORY_RESET)
-    common_lib.check_if820_response(ezp_peripheral.CMD_FACTORY_RESET, ez_rsp)
-    ez_rsp = ezp_peripheral.wait_event(ezp_peripheral.EVENT_SYSTEM_BOOT)
-    common_lib.check_if820_response(ezp_peripheral.EVENT_SYSTEM_BOOT, ez_rsp)
+    if HIBERNATE:
+        # set hibernate mode
+        ez_rsp = if820_board_p.p_uart.send_and_wait(command=if820_board_p.p_uart.CMD_SET_SLEEP_PARAMS,
+                                                    apiformat=Packet.EZS_API_FORMAT_TEXT, level=SYS_DEEP_SLEEP_LEVEL, hid_off_sleep_time=0)
+        common_lib.check_if820_response(
+            if820_board_p.p_uart.CMD_SET_SLEEP_PARAMS, ez_rsp)
 
-    # Enable Deep Sleep via System Command
-    app_logger.app_log_info("Enable deep sleep via system command.")
-    ez_rsp = ezp_peripheral.send_and_wait(command=ezp_peripheral.CMD_SET_SLEEP_PARAMS,
-                                          apiformat=Packet.EZS_API_FORMAT_TEXT, level=SYS_DEEP_SLEEP_LEVEL, hid_off_sleep_time=0)
-    common_lib.check_if820_response(
-        ezp_peripheral.CMD_SET_SLEEP_PARAMS, ez_rsp)
+    else:
+        # turn off bluetooth
+        ez_rsp = if820_board_p.p_uart.send_and_wait(
+            if820_board_p.p_uart.CMD_GAP_STOP_ADV)
+        common_lib.check_if820_response(
+            if820_board_p.p_uart.CMD_GAP_STOP_ADV, ez_rsp)
+
+        ez_rsp = if820_board_p.p_uart.send_and_wait(
+            if820_board_p.p_uart.CMD_SET_PARAMS,
+            apiformat=Packet.EZS_API_FORMAT_TEXT,
+            link_super_time_out=0x7d00,
+            discoverable=0,
+            connectable=0,
+            flags=0,
+            scn=0,
+            active_bt_discoverability=0,
+            active_bt_connectability=0)
+        common_lib.check_if820_response(
+            if820_board_p.p_uart.CMD_SET_PARAMS, ez_rsp)
 
     # Enable Sleep via GPIO
-    app_logger.app_log_info("Put device to sleep for 30 seconds.")
-    pp_peripheral.gpio_to_output_low(pp_peripheral.GPIO_16)
-    pp_peripheral.gpio_to_output_low(pp_peripheral.GPIO_20)
+    logging.info("Put device to sleep.")
+    if820_board_p.probe.gpio_to_output_low(if820_board_p.probe.GPIO_20)
 
     # Device will now sleep until awoken by the host.
     # This code can be commented out to keep the device sleeping.
-    time.sleep(30)
-    app_logger.app_log_info("Wake the device.")
-    pp_peripheral.gpio_to_output_high(pp_peripheral.GPIO_20)
-    pp_peripheral.gpio_to_output_high(pp_peripheral.GPIO_16)
+    time.sleep(SLEEP_TIME)
+    logging.info("Wake the device.")
+    if820_board_p.probe.gpio_to_output_high(if820_board_p.probe.GPIO_20)
+
+    if HIBERNATE:
+        # device will reboot when waking up from hibernate
+        ez_rsp = if820_board_p.p_uart.wait_event(
+            if820_board_p.p_uart.EVENT_SYSTEM_BOOT)
+    else:
+        # Wait for module to wake up
+        time.sleep(0.5)
+
+    # Send Ping just to verify coms before proceeding
+    ez_rsp = if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_PING)
+    common_lib.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
 
     # Close the open com ports
-    pp_peripheral.close()
-    ezp_peripheral.close()
+    if820_board_p.close_ports_and_reset()

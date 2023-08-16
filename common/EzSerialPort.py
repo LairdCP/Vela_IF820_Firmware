@@ -107,6 +107,10 @@ class BluetoothCommands:
     @property
     def CMD_GET_DEVICE_CLASS(self): return "bt_get_device_class"
     @property
+    def CMD_SET_PARAMS(self): return "bt_set_parameters"
+    @property
+    def CMD_GET_PARAMS(self): return "bt_get_parameters"
+    @property
     def EVENT_INQUIRY_RESULT(self): return "bt_inquiry_result"
     @property
     def EVENT_NAME_RESULT(self): return "bt_name_result"
