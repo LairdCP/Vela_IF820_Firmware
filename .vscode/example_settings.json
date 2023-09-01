@@ -1,6 +1,6 @@
 {
     "default_baud": "115200",
     "mini_driver": "${workspaceFolder}/files/minidriver-20820A1-uart-patchram.hex",
-    "ezserial_firmware": "${workspaceFolder}/files/20230609_ezserial_app_CYBT-243053-EVAL_140808_v1.4.8.8_download.hex",
+    "ezserial_firmware": "${workspaceFolder}/files/v1.4.10.10-candidate_int-ant/20230831_ezserial_app_VELA-IF820-INT-ANT-EVK_141010_v1.4.10.10_download.hex",
     "comport_BT900_device1": "/dev/cu.usbserial-AL04XL61"
 }
