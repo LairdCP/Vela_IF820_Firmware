@@ -49,13 +49,18 @@ Read Settings File
     Set Global Variable    ${settings_default_baud}    ${settings["default_baud"]}
     Set Global Variable    ${settings_comport_BT900}    ${settings["comport_BT900_device1"]}
 
-    IF    ${num_boards} != ${0}
+    IF    ${num_boards} == ${0}
+        Fail    Error! No IF820 boards found!
+    ELSE IF    ${num_boards} >= ${1}
         Set Global Variable    ${settings_comport_IF820_central}    ${if820_boards[0].puart_port_name}
         Set Global Variable    ${settings_hci_port_IF820_central}    ${if820_boards[0].hci_port_name}
         Set Global Variable    ${settings_id_pp_central}    ${if820_boards[0].probe.id}
+        Set Global Variable    ${settings_comport_IF820_peripheral}    ${if820_boards[0].puart_port_name}
+        Set Global Variable    ${settings_hci_port_IF820_peripheral}    ${if820_boards[0].hci_port_name}
+        Set Global Variable    ${settings_id_pp_peripheral}    ${if820_boards[0].probe.id}
     END
 
-    IF    ${num_boards} == ${2}
+    IF    ${num_boards} >= ${2}
         Set Global Variable    ${settings_comport_IF820_peripheral}    ${if820_boards[1].puart_port_name}
         Set Global Variable    ${settings_hci_port_IF820_peripheral}    ${if820_boards[1].hci_port_name}
         Set Global Variable    ${settings_id_pp_peripheral}    ${if820_boards[1].probe.id}
