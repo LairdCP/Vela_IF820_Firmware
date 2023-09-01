@@ -21,9 +21,9 @@ Default Tags        vela if820
 *** Variables ***
 ${lib_if820_device}             ${EMPTY}
 ${ez_system_commands}           ${EMPTY}
-${MINI_DRIVER}                  ../files/minidriver-20820A1-uart-patchram.hex
+${MINI_DRIVER}                  ${CURDIR}${/}..${/}files${/}minidriver-20820A1-uart-patchram.hex
 ${FIRMWARE}
-...                             ../files/20230609_ezserial_app_CYBT-243053-EVAL_140808_v1.4.8.8_download.hex
+...                             ${CURDIR}${/}..${/}files${/}v1.4.10.10-candidate_int-ant/20230831_ezserial_app_VELA-IF820-INT-ANT-EVK_141010_v1.4.10.10_download.hex
 ${PROGRAM_BAUD_RATE}            3000000
 ${PROGRAM_FIRMWARE_TIMEOUT}     30 seconds
 ${TEST_TIMEOUT_SHORT}           2 seconds
@@ -65,7 +65,12 @@ Test Setup
     Set Global Variable    ${result_file}    ${result_file}
     Create File    path=${result_file}
 
-    # Setup GPIO pairs for integrated antenna module
+    # Setup GPIO pairs for integrated antenna module. These pairs are specified as the CYW20820 port pins (P15, P8, etc.).
+    # The first pin in the pair is the output pin and the second pin is the input pin.
+    # 15 -> 8 : module pin 6 -> 7
+    # 2 -> 3 : module pin 8 -> 9
+    # 6 -> 17 : module pin 10 -> 11
+    # 13 -> 9 : module pin 12 -> 13
     ${gpio_sets} =    Evaluate    [[15, 8], [2, 3], [6, 17], [13, 9]]    # TODO: Need to add all pairs
     Set Global Variable    ${GPIO_SETS}    ${gpio_sets}
 
