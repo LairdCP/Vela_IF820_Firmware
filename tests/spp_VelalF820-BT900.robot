@@ -48,6 +48,8 @@ SPP IF820->BT900 Text Mode
 
 *** Keywords ***
 Test Setup
+    # The last test may have reboot the device, give it time to boot.
+    Sleep    ${5}
     Read Settings File
     IF820_Central.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
 
@@ -92,7 +94,9 @@ Test Teardown
     Disconnect BT900
     Call Method    ${bt900_peripheral_device}    close
     IF820_Central.close
-    Close Pico Probe
+    # note rebooting the pico probe will reset the if820 device and all i/o.
+    PP_Central.Reboot
+    PP_Central.Close
     Log    "Test Teardown Complete"
 
 Disconnect BT900
@@ -104,13 +108,6 @@ Disconnect BT900
 Open Pico Probe
     PP_Central.Open    ${settings_id_pp_central}
     PP_Central.Gpio To Input    ${lib_pp_central.GPIO_19}
-
-Close Pico Probe
-    # Setting high will terminate SPP
-    PP_Central.Gpio To Output    ${lib_pp_central.GPIO_19}
-    PP_Central.Gpio To Output High    ${lib_pp_central.GPIO_19}
-    PP_Central.Gpio To Input    ${lib_pp_central.GPIO_19}
-    PP_Central.Close
 
 SPP Test
     [Arguments]    ${api_format}

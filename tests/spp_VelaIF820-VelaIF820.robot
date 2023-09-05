@@ -50,6 +50,8 @@ SPP IF820->IF820 Text Mode
 
 *** Keywords ***
 Test Setup
+    # The last test may have reboot the device, give it time to boot.
+    Sleep    ${5}
     Read Settings File
     IF820_Central.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
     IF820_Peripheral.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
@@ -100,9 +102,13 @@ Test Setup
     ${response} =    IF820_Peripheral.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
 
 Test Teardown
-    Close Pico Probes
     IF820_Central.close
     IF820_Peripheral.close
+    # note rebooting the pico probe will reset the if820 device and all i/o.
+    PP_Central.Reboot
+    PP_Peripheral.Reboot
+    PP_Central.Close
+    PP_Peripheral.Close
     Log    Test Teardown Complete
 
 Get Peripheral Bluetooth Address
@@ -132,18 +138,6 @@ Open Pico Probes
     PP_Central.Gpio To Input    ${lib_pp_central.GPIO_19}
     PP_Peripheral.Open    ${settings_id_pp_peripheral}
     PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_19}
-
-Close Pico Probes
-    # Setting high will terminate SPP
-    PP_Central.Gpio To Output    ${lib_pp_central.GPIO_19}
-    PP_Central.Gpio To Output High    ${lib_pp_central.GPIO_19}
-    PP_Central.Gpio To Input    ${lib_pp_central.GPIO_19}
-    PP_Central.Close
-
-    PP_Peripheral.Gpio To Output    ${lib_pp_peripheral.GPIO_19}
-    PP_Peripheral.Gpio To Output High    ${lib_pp_peripheral.GPIO_19}
-    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_19}
-    PP_Peripheral.Close
 
 Get Pico Probe Firmware Version
     [Documentation]    Deivce refers to what the probe is connected to
