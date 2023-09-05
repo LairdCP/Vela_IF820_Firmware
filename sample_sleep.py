@@ -11,10 +11,6 @@ from common.If820Board import If820Board
 # LOW_POWER_ENABLE = 0
 # LOW_POWER_DISABLE = 1
 
-# GPIO16 is DEV_WAKE I/O Control
-# DEV_WAKE_ENABLE = 1
-# DEV_WAKE_DISABLE = 0
-
 SYS_DEEP_SLEEP_LEVEL = 2
 HIBERNATE = False
 SLEEP_TIME = 15
@@ -23,9 +19,7 @@ SLEEP_TIME = 15
 Hardware Setup
 This sample requires the following hardware:
 -IF820 connected to PC via USB to act as a Bluetooth Peripheral
--Jumpers on PUART_TXD, PUART_RXD, LP_MODE, and BT_DEV_WAKE must be installed.
--Depending on how current is measured on the dev board, it maybe necessary to remove
- the above jumpers after the device enters sleep mode to avoid I/O leakage.
+-Jumpers on PUART_TXD, PUART_RXD, and LP_MODE must be installed.
 """
 
 if __name__ == '__main__':
@@ -49,11 +43,15 @@ if __name__ == '__main__':
     # Disable sleep via gpio
     if820_board_p.probe.gpio_to_output(if820_board_p.probe.GPIO_20)
     if820_board_p.probe.gpio_to_output_high(if820_board_p.probe.GPIO_20)
+    logging.info(f'GPIO Init')
 
     # Allow the device some time to wake from sleep
-    time.sleep(0.5)
+    # Note if this value is not at least 6 seconds the device does not sleep properly.
+    # Rather it goes into a mode where it draws ~80uA instead of ~10uA.
+    time.sleep(6)
 
     # Send Ping just to verify coms before proceeding
+    logging.info(f'Send Ping')
     ez_rsp = if820_board_p.p_uart.send_and_wait(
         if820_board_p.p_uart.CMD_PING)
     common_lib.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
@@ -67,6 +65,7 @@ if __name__ == '__main__':
 
     else:
         # turn off bluetooth
+        logging.info(f'Turn off bluetooth.')
         ez_rsp = if820_board_p.p_uart.send_and_wait(
             if820_board_p.p_uart.CMD_GAP_STOP_ADV)
         common_lib.check_if820_response(
