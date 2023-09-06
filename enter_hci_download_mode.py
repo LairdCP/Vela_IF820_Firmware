@@ -42,7 +42,7 @@ if __name__ == '__main__':
     if res < 0:
         exit(res)
     if not hci_port:
-        hci_port = board.hci_port
+        hci_port = board.hci_port_name
 
     logging.info(
         f"Board {board.probe.id} [{hci_port}] entered HCI download mode")
