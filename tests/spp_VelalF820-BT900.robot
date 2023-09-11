@@ -112,6 +112,8 @@ Open Pico Probe
 SPP Test
     [Arguments]    ${api_format}
 
+    IF820_central.Set Api Format    ${api_format}
+
     ${peripheral_address} =    BT900_Peripheral.Get Bt900 Bluetooth Mac
 
     ${response} =    BT900_Peripheral.Send And Wait For Response    ${lib_bt900_peripheral.BT900_CMD_MODE}
@@ -146,7 +148,6 @@ SPP Test
     # IF820(central) connect to BT900 (peripheral)
     Reverse List    ${peripheral_address[1]}
     ${response} =    IF820_central.Send And Wait    command=${ez_bluetooth_commands.CMD_CONNECT}
-    ...    apiformat=${api_format}
     ...    address=${peripheral_address[1]}
     ...    type=${1}
     Fail if not equal    ${response[0]}    ${0}

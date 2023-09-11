@@ -114,9 +114,10 @@ Open Pico Probe
 SPP Test
     [Arguments]    ${api_format}
 
+    IF820_Peripheral.Set Api Format    ${api_format}
+
     ${resp} =    IF820_Peripheral.Send And Wait
     ...    command=${ez_system_commands.CMD_GET_BT_ADDR}
-    ...    apiformat=${api_format}
     ${peripheral_address} =    Builtin.Get Variable Value    ${resp[1].payload.address}
     Log    ${peripheral_address}
     ${str_mac} =    Common_Lib.If820 Mac Addr Response To Mac As String    ${peripheral_address}

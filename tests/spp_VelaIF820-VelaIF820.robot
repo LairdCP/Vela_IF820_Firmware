@@ -112,10 +112,8 @@ Test Teardown
     Log    Test Teardown Complete
 
 Get Peripheral Bluetooth Address
-    [Arguments]    ${api_format}
     ${resp} =    IF820_Peripheral.Send And Wait
     ...    command=${ez_system_commands.CMD_GET_BT_ADDR}
-    ...    api_format=${api_format}
     Fail on error    ${resp[0]}
     ${peripheral_address} =    Builtin.Get Variable Value    ${resp[1].payload.address}
     RETURN    ${peripheral_address}
@@ -123,11 +121,9 @@ Get Peripheral Bluetooth Address
 Connect to Peripheral
     [Documentation]    Request Central to connect to Periperal via Bluetooth
     [Arguments]    ${peripheral_address}
-    ...    ${api_format}
 
     ${resp} =    IF820_Central.Send And Wait
     ...    command=${ez_bluetooth_commands.CMD_CONNECT}
-    ...    api_format=${api_format}
     ...    address=${peripheral_address}
     ...    type=${1}
     Fail on error    ${resp[0]}
@@ -154,10 +150,14 @@ Get Pico Probe Firmware Version
 
 SPP Test
     [Arguments]    ${api_format}
-    ${peripheral_address} =    Get Peripheral Bluetooth Address    ${api_format}
+
+    IF820_Peripheral.Set Api Format    ${api_format}
+    IF820_Central.Set Api Format    ${api_format}
+
+    ${peripheral_address} =    Get Peripheral Bluetooth Address
     Log    ${peripheral_address}
 
-    ${resp} =    Connect to Peripheral    ${peripheral_address}    ${api_format}
+    ${resp} =    Connect to Peripheral    ${peripheral_address}
     ${conn_handle} =    Builtin.Get Variable Value    ${resp[1].payload.conn_handle}
     Log    conn_handle = ${conn_handle}
 

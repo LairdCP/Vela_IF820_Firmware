@@ -137,10 +137,12 @@ Get Pico Probe Firmware Version
 CYSPP Test
     [Arguments]    ${api_format}
 
+    IF820_Central.Set Api Format    ${api_format}
+
     # Set Central CY_ROLE pin low to boot in central mode
     PP_Central.Gpio To Output    ${lib_pp_central.GPIO_18}
     PP_Central.Gpio To Output Low    ${lib_pp_central.GPIO_18}
-    ${response} =    IF820_Central.Send And Wait    ${ez_system_commands.CMD_REBOOT}    ${api_format}
+    ${response} =    IF820_Central.Send And Wait    ${ez_system_commands.CMD_REBOOT}
     Fail on error    ${response[0]}
 
     # wait for connection

@@ -121,14 +121,14 @@ Open Pico Probe
 CYSPP Test
     [Arguments]    ${api_format}
 
+    IF820_Peripheral.Set Api Format    ${api_format}
+
     ${resp} =    IF820_Peripheral.Send And Wait
     ...    command=${ez_gap_commands.CMD_GAP_STOP_ADV}
-    ...    api_format=${api_format}
     Fail on error    ${resp[0]}
 
     ${resp} =    IF820_Peripheral.Send And Wait
     ...    command=${ez_system_commands.CMD_GET_BT_ADDR}
-    ...    apiformat=${api_format}
     Fail on error    ${resp[0]}
     ${peripheral_address} =    Builtin.Get Variable Value    ${resp[1].payload.address}
     Log    ${peripheral_address}
@@ -142,7 +142,6 @@ CYSPP Test
     # if820 advertise
     ${resp} =    IF820_Peripheral.Send And Wait
     ...    command=${ez_gap_commands.CMD_GAP_START_ADV}
-    ...    api_format=${api_format}
     ...    mode=${2}
     ...    type=${3}
     ...    channels=${7}
