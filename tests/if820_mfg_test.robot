@@ -23,7 +23,7 @@ ${lib_if820_device}             ${EMPTY}
 ${ez_system_commands}           ${EMPTY}
 ${MINI_DRIVER}                  ${CURDIR}${/}..${/}files${/}minidriver-20820A1-uart-patchram.hex
 ${FIRMWARE}
-...                             ${CURDIR}${/}..${/}files${/}v1.4.11.11-candidate_int-ant/20230907_ezserial_app_VELA-IF820-INT-ANT-EVK_141111_v1.4.11.11_download.hex
+...                             ${CURDIR}${/}..${/}files${/}v1.4.12.12-candidate_int-ant/202309011_ezserial_app_VELA-IF820-INT-ANT-EVK_141212_v1.4.12.12_download.hex
 ${PROGRAM_BAUD_RATE}            3000000
 ${PROGRAM_FIRMWARE_TIMEOUT}     30 seconds
 ${TEST_TIMEOUT_SHORT}           2 seconds
