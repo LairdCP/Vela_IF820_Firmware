@@ -169,6 +169,8 @@ class GapCommands:
     @property
     def CMD_GAP_SET_ADV_PARAMETERS(self): return "gap_set_adv_parameters"
     @property
+    def CMD_GAP_GET_ADV_PARAMETERS(self): return "gap_get_adv_parameters"
+    @property
     def CMD_GAP_SET_ADV_DATA(self): return "gap_set_adv_data"
     @property
     def CMD_GAP_START_ADV(self): return "gap_start_adv"
