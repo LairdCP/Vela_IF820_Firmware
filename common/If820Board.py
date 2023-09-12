@@ -11,6 +11,13 @@ ERR_BOARD_NOT_FOUND = -1
 
 class If820Board(DvkProbe):
 
+    BT_DEV_WAKE = DvkProbe.GPIO_16
+    BT_HOST_WAKE = DvkProbe.GPIO_17
+    CP_ROLE = DvkProbe.GPIO_18
+    CYSPP = DvkProbe.GPIO_19
+    LP_MODE = DvkProbe.GPIO_20
+    CONNECTION = DvkProbe.GPIO_21
+
     @staticmethod
     def get_board():
         """Helper method to get a single board, or prompt user to select a board
