@@ -3,17 +3,11 @@
 import argparse
 import logging
 import time
-import common.EzSerialPort as ez_port
 from common.BT900SerialPort import BT900SerialPort
 from common.CommonLib import CommonLib
 from ezserial_host_api.ezslib import Packet
 from common.If820Board import If820Board
 
-SCAN_MODE = ez_port.GapScanMode.NA.value
-SCAN_INTERVAL = 0x40
-SCAN_WINDOW = 0x40
-SCAN_FILTER_ACCEPT_ALL = ez_port.GapScanFilter.NA.value
-PERIPHERAL_ADDRESS = None
 BT900_ADV_FLAGS = bytes([0x02, 0x01, 0x06])
 BT900_ADV_NAME = bytes([0x0C, 0x09, 0x4C, 0x41, 0x49,
                        0x52, 0x44, 0x20, 0x42, 0x54, 0x39, 0x30, 0x30])
@@ -25,8 +19,6 @@ This sample requires the following hardware:
  *** The BT900 should be reset before the test to ensure it is advertising ***
 -IF820 connected to PC via USB to act as a Bluetooth Central.
 """
-
-CYSPP_DATA = "abcdefghijklmnop"
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -63,8 +55,8 @@ if __name__ == '__main__':
     common_lib.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
 
     # Put into central mode by setting CP_ROLE (GPIO18 low)
-    if820_board_c.probe.gpio_to_output(if820_board_c.probe.GPIO_18)
-    if820_board_c.probe.gpio_to_output_low(if820_board_c.probe.GPIO_18)
+    if820_board_c.probe.gpio_to_output(if820_board_c.CP_ROLE)
+    if820_board_c.probe.gpio_to_output_low(if820_board_c.CP_ROLE)
     ez_rsp = if820_board_c.p_uart.send_and_wait(
         if820_board_c.p_uart.CMD_REBOOT)
     common_lib.check_if820_response(if820_board_c.p_uart.CMD_REBOOT, ez_rsp)

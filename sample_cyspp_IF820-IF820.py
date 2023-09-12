@@ -15,12 +15,11 @@ Hardware Setup
 This sample requires the following hardware:
 -IF820 connected to PC via USB to act as a Bluetooth Peripheral
 -IF820 connected to PC via USB to act as a Bluetooth Central
--P27 is the "Connection" indicator.  On the Laird Module this is pin 33 of the module, attached to GPIO8 of the pico probe.
+-P27 is the "Connection" indicator.  On the Laird Module this is pin 33 of the module, attached to GPIO_21 of the pico probe.
 -The jumper on J3 CP_ROLE must be placed.
 """
 SCAN_MODE_GENERAL_DISCOVERY = ez_port.GapScanMode.NA.value
 SCAN_FILTER_ACCEPT_ALL = ez_port.GapScanFilter.NA.value
-FLAG_INQUIRY_NAME = 1
 CY_SPP_DATA = "abcdefghijklmnop"
 CENTRAL_ROLE = 1
 ENABLE_PLUS_AUTO_START = 2
@@ -74,8 +73,8 @@ if __name__ == '__main__':
 
     if GPIO_MODE:
         # Set Central CY_ROLE pin low to boot in central mode
-        if820_board_c.probe.gpio_to_output(if820_board_c.probe.GPIO_18)
-        if820_board_c.probe.gpio_to_output_low(if820_board_c.probe.GPIO_18)
+        if820_board_c.probe.gpio_to_output(if820_board_c.CP_ROLE)
+        if820_board_c.probe.gpio_to_output_low(if820_board_c.CP_ROLE)
         if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_REBOOT)
 
         wait_for_conn = True
