@@ -41,6 +41,10 @@ class WxTextCtrlLogHandler(logging.Handler):
         wx.CallAfter(self.ctrl.AppendText, s)
 
 
+header_img = resource_path('img/IF820_fw_upgrade_header.png')
+minidriver = resource_path('files/minidriver-20820A1-uart-patchram.hex')
+
+
 class Window(wx.Frame):
     """
     Class definition for the gui window and gui elements
@@ -57,8 +61,7 @@ class Window(wx.Frame):
         vbox = wx.BoxSizer(wx.VERTICAL)
 
         # Place a nice image to the top
-        bmpl = wx.Image(resource_path(
-            'img/IF820_fw_upgrade_header.png'), wx.BITMAP_TYPE_ANY)
+        bmpl = wx.Image(header_img, wx.BITMAP_TYPE_ANY)
         img_header = wx.StaticBitmap(panel, -1, bmpl, (0, 0))
         hbox_image = wx.BoxSizer(wx.HORIZONTAL)
         hbox_image.Add(img_header)
@@ -94,33 +97,16 @@ class Window(wx.Frame):
         hbox_selboard.Add(self.ch_chiperase)
         vbox.Add(hbox_selboard, flag=wx.EXPAND | wx.ALL, border=10)
 
-        # Grab firmware files from 'files' folder or local folder
-        files = []
-        if os.path.exists('files'):
-            files = os.listdir('files')
-        else:
-            files = os.listdir('.')
-        firmware = []
-        for f in files:
-            if (('ezserial_app' in f) and ('.hex' in f)):
-                firmware.append(f)
-        if len(firmware) == 0:
-            wx.MessageBox('No firmware hex file found.\n\nMake sure to download a proper hex file to the sub-folder "files" or to the local folder.',
-                          PROGRAM_TITLE, wx.OK | wx.ICON_ERROR)
-            wx.Exit()
-
-        # Sort reverse to make latest versions appear on top and pre-selected
-        firmware.sort(reverse=True)
-
-        # Add combobox for firmware selection
+        # Add file picker for firmware selection
         st_selfirmware = wx.StaticText(panel, label="Select firmware:")
         font = st_selfirmware.GetFont()
         font = font.Bold()
         st_selfirmware.SetFont(font)
         vbox.Add(st_selfirmware, flag=wx.LEFT | wx.RIGHT, border=10)
-        self.cb_selfirmware = wx.ComboBox(
-            panel, style=wx.CB_READONLY, value=firmware[0], choices=firmware)
-        vbox.Add(self.cb_selfirmware, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border=10)
+        self.picker_firmware = wx.FilePickerCtrl(
+            panel, message='Select firmware hex file', wildcard='*.hex')
+        vbox.Add(self.picker_firmware, flag=wx.EXPAND |
+                 wx.LEFT | wx.RIGHT | wx.BOTTOM, border=10)
 
         # Add a log output textctrl
         st_logoutput = wx.StaticText(panel, label="Log output:")
@@ -168,17 +154,15 @@ class Window(wx.Frame):
         """
         self.bt_fwupgrade.Enable()
         self.cb_selboard.Enable()
-        self.cb_selfirmware.Enable()
+        self.picker_firmware.Enable()
         self.ch_chiperase.Enable()
 
     def flash_firmware(self):
         """Task to flash firmware to the board.
         """
         try:
-            mini_driver = resource_path(
-                'files/minidriver-20820A1-uart-patchram.hex')
             self.selected_board.flash_firmware(
-                mini_driver, f'files/{self.cb_selfirmware.GetValue()}', self.ch_chiperase.GetValue())
+                minidriver, f'{self.picker_firmware.GetTextCtrl().GetValue()}', self.ch_chiperase.GetValue())
         except Exception as e:
             # Log any error
             logging.error(e)
@@ -190,11 +174,12 @@ class Window(wx.Frame):
         """
         self.bt_fwupgrade.Disable()
         self.cb_selboard.Disable()
-        self.cb_selfirmware.Disable()
+        self.picker_firmware.Disable()
         self.ch_chiperase.Disable()
         self.selected_board = self.cb_selboard.GetClientData(
             self.cb_selboard.GetSelection())
-        self.tx_logoutput.AppendText(f'\n\nFlashing board {self.selected_board.probe.id}...\n')
+        self.tx_logoutput.AppendText(
+            f'\n\nFlashing board {self.selected_board.probe.id}...\n')
         # Run programming in a separate thread to avoid blocking the GUI
         thread = threading.Thread(target=self.flash_firmware)
         thread.daemon = True
@@ -208,7 +193,7 @@ class Window(wx.Frame):
 
 if __name__ == '__main__':
     logging.basicConfig(
-        format=LOGGING_FORMAT, level=logging.DEBUG)
+        format=LOGGING_FORMAT, level=logging.INFO)
 
     # Create wxPython app, window and show it and start main loop to wait for user interaction
     app = wx.App()
