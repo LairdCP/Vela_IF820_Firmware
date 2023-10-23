@@ -26,3 +26,6 @@ interactive_console_output.xml
 
 mfg_output/
 *mfg_results*.txt
+
+dist/
+build/

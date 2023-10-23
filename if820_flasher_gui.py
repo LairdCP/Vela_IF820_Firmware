@@ -5,7 +5,7 @@ Python GUI for IF820 Firmware Upgrade
 
 pyinstaller command to produce a single executable file:
 
-    pyinstaller --onefile --windowed --add-data "img\\IF820_fw_upgrade_header.png;." if820_fw_upgrade.py
+pyinstaller --clean --windowed --noconfirm  --onefile --add-data "img/IF820_fw_upgrade_header.png:img" --add-data "files/minidriver-20820A1-uart-patchram.hex:files" --collect-all pyocd  --collect-all cmsis_pack_manager -p common_lib if820_flasher_gui.py
 
 """
 
