@@ -62,8 +62,7 @@
             "args": [
                 "${workspaceFolder}/sample_cyspp_BT900-IF820.py",
                 "-cc",
-                "${config:comport_BT900_device1}",
-                "-d"
+                "${config:comport_BT900_device1}"
             ],
             "problemMatcher": []
         },
@@ -74,8 +73,7 @@
             "args": [
                 "${workspaceFolder}/sample_cyspp_IF820-BT900.py",
                 "-cp",
-                "${config:comport_BT900_device1}",
-                "-d"
+                "${config:comport_BT900_device1}"
             ],
             "problemMatcher": []
         },
@@ -84,8 +82,7 @@
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/sample_spp_IF820-IF820.py",
-                "-d"
+                "${workspaceFolder}/sample_spp_IF820-IF820.py"
             ],
             "problemMatcher": []
         },
@@ -96,8 +93,7 @@
             "args": [
                 "${workspaceFolder}/sample_spp_IF820-BT900.py",
                 "-cp",
-                "${config:comport_BT900_device1}",
-                "-d"
+                "${config:comport_BT900_device1}"
             ],
             "problemMatcher": []
         },
@@ -109,7 +105,6 @@
                 "${workspaceFolder}/sample_spp_BT900-IF820.py",
                 "-cc",
                 "${config:comport_BT900_device1}",
-                "-d"
             ],
             "problemMatcher": []
         },
