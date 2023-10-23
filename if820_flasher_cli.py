@@ -5,9 +5,9 @@ import logging
 import textwrap
 import os
 import sys
-
-from common.HciProgrammer import HciProgrammer
-from common.If820Board import If820Board
+sys.path.append('./common_lib')
+from common_lib.If820Board import If820Board
+from common_lib.HciProgrammer import HciProgrammer
 
 LOG_MODULE_HCI_PORT = 'hci_port'
 

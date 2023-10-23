@@ -10,12 +10,13 @@ pyinstaller command to produce a single executable file:
 """
 
 
-import sys
 import threading
 import os
 import wx
 import logging
-from common.If820Board import If820Board
+import sys
+sys.path.append('./common_lib')
+from common_lib.If820Board import If820Board
 
 
 LOG_MODULE_HCI_PORT = 'hci_port'
