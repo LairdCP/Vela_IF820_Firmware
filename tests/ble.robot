@@ -1,8 +1,8 @@
 *** Settings ***
 Documentation       BLE Test Suite
 
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    Peripheral
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    Central
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    Peripheral
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    Central
 Library             String
 Library             Collections
 Resource            common.robot

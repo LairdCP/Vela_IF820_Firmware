@@ -2,10 +2,10 @@
 Documentation       IF820 Manufacturing Test
 ...                 This test will continue to loop to test IF820 modules
 
-Library             ..${/}common${/}DvkProbe.py
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Device
-Library             ..${/}common${/}HciProgrammer.py    WITH NAME    IF820_Programmer
-Library             ..${/}common${/}HciSerialPort.py    WITH NAME    IF820_HciPort
+Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Device
+Library             ..${/}common_lib${/}common_lib${/}HciProgrammer.py    WITH NAME    IF820_Programmer
+Library             ..${/}common_lib${/}common_lib${/}HciSerialPort.py    WITH NAME    IF820_HciPort
 Library             ../common/CommonLib.py
 Library             Dialogs
 Library             Collections

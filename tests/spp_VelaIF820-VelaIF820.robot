@@ -1,12 +1,12 @@
 *** Settings ***
 Documentation       SPP tests with Vela IF820 devices.
 
-Library             ..${/}common${/}DvkProbe.py    WITH NAME    PP_Peripheral
-Library             ..${/}common${/}DvkProbe.py    WITH NAME    PP_Central
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Central
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
-Library             ..${/}common${/}SerialPort.py    WITH NAME    IF820_Central_SPP
-Library             ..${/}common${/}SerialPort.py    WITH NAME    IF820_Peripheral_SPP
+Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    PP_Peripheral
+Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    PP_Central
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Central
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
+Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_Central_SPP
+Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_Peripheral_SPP
 Resource            common.robot
 
 Test Setup          Test Setup

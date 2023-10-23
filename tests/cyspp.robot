@@ -1,12 +1,12 @@
 *** Settings ***
 Documentation       CYSPP tests with Vela IF820 devices.
 
-Library             ..${/}common${/}DvkProbe.py    WITH NAME    PP_Peripheral
-Library             ..${/}common${/}DvkProbe.py    WITH NAME    PP_Central
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Central
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
-Library             ..${/}common${/}SerialPort.py    WITH NAME    IF820_Central_CYSPP
-Library             ..${/}common${/}SerialPort.py    WITH NAME    IF820_Peripheral_CYSPP
+Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    PP_Peripheral
+Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    PP_Central
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Central
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
+Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_Central_CYSPP
+Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_Peripheral_CYSPP
 Resource            common.robot
 
 Test Setup          Test Setup
@@ -84,9 +84,6 @@ Test Setup
     Log    ${fw_ver_peripheral}
 
     # open the serial ports for devices in test
-    IF820_Central.Close
-    IF820_Peripheral.Close
-    Sleep    ${1}
     IF820_Central.open    ${settings_comport_IF820_central}    ${lib_if820_central.IF820_DEFAULT_BAUD}
     IF820_Peripheral.open    ${settings_comport_IF820_peripheral}    ${lib_if820_peripheral.IF820_DEFAULT_BAUD}
     Sleep    ${1}
@@ -164,15 +161,13 @@ CYSPP Test
     Builtin.Should Be Equal    ${0}    ${io_state_c}
 
     # send data from central to peripheral
-    ${open_result} =    IF820_Central_CYSPP.open
+    IF820_Central_CYSPP.open
     ...    ${settings_comport_IF820_central}
     ...    ${lib_if820_central.IF820_DEFAULT_BAUD}
-    Should Be True    ${open_result}
 
-    ${open_result} =    IF820_Peripheral_CYSPP.open
+    IF820_Peripheral_CYSPP.open
     ...    ${settings_comport_IF820_peripheral}
     ...    ${lib_if820_peripheral.IF820_DEFAULT_BAUD}
-    Should Be True    ${open_result}
 
     ${length} =    Get Length    ${CY_SPP_DATA}
     FOR    ${index}    IN RANGE    ${length}

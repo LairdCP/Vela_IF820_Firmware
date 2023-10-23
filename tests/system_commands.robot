@@ -2,7 +2,7 @@
 Documentation       System Command Tests.
 ...                 Will test system commands on an IF820 devcie.
 
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Device
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Device
 Resource            common.robot
 
 Test Setup          Test Setup

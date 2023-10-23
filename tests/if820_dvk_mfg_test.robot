@@ -2,7 +2,7 @@
 Documentation       IF820 DVK Manufacturing Test
 ...                 This test will test one IF820 DVK at a time.
 
-Library             ..${/}common${/}DvkProbe.py
+Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py
 
 Default Tags        vela if820
 

@@ -37,6 +37,7 @@ PATH:
   - ..
 PYTHONPATH:
   - ..
+  - ../common_lib
 
 ignoreFiles:
   - ../.gitignore

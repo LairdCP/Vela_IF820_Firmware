@@ -2,11 +2,11 @@
 Documentation       SPP tests with Vela IF820 devices.
 
 Library             OperatingSystem
-Library             ..${/}common${/}DvkProbe.py    WITH NAME    PP_Peripheral
-Library             ..${/}common${/}BT900SerialPort.py    WITH NAME    BT900_Central
-Library             ..${/}common${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
-Library             ..${/}common${/}SerialPort.py    WITH NAME    IF820_SPP
-Library             ..${/}common${/}CommonLib.py    WITH NAME    Common_Lib
+Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    PP_Peripheral
+Library             ..${/}common_lib${/}common_lib${/}BT900SerialPort.py    WITH NAME    BT900_Central
+Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
+Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_SPP
+Library             ..${/}common_lib${/}common_lib${/}CommonLib.py    WITH NAME    Common_Lib
 Library             Collections
 Resource            common.robot
 
@@ -74,9 +74,6 @@ Test Setup
     Open Pico Probe
 
     # open the serial ports for devices in test
-    IF820_Peripheral.close
-    Call Method    ${bt900_central_device}    close
-    Sleep    ${1}
     IF820_Peripheral.open    ${settings_comport_IF820_central}    ${lib_if820_peripheral.IF820_DEFAULT_BAUD}
     Call Method
     ...    ${bt900_central_device}

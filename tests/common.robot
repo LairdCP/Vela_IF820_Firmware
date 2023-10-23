@@ -1,6 +1,6 @@
 *** Settings ***
 Library     OperatingSystem
-Library     ..${/}common${/}If820Board.py    WITH NAME    IF820_Board
+Library     ..${/}common_lib${/}common_lib${/}If820Board.py    WITH NAME    IF820_Board
 
 
 *** Variables ***
