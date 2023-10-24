@@ -4,11 +4,13 @@ import logging
 import argparse
 import time
 import sys
-import common.EzSerialPort as ez_port
-import common.SerialPort as serial_port
-from common.CommonLib import CommonLib
-from ezserial_host_api.ezslib import Packet
-from common.If820Board import If820Board
+import sys
+sys.path.append('./common_lib')
+from common_lib.If820Board import If820Board
+from common_lib.ezserial_host_api.ezslib import Packet
+from common_lib.CommonLib import CommonLib
+import common_lib.SerialPort as serial_port
+import common_lib.EzSerialPort as ez_port
 
 """
 Hardware Setup
@@ -184,7 +186,7 @@ if __name__ == '__main__':
     # wait 1 sec to ensure all data is sent and received
     time.sleep(1)
     rx_data = sp_central.get_rx_queue()
-    string_utf8 = bytes(rx_data).decode('utf-8')
+    string_utf8 = bytes(rx_data).decode('utf-8', 'replace')
     logging.debug(
         f"Received CYSPP Data Peripheral->Central: {string_utf8}")
     if (len(string_utf8) == 0):

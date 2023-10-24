@@ -3,9 +3,11 @@
 import logging
 import argparse
 import time
-from common.CommonLib import CommonLib
-from ezserial_host_api.ezslib import Packet
-from common.If820Board import If820Board
+import sys
+sys.path.append('./common_lib')
+from common_lib.CommonLib import CommonLib
+from common_lib.ezserial_host_api.ezslib import Packet
+from common_lib.If820Board import If820Board
 
 
 API_FORMAT = Packet.EZS_API_FORMAT_TEXT

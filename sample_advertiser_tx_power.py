@@ -9,9 +9,10 @@ import argparse
 import logging
 import time
 import sys
-import ezserial_host_api.ezslib as ez_serial
-import common.EzSerialPort as ez_port
-from common.If820Board import If820Board
+sys.path.append('./common_lib')
+import common_lib.ezserial_host_api.ezslib as ez_serial
+import common_lib.EzSerialPort as ez_port
+from common_lib.If820Board import If820Board
 
 
 API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_TEXT

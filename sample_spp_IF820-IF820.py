@@ -3,9 +3,10 @@ import logging
 import argparse
 import time
 import sys
-import common.SerialPort as serial_port
-from common.CommonLib import CommonLib
-from common.If820Board import If820Board
+sys.path.append('./common_lib')
+import common_lib.SerialPort as serial_port
+from common_lib.CommonLib import CommonLib
+from common_lib.If820Board import If820Board
 
 """
 Hardware Setup

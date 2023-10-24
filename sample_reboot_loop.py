@@ -4,9 +4,9 @@ import argparse
 import logging
 import time
 import sys
-import ezserial_host_api.ezslib as ez_serial
-import common.EzSerialPort as ez_port
-from common.If820Board import If820Board
+sys.path.append('./common_lib')
+import common_lib.EzSerialPort as ez_port
+from common_lib.If820Board import If820Board
 
 """
 Hardware Setup
@@ -19,12 +19,6 @@ This sample requires the following hardware:
 def log_resp_err(resp: int):
     if resp != 0:
         logging.error(f'Response err: {resp}')
-
-
-def quit_on_resp_err(resp: int):
-    if resp != 0:
-        sys.exit(f'Response err: {resp}')
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -39,18 +33,18 @@ if __name__ == '__main__':
         logging.info("Debugging mode disabled")
 
     board = If820Board.get_board()
-    logging.info(f'Port Name: {board.puart_port}')
+    logging.info(f'Port Name: {board.puart_port_name}')
 
     ezp = ez_port.EzSerialPort()
-    open_result = ezp.open(board.puart_port, ezp.IF820_DEFAULT_BAUD)
+    open_result = ezp.open(board.puart_port_name, ezp.IF820_DEFAULT_BAUD)
     if (not open_result):
         raise Exception(
-            f"Error!  Unable to open ez_peripheral at {board.puart_port}")
+            f"Error!  Unable to open ez_peripheral at {board.puart_port_name}")
 
     while (True):
         try:
             logging.info('Send reboot')
-            log_resp_err(ezp.send_and_wait(ezp.CMD_REBOOT))
+            log_resp_err(ezp.send_and_wait(ezp.CMD_REBOOT)[0])
             logging.info('Wait for boot...')
             res = ezp.wait_event(ezp.EVENT_SYSTEM_BOOT)
             if (res[0] == 0):

@@ -3,8 +3,9 @@
 import argparse
 import logging
 import textwrap
-
-from common.If820Board import If820Board
+import sys
+sys.path.append('./common_lib')
+from common_lib.If820Board import If820Board
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

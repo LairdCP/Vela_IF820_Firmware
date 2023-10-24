@@ -50,8 +50,7 @@
             "type": "shell",
             "command": "python",
             "args": [
-                "${workspaceFolder}/sample_cyspp_IF820-IF820.py",
-                "-d"
+                "${workspaceFolder}/sample_cyspp_IF820-IF820.py"
             ],
             "problemMatcher": []
         },

@@ -3,11 +3,13 @@
 import argparse
 import logging
 import time
-import common.SerialPort as serial_port
-from common.BT900SerialPort import BT900SerialPort
-from common.CommonLib import CommonLib
-from ezserial_host_api.ezslib import Packet
-from common.If820Board import If820Board
+import sys
+sys.path.append('./common_lib')
+import common_lib.SerialPort as serial_port
+from common_lib.BT900SerialPort import BT900SerialPort
+from common_lib.CommonLib import CommonLib
+from common_lib.ezserial_host_api.ezslib import Packet
+from common_lib.If820Board import If820Board
 
 """
 Hardware Setup
@@ -43,11 +45,8 @@ if __name__ == '__main__':
     # open devices
     # bt900
     bt900_central = BT900SerialPort()
-    open_result = bt900_central.device.open(
+    bt900_central.device.open(
         args.connection_c, bt900_central.BT900_DEFAULT_BAUD)
-    if (not open_result):
-        raise Exception(
-            f"Error!  Unable to open bt900 central at {args.connection_p}")
 
     # IF820
     if820_board_p = If820Board.get_board()

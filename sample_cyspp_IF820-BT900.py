@@ -3,10 +3,12 @@
 import argparse
 import logging
 import time
-from common.BT900SerialPort import BT900SerialPort
-from common.CommonLib import CommonLib
-from ezserial_host_api.ezslib import Packet
-from common.If820Board import If820Board
+import sys
+sys.path.append('./common_lib')
+from common_lib.BT900SerialPort import BT900SerialPort
+from common_lib.CommonLib import CommonLib
+from common_lib.ezserial_host_api.ezslib import Packet
+from common_lib.If820Board import If820Board
 
 BT900_ADV_FLAGS = bytes([0x02, 0x01, 0x06])
 BT900_ADV_NAME = bytes([0x0C, 0x09, 0x4C, 0x41, 0x49,
@@ -39,11 +41,8 @@ if __name__ == '__main__':
     # open devices
     # bt900
     bt900_peripheral = BT900SerialPort()
-    open_result = bt900_peripheral.device.open(
+    bt900_peripheral.device.open(
         args.connection_p, bt900_peripheral.BT900_DEFAULT_BAUD)
-    if (not open_result):
-        raise Exception(
-            f"Error!  Unable to open bt900 peripheral at {args.connection_p}")
 
     # IF820
     if820_board_c = If820Board.get_board()
