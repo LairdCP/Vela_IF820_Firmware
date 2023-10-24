@@ -88,7 +88,7 @@ Query Firmware Version
 
 Query Bluetooth Address
     [Timeout]    ${TEST_TIMEOUT_SHORT}
-    ${res} =    IF820 Query Bluetooth Address    ${settings_if820_board1}
+    ${res} =    IF820 Query Bluetooth Address String    ${settings_if820_board1}
     Log Result    ${res}
     Log    Bluetooth address: ${res}
 
