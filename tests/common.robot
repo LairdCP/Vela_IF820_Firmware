@@ -128,6 +128,18 @@ EZ Wait Event DUT1
     ${res}=    EZ Wait Event    ${settings_if820_board1}    ${event}    ${timeout}
     RETURN    ${res}
 
+EZ Send DUT2
+    [Arguments]    ${command}    ${apiformat}=${API_MODE_TEXT}    &{kwargs}
+
+    ${res}=    EZ Send    ${settings_if820_board2}    ${command}    ${apiformat}    &{kwargs}
+    RETURN    ${res}
+
+EZ Wait Event DUT2
+    [Arguments]    ${event}    ${timeout}=${DEFAULT_RX_TIMEOUT}
+
+    ${res}=    EZ Wait Event    ${settings_if820_board2}    ${event}    ${timeout}
+    RETURN    ${res}
+
 EZ Port Open
     [Arguments]    ${board}    ${flow_control}=${False}
 
@@ -162,12 +174,18 @@ IF820 Query Firmware Version
     [Arguments]    ${board}
 
     ${res}=    EZ Send    ${board}    ${ez_system_commands.CMD_QUERY_FW}
-    ${app_ver} =    Convert To Hex    ${res.payload.app}    prefix=0x    length=8
+    ${app_ver}=    Convert To Hex    ${res.payload.app}    prefix=0x    length=8
     RETURN    ${app_ver}
 
 IF820 Query Bluetooth Address
     [Arguments]    ${board}
 
     ${res}=    EZ Send    ${board}    ${ez_system_commands.CMD_GET_BT_ADDR}
-    ${bt_addr} =    IF820_Board.if820_mac_addr_response_to_mac_as_string    ${res.payload.address}
+    RETURN    ${res.payload.address}
+
+IF820 Query Bluetooth Address String
+    [Arguments]    ${board}
+
+    ${res}=    IF820 Query Bluetooth Address    ${board}
+    ${bt_addr}=    IF820_Board.if820_mac_addr_response_to_mac_as_string    ${res}
     RETURN    ${bt_addr}
