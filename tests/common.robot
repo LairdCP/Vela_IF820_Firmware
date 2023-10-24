@@ -41,7 +41,7 @@ Fail if not equal
 
 Find Boards and Settings
     # Delay in case boards are re-enumerating over USB
-    Sleep    ${2}
+    Sleep    ${BOOT_DELAY_SECONDS}
 
     ${ez_system_commands}=    EZ_Serial_Port.Get Sys Commands
     Set Global Variable    ${ez_system_commands}    ${ez_system_commands}
@@ -82,19 +82,19 @@ Find Boards and Settings
     RETURN    ${settings}
 
 Init Board
-    [Arguments]    ${board}
+    [Arguments]    ${board}    ${wait_for_boot}=${True}
 
     ${board_ready}=    Set Variable    ${board.is_initialized}
     IF    ${board_ready} == False
-        Call Method    ${board}    open_and_init_board
+        Call Method    ${board}    open_and_init_board    ${wait_for_boot}
     END
 
 De-Init Board
-    [Arguments]    ${board}
+    [Arguments]    ${board}    ${reset_probe}=${True}
 
     ${board_ready}=    Set Variable    ${board.is_initialized}
     IF    ${board_ready} == True
-        Call Method    ${board}    close_ports_and_reset
+        Call Method    ${board}    close_ports_and_reset    ${reset_probe}
     END
 
 EZ Set API Mode
@@ -107,22 +107,26 @@ EZ Send
 
     ${res}=    Call Method    ${board.p_uart}    send_and_wait    ${command}    ${apiformat}    &{kwargs}
     Fail on error    ${res[0]}
+    RETURN    ${res[1]}
 
 EZ Wait Event
     [Arguments]    ${board}    ${event}    ${timeout}=${DEFAULT_RX_TIMEOUT}
 
     ${res}=    Call Method    ${board.p_uart}    wait_event    ${event}    ${timeout}
     Fail on error    ${res[0]}
+    RETURN    ${res[1]}
 
 EZ Send DUT1
     [Arguments]    ${command}    ${apiformat}=${API_MODE_TEXT}    &{kwargs}
 
-    EZ Send    ${settings_if820_board1}    ${command}    ${apiformat}    &{kwargs}
+    ${res}=    EZ Send    ${settings_if820_board1}    ${command}    ${apiformat}    &{kwargs}
+    RETURN    ${res}
 
 EZ Wait Event DUT1
     [Arguments]    ${event}    ${timeout}=${DEFAULT_RX_TIMEOUT}
 
-    EZ Wait Event    ${settings_if820_board1}    ${event}    ${timeout}
+    ${res}=    EZ Wait Event    ${settings_if820_board1}    ${event}    ${timeout}
+    RETURN    ${res}
 
 EZ Port Open
     [Arguments]    ${board}    ${flow_control}=${False}
@@ -147,3 +151,23 @@ UTF8 Bytes to String
     ${byte_string}=    Convert To Bytes    ${utf8_bytes}
     ${utf8_string}=    Convert To String    ${byte_string}
     RETURN    ${utf8_string}
+
+IF820 Flash Firmware
+    [Arguments]    ${board}    ${mini_driver}    ${firmware_file}    ${chip_erase}=${False}
+
+    De-Init Board    ${board}    ${False}
+    ${res}=    Call Method    ${board}    flash_firmware    ${mini_driver}    ${firmware_file}    ${chip_erase}
+
+IF820 Query Firmware Version
+    [Arguments]    ${board}
+
+    ${res}=    EZ Send    ${board}    ${ez_system_commands.CMD_QUERY_FW}
+    ${app_ver} =    Convert To Hex    ${res.payload.app}    prefix=0x    length=8
+    RETURN    ${app_ver}
+
+IF820 Query Bluetooth Address
+    [Arguments]    ${board}
+
+    ${res}=    EZ Send    ${board}    ${ez_system_commands.CMD_GET_BT_ADDR}
+    ${bt_addr} =    IF820_Board.if820_mac_addr_response_to_mac_as_string    ${res.payload.address}
+    RETURN    ${bt_addr}

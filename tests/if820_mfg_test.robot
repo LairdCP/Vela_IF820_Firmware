@@ -2,11 +2,6 @@
 Documentation       IF820 Manufacturing Test
 ...                 This test will continue to loop to test IF820 modules
 
-Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py
-Library             ..${/}common_lib${/}common_lib${/}If820Board.py    WITH NAME    IF820_Board
-Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Device
-Library             ..${/}common_lib${/}common_lib${/}HciProgrammer.py    WITH NAME    IF820_Programmer
-Library             ..${/}common_lib${/}common_lib${/}HciSerialPort.py    WITH NAME    IF820_HciPort
 Library             Dialogs
 Library             Collections
 Library             DateTime
@@ -19,13 +14,9 @@ Default Tags        vela if820
 
 
 *** Variables ***
-${lib_if820_board}              ${EMPTY}
-${lib_if820_device}             ${EMPTY}
-${ez_system_commands}           ${EMPTY}
 ${MINI_DRIVER}                  ${CURDIR}${/}..${/}files${/}minidriver-20820A1-uart-patchram.hex
 ${FIRMWARE}
-...                             ${CURDIR}${/}..${/}files${/}v1.4.12.12-candidate_int-ant/202309011_ezserial_app_VELA-IF820-INT-ANT-EVK_141212_v1.4.12.12_download.hex
-${PROGRAM_BAUD_RATE}            3000000
+...                             ${CURDIR}${/}..${/}files${/}v1.4.12.12_int-ant/202309011_ezserial_app_VELA-IF820-INT-ANT-EVK_141212_v1.4.12.12_download.hex
 ${PROGRAM_FIRMWARE_TIMEOUT}     30 seconds
 ${TEST_TIMEOUT_SHORT}           2 seconds
 @{module_result}                ${EMPTY}
@@ -45,23 +36,15 @@ ${GPIO_OP_RELEASE}              ${4}
 
 *** Test Cases ***
 MFG Test
-    Set Tags    L2-67
+    Set Tags    PROD-695
     Manufacturing Test Loop
 
 
 *** Keywords ***
 Test Setup
-    Read Settings File
+    Find Boards and Settings
 
-    # Get instances of python libraries needed
-    ${lib_if820_board} =    Builtin.Get Library Instance    IF820_Board
-    Set Global Variable    ${lib_if820_board}    ${lib_if820_board}
-
-    ${lib_if820_device} =    Builtin.Get Library Instance    IF820_Device
-    Set Global Variable    ${lib_if820_device}    ${lib_if820_device}
-
-    ${ez_system_commands} =    IF820_Device.Get Sys Commands
-    Set Global Variable    ${ez_system_commands}    ${ez_system_commands}
+    Init Board    ${settings_if820_board1}    ${False}
 
     # Setup test result file
     ${current_time} =    Get Current Date    result_format=%Y%m%d-%H%M%S
@@ -79,8 +62,7 @@ Test Setup
     Set Global Variable    ${GPIO_SETS}    ${gpio_sets}
 
 Test Teardown
-    IF820_Device.Close
-    Log    "Test Teardown Complete"
+    De-Init Board    ${settings_if820_board1}
 
 Init Module Result
     ${module_result} =    Create List
@@ -93,93 +75,62 @@ Log Result
 Program firmware
     [Timeout]    ${PROGRAM_FIRMWARE_TIMEOUT}
     [Arguments]    ${skip}=${False}
-    DvkProbe.Open    ${settings_id_pp_central}
     IF    not ${skip}
-        # Set module HCI CTS low to enter programming mode
-        IF820_HciPort.open    ${settings_hci_port_IF820_central}    ${lib_if820_device.IF820_DEFAULT_BAUD}
-        # Reset the module to enter programming mode
-        DvkProbe.Reset Device
-        # Close the HCI serial port so the programmer can open it
-        IF820_HciPort.Close
-        IF820_Programmer.Init
-        ...    ${MINI_DRIVER}
-        ...    ${settings_hci_port_IF820_central}
-        ...    ${lib_if820_device.IF820_DEFAULT_BAUD}
-        IF820_Programmer.Program Firmware    ${PROGRAM_BAUD_RATE}    ${FIRMWARE}    ${True}
+        IF820 Flash Firmware    ${settings_if820_board1}    ${MINI_DRIVER}    ${FIRMWARE}    ${True}
     END
-    # Reset the module to boot the firmware
-    DvkProbe.Reset Device
-    DvkProbe.Close
-    # Open the serial connection to communicate with EZ-Serial
-    IF820_Device.Open    ${settings_comport_IF820_central}    ${lib_if820_device.IF820_DEFAULT_BAUD}
-    # Wait for the module to boot
-    ${res} =    IF820_Device.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
-    Fail on error    ${res[0]}
+    Init Board    ${settings_if820_board1}    ${True}
 
 Query Firmware Version
     [Timeout]    ${TEST_TIMEOUT_SHORT}
-    ${res} =    IF820_Device.Send And Wait    ${ez_system_commands.CMD_QUERY_FW}
-    Fail on error    ${res[0]}
-    ${app_ver} =    Convert To Hex    ${res[1].payload.app}    prefix=0x    length=8
-    Log Result    ${app_ver}
-    Log    Firmware version: ${app_ver}
+    ${res} =    IF820 Query Firmware Version    ${settings_if820_board1}
+    Log Result    ${res}
+    Log    Firmware version: ${res}
 
 Query Bluetooth Address
     [Timeout]    ${TEST_TIMEOUT_SHORT}
-    ${res} =    IF820_Device.Send And Wait    ${ez_system_commands.CMD_GET_BT_ADDR}
-    Fail on error    ${res[0]}
-    ${mac_string} =    Call Method
-    ...    ${lib_if820_board}
-    ...    if820_mac_addr_response_to_mac_as_string
-    ...    ${res[1].payload.address}
-    Log Result    ${mac_string}
-    Log    Bluetooth address: ${mac_string}
+    ${res} =    IF820 Query Bluetooth Address    ${settings_if820_board1}
+    Log Result    ${res}
+    Log    Bluetooth address: ${res}
 
 Test GPIO
     [Timeout]    ${PROGRAM_FIRMWARE_TIMEOUT}
     FOR    ${pins}    IN    @{GPIO_SETS}
         # Config output pin
-        ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_DRIVE}
+        EZ Send DUT1    ${lib_ez_serial_port.CMD_GPIO_SET_DRIVE}
         ...    pin=${pins[0]}
         ...    pin_config=${GPIO_CONFIG_OUTPUT}
         ...    pin_out_value=${0}
         ...    pin_operation=${GPIO_OP_IMMEDIATE}
-        Fail on error    ${res[0]}
         # Config input pin
-        ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_DRIVE}
+        EZ Send DUT1    ${lib_ez_serial_port.CMD_GPIO_SET_DRIVE}
         ...    pin=${pins[1]}
         ...    pin_config=${GPIO_CONFIG_INPUT}
         ...    pin_out_value=${0}
         ...    pin_operation=${GPIO_OP_IMMEDIATE}
-        Fail on error    ${res[0]}
         # Set and read state
         FOR    ${state}    IN    @{GPIO_TEST_STATES}
-            ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_LOGIC}
+            EZ Send DUT1    ${lib_ez_serial_port.CMD_GPIO_SET_LOGIC}
             ...    pin=${pins[0]}
             ...    pin_out_value=${state}
-            Fail on error    ${res[0]}
-            ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_GET_LOGIC}
+            ${res} =    EZ Send DUT1    ${lib_ez_serial_port.CMD_GPIO_GET_LOGIC}
             ...    pin=${pins[1]}
             ...    direction=${0}
-            Fail on error    ${res[0]}
             Log    ${res}
-            IF    ${res[1].payload.logic} != ${state}
-                Fail    GPIO ${pins[0]} state ${res[1].payload.logic} should be ${state}
+            IF    ${res.payload.logic} != ${state}
+                Fail    GPIO ${pins[0]} state ${res.payload.logic} should be ${state}
             END
         END
         # Release pins from control
-        ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_DRIVE}
+        EZ Send DUT1    ${lib_ez_serial_port.CMD_GPIO_SET_DRIVE}
         ...    pin=${pins[0]}
         ...    pin_config=${0}
         ...    pin_out_value=${0}
         ...    pin_operation=${GPIO_OP_RELEASE}
-        Fail on error    ${res[0]}
-        ${res} =    IF820_Device.Send And Wait    ${lib_if820_device.CMD_GPIO_SET_DRIVE}
+        EZ Send DUT1    ${lib_ez_serial_port.CMD_GPIO_SET_DRIVE}
         ...    pin=${pins[1]}
         ...    pin_config=${0}
         ...    pin_out_value=${0}
         ...    pin_operation=${GPIO_OP_RELEASE}
-        Fail on error    ${res[0]}
     END
 
 Record Result
