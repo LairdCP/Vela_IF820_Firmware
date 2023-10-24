@@ -6,7 +6,6 @@ Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME  
 Library             ..${/}common_lib${/}common_lib${/}BT900SerialPort.py    WITH NAME    BT900_Central
 Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
 Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_SPP
-Library             ..${/}common_lib${/}common_lib${/}CommonLib.py    WITH NAME    Common_Lib
 Library             Collections
 Resource            common.robot
 

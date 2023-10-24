@@ -6,7 +6,6 @@ Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME  
 Library             ..${/}common_lib${/}common_lib${/}BT900SerialPort.py    WITH NAME    BT900_Central
 Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
 Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_CYSPP
-Library             ..${/}common_lib${/}common_lib${/}CommonLib.py    WITH NAME    Common_Lib
 Library             Collections
 Resource            common.robot
 
@@ -55,13 +54,11 @@ Test Setup
     IF820_Peripheral.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
 
     # Get instances of python libraries needed
-    ${lib_bt900_central} =    Builtin.Get Library Instance    BT900_Central
     ${lib_if820_peripheral} =    Builtin.Get Library Instance    IF820_Peripheral
     ${lib_pp_peripheral} =    Builtin.Get Library Instance    PP_Peripheral
-    Set Global Variable    ${lib_bt900_central}    ${lib_bt900_central}
     Set Global Variable    ${lib_if820_peripheral}    ${lib_if820_peripheral}
     Set Global Variable    ${lib_pp_peripheral}    ${lib_pp_peripheral}
-    ${bt900_central_device} =    BT900_Central.Get Device
+    ${bt900_central_device} =    Builtin.Get Library Instance    BT900_Central
     Set Global Variable    ${bt900_central_device}    ${bt900_central_device}
     ${ez_system_commands} =    IF820_Peripheral.Get Sys Commands
     ${ez_cyspp_commands} =    IF820_Peripheral.Get Cyspp Commands
@@ -76,15 +73,13 @@ Test Setup
     Open Pico Probe
 
     # open the serial ports for devices in test
-    # IF820_Peripheral.close
-    # Call Method    ${bt900_central_device}    close
     Sleep    ${1}
     IF820_Peripheral.open    ${settings_comport_IF820_peripheral}    ${lib_if820_peripheral.IF820_DEFAULT_BAUD}
     Call Method
     ...    ${bt900_central_device}
     ...    open
     ...    ${settings_comport_BT900}
-    ...    ${lib_bt900_central.BT900_DEFAULT_BAUD}
+    ...    ${bt900_central_device.BT900_DEFAULT_BAUD}
 
     Sleep    ${1}
 
@@ -104,12 +99,17 @@ Test Teardown
     PP_Peripheral.Close
     Log    "Test Teardown Complete"
 
+BT900 Send
+    [Arguments]    ${command}
+    ${response} =    Call Method    ${bt900_central_device}    send    ${command}
+    RETURN    ${response}
+
 Disconnect BT900
-    Call Method    ${bt900_central_device}    send    ${lib_bt900_central.BT900_GATTC_CLOSE}
+    Call Method    ${bt900_central_device}    send    ${bt900_central_device.BT900_GATTC_CLOSE}
     Sleep    ${0.5}
-    Call Method    ${bt900_central_device}    send    ${lib_bt900_central.BT900_CYSPP_DISCONNECT}
+    Call Method    ${bt900_central_device}    send    ${bt900_central_device.BT900_CYSPP_DISCONNECT}
     Sleep    ${0.5}
-    Call Method    ${bt900_central_device}    send    ${lib_bt900_central.BT900_EXIT}
+    Call Method    ${bt900_central_device}    send    ${bt900_central_device.BT900_EXIT}
     Sleep    ${0.5}
 
 Open Pico Probe
@@ -136,8 +136,8 @@ CYSPP Test
     Log    ${str_mac}
     ${str_mac} =    Set Variable    01${str_mac}
 
-    ${response} =    BT900_Central.Send And Wait For Response    ${lib_bt900_central.BT900_CMD_MODE}
-    Should Contain    ${response[1]}    ${OK}
+    ${response} =    BT900 Send    ${bt900_central_device.BT900_CMD_MODE}
+    Should Contain    ${response}    ${OK}
 
     # if820 advertise
     ${resp} =    IF820_Peripheral.Send And Wait
@@ -157,10 +157,10 @@ CYSPP Test
     # bt900 cyspp connect
     # note:    the bt900 central could scan for devices and pick out the appropriate device to connect to.
     # however for simplicity since we already know its address we will skip that step and just connect.
-    Log    ${lib_bt900_central.BT900_CYSPP_CONNECT}
+    Log    ${bt900_central_device.BT900_CYSPP_CONNECT}
     ${connect_command} =    Set Variable
-    ...    ${lib_bt900_central.BT900_CYSPP_CONNECT}${str_mac} 50 30 30 50 ${lib_bt900_central.CR}
-    ${response} =    BT900_Central.Send And Wait For Response    ${connect_command}
+    ...    ${bt900_central_device.BT900_CYSPP_CONNECT}${str_mac} 50 30 30 50
+    ${response} =    BT900 Send    ${connect_command}
     Should Contain    ${response[1]}    ${OK}
 
     # IF820 Event (Text Info contains "C" for connect)
@@ -172,11 +172,11 @@ CYSPP Test
     Fail if not equal    ${response[0]}    ${0}
 
     # bt900 open gattc
-    ${response} =    BT900_Central.Send And Wait For Response    ${lib_bt900_central.BT900_GATTC_OPEN}
+    ${response} =    BT900 Send    ${bt900_central_device.BT900_GATTC_OPEN}
     Should Contain    ${response[1]}    ${OK}
 
     # bt900 enable notifications
-    ${response} =    BT900_Central.Send And Wait For Response    ${lib_bt900_central.BT900_ENABLE_CYSPP_NOT}
+    ${response} =    BT900 Send    ${bt900_central_device.BT900_ENABLE_CYSPP_NOT}
     Should Contain    ${response[1]}    ${OK}
 
     # IF820 Event (Text Info contains "W" for gatts data written)
@@ -207,10 +207,9 @@ CYSPP Test
     # send data from BT900 -> IF820
     Log    Send BT900->IF820
     ${data_to_send} =    Builtin.Catenate
-    ...    ${lib_bt900_central.BT900_CYSPP_WRITE_DATA_STRING}
+    ...    ${bt900_central_device.BT900_CYSPP_WRITE_DATA_STRING}
     ...    ${CYSPP_DATA}
-    ...    ${lib_bt900_central.CR}
-    ${response} =    BT900_Central.Send And Wait For Response    ${data_to_send}
+    ${response} =    BT900 Send    ${data_to_send}
     Log    ${response[1]}
 
     # read data from IF820 Rx Queue

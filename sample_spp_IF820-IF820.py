@@ -5,7 +5,6 @@ import time
 import sys
 sys.path.append('./common_lib')
 import common_lib.SerialPort as serial_port
-from common_lib.CommonLib import CommonLib
 from common_lib.If820Board import If820Board
 
 """
@@ -30,8 +29,6 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    common_lib = CommonLib()
-
     boards = If820Board.get_connected_boards()
     if len(boards) < 2:
         logging.critical(
@@ -45,15 +42,15 @@ if __name__ == '__main__':
 
     # Send Ping just to verify coms before proceeding
     ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
-    common_lib.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
     ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
-    common_lib.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
 
     # Query the peripheral to get is Bluetooth Address
     peripheral_bt_mac = None
     ez_rsp = if820_board_p.p_uart.send_and_wait(
         if820_board_p.p_uart.CMD_GET_BT_ADDR)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_p.p_uart.CMD_GET_BT_ADDR, ez_rsp)
     peripheral_bt_mac = ez_rsp[1].payload.address
     logging.debug(peripheral_bt_mac)
@@ -63,12 +60,12 @@ if __name__ == '__main__':
     ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_CONNECT,
                                                 address=peripheral_bt_mac,
                                                 type=1)
-    common_lib.check_if820_response(if820_board_p.p_uart.CMD_CONNECT, ez_rsp)
+    If820Board.check_if820_response(if820_board_p.p_uart.CMD_CONNECT, ez_rsp)
     conn_handle = ez_rsp[1].payload.conn_handle
 
     ez_rsp = if820_board_c.p_uart.wait_event(
         if820_board_c.p_uart.EVENT_BT_CONNECTED)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_BT_CONNECTED, ez_rsp)
 
     # close ez serial ports

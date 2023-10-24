@@ -6,7 +6,6 @@ import time
 import sys
 sys.path.append('./common_lib')
 from common_lib.BT900SerialPort import BT900SerialPort
-from common_lib.CommonLib import CommonLib
 from common_lib.ezserial_host_api.ezslib import Packet
 from common_lib.If820Board import If820Board
 
@@ -36,8 +35,6 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    common_lib = CommonLib()
-
     # open devices
     # bt900
     bt900_peripheral = BT900SerialPort()
@@ -51,24 +48,24 @@ if __name__ == '__main__':
 
     # IF820 Ping
     ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_PING)
-    common_lib.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
 
     # Put into central mode by setting CP_ROLE (GPIO18 low)
     if820_board_c.probe.gpio_to_output(if820_board_c.CP_ROLE)
     if820_board_c.probe.gpio_to_output_low(if820_board_c.CP_ROLE)
     ez_rsp = if820_board_c.p_uart.send_and_wait(
         if820_board_c.p_uart.CMD_REBOOT)
-    common_lib.check_if820_response(if820_board_c.p_uart.CMD_REBOOT, ez_rsp)
+    If820Board.check_if820_response(if820_board_c.p_uart.CMD_REBOOT, ez_rsp)
     ez_rsp = if820_board_c.p_uart.wait_event(
         if820_board_c.p_uart.EVENT_SYSTEM_BOOT)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_SYSTEM_BOOT, ez_rsp)
 
     bt900_addr = None
     while (bt900_addr == None):
         ez_rsp = if820_board_c.p_uart.wait_event(
             if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT, ez_rsp)
         packet = ez_rsp[1]
         if ((packet.payload.address_type == 0) and
@@ -81,7 +78,7 @@ if __name__ == '__main__':
 
     ez_rsp = if820_board_c.p_uart.send_and_wait(
         if820_board_c.p_uart.CMD_GAP_STOP_SCAN)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.CMD_GAP_STOP_SCAN, ez_rsp)
 
     # IF820(central) connect to BT900 (peripheral)
@@ -97,7 +94,7 @@ if __name__ == '__main__':
                                                   scan_interval=0x0100,
                                                   scan_window=0x0100,
                                                   scan_timeout=0)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.CMD_GAP_CONNECT, response)
     logging.info("Wait for connected event.")
     ez_rsp = if820_board_c.p_uart.wait_event(
@@ -117,7 +114,7 @@ if __name__ == '__main__':
                                                 attr_handle=0x16,
                                                 type=0,
                                                 data=[0x01, 0x00])
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.CMD_GATTC_WRITE_HANDLE, ez_rsp)
     time.sleep(0.5)
 
@@ -129,7 +126,7 @@ if __name__ == '__main__':
                                                 attr_handle=0x13,
                                                 type=1,
                                                 data=[0x30, 0x31, 0x32, 0x33, 0x34, 0x35])
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.CMD_GATTC_WRITE_HANDLE, ez_rsp)
 
     time.sleep(0.5)
@@ -142,7 +139,7 @@ if __name__ == '__main__':
     bt900_peripheral.device.send('a')
     ez_rsp = if820_board_c.p_uart.wait_event(
         if820_board_c.p_uart.EVENT_GATTC_DATA_RECEIVED)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_GATTC_DATA_RECEIVED, ez_rsp)
     rx_data = ez_rsp[1].payload.data
     string_utf8 = bytes(rx_data).decode('utf-8')

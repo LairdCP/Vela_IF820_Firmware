@@ -5,7 +5,6 @@ import argparse
 import time
 import sys
 sys.path.append('./common_lib')
-from common_lib.CommonLib import CommonLib
 from common_lib.ezserial_host_api.ezslib import Packet
 from common_lib.If820Board import If820Board
 
@@ -55,8 +54,6 @@ if __name__ == '__main__':
     if820_board_p.open_and_init_board()
     if820_board_p.p_uart.set_api_format(API_FORMAT)
 
-    common_lib = CommonLib()
-
     # Disable sleep via gpio
     logging.info(f'GPIO Init')
     if820_board_p.probe.gpio_to_output(if820_board_p.LP_MODE)
@@ -69,25 +66,25 @@ if __name__ == '__main__':
     logging.info(f'Send Ping')
     ez_rsp = if820_board_p.p_uart.send_and_wait(
         if820_board_p.p_uart.CMD_PING)
-    common_lib.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
 
     ez_rsp = if820_board_p.p_uart.send_and_wait(
         command=if820_board_p.p_uart.CMD_GAP_GET_ADV_PARAMETERS)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_p.p_uart.CMD_GAP_GET_ADV_PARAMETERS, ez_rsp)
 
     if HIBERNATE:
         # set hibernate mode
         ez_rsp = if820_board_p.p_uart.send_and_wait(command=if820_board_p.p_uart.CMD_SET_SLEEP_PARAMS,
                                                     level=SYS_DEEP_SLEEP_LEVEL, hid_off_sleep_time=0)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_p.p_uart.CMD_SET_SLEEP_PARAMS, ez_rsp)
 
     else:
         logging.info(f'Stop BLE advertising.')
         ez_rsp = if820_board_p.p_uart.send_and_wait(
             if820_board_p.p_uart.CMD_GAP_STOP_ADV)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_p.p_uart.CMD_GAP_STOP_ADV, ez_rsp)
 
         logging.info(f'Stop Bluetooth classic discovery.')
@@ -100,7 +97,7 @@ if __name__ == '__main__':
             scn=0,
             active_bt_discoverability=0,
             active_bt_connectability=0)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_p.p_uart.CMD_SET_PARAMS, ez_rsp)
 
     # Enable Sleep via GPIO
@@ -125,7 +122,7 @@ if __name__ == '__main__':
     # Send Ping just to verify coms before proceeding
     ez_rsp = if820_board_p.p_uart.send_and_wait(
         if820_board_p.p_uart.CMD_PING)
-    common_lib.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
 
     # Close the open com ports
     if820_board_p.close_ports_and_reset()

@@ -7,7 +7,6 @@ import sys
 sys.path.append('./common_lib')
 import common_lib.SerialPort as serial_port
 from common_lib.BT900SerialPort import BT900SerialPort
-from common_lib.CommonLib import CommonLib
 from common_lib.ezserial_host_api.ezslib import Packet
 from common_lib.If820Board import If820Board
 
@@ -34,8 +33,6 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    common_lib = CommonLib()
-
     # open devices
     # bt900
     bt900_peripheral = BT900SerialPort()
@@ -55,16 +52,16 @@ if __name__ == '__main__':
     # factory reset if820
     ez_rsp = if820_board_c.p_uart.send_and_wait(
         if820_board_c.p_uart.CMD_FACTORY_RESET)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.CMD_FACTORY_RESET, ez_rsp)
     ez_rsp = if820_board_c.p_uart.wait_event(
         if820_board_c.p_uart.EVENT_SYSTEM_BOOT)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_SYSTEM_BOOT, ez_rsp)
 
     # IF820 Ping
     ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_PING)
-    common_lib.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
 
     # bt900 get mac address of peripheral
     bt900_mac = bt900_peripheral.get_bt900_bluetooth_mac()
@@ -73,37 +70,37 @@ if __name__ == '__main__':
     # bt900 enter command mode
     response = bt900_peripheral.send_and_wait_for_response(
         bt900_peripheral.BT900_CMD_MODE)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # bt900 delete all previous bonds
     response = bt900_peripheral.send_and_wait_for_response(
         bt900_peripheral.BT900_CMD_BTC_BOND_DEL)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # bt900 set io cap
     response = bt900_peripheral.send_and_wait_for_response(
         bt900_peripheral.BT900_CMD_BTC_IOCAP)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # bt900 set pairable
     response = bt900_peripheral.send_and_wait_for_response(
         bt900_peripheral.BT900_CMD_SET_BTC_PAIRABLE)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # bt900 set connectable
     response = bt900_peripheral.send_and_wait_for_response(
         bt900_peripheral.BT900_CMD_SET_BTC_CONNECTABLE)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # bt900 set discoverable
     response = bt900_peripheral.send_and_wait_for_response(
         bt900_peripheral.BT900_CMD_SET_BTC_DISCOVERABLE)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # bt900 open spp port
     response = bt900_peripheral.send_and_wait_for_response(
         bt900_peripheral.BT900_CMD_SPP_OPEN)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # IF820(central) connect to BT900 (peripheral)
     conn_handle = None
@@ -112,7 +109,7 @@ if __name__ == '__main__':
                                                   address=bt900_mac[1],
                                                   apiformat=Packet.EZS_API_FORMAT_TEXT,
                                                   type=1)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_SMP_PASSKEY_DISPLAY_REQUESTED, response)
     conn_handle = response[1]
 
@@ -120,55 +117,55 @@ if __name__ == '__main__':
     logging.info("Wait for IF820 Pairing Requested Event.")
     response = if820_board_c.p_uart.wait_event(
         event=if820_board_c.p_uart.EVENT_SMP_PAIRING_REQUESTED)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_SMP_PAIRING_REQUESTED, response)
 
     # bt900 event (Text Info contains "Pair Req")
     logging.info("Wait for BT900 Pair Request Event.")
     bt900_event = bt900_peripheral.wait_for_response(
         rx_timeout_sec=bt900_peripheral.DEFAULT_WAIT_TIME_SEC)
-    common_lib.check_bt900_response(
+    BT900SerialPort.check_bt900_response(
         bt900_event, bt900_peripheral.BT900_PAIR_REQ)
 
     # bt900 set pairable (Response is "OK")
     logging.info("Send BT900 Pair Request")
     response = bt900_peripheral.send_and_wait_for_response(
         bt900_peripheral.BT900_CMD_BTC_PAIR_RESPONSE)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # IF820 Event (Text Info contains "PR")
     logging.info("Wait for IF820 SMP Pairing Result Event.")
     response = if820_board_c.p_uart.wait_event(
         event=if820_board_c.p_uart.EVENT_SMP_PAIRING_RESULT)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_SMP_PAIRING_RESULT, response)
 
     # bt900 event (Text Info contains "Pair Result")
     logging.info("Wait for BT900 SMP Pair Result.")
     bt900_event = bt900_peripheral.wait_for_response(
         rx_timeout_sec=bt900_peripheral.DEFAULT_WAIT_TIME_SEC)
-    common_lib.check_bt900_response(
+    BT900SerialPort.check_bt900_response(
         bt900_event, bt900_peripheral.BT900_PAIR_RESULT)
 
     # IF820 Event (Text Info contains "ENC")
     logging.info("Wait for IF820 SMP Encryption Status Event.")
     response = if820_board_c.p_uart.wait_event(
         event=if820_board_c.p_uart.EVENT_SMP_ENCRYPTION_STATUS)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_SMP_PASSKEY_DISPLAY_REQUESTED, response)
 
     # IF820 Event
     logging.info("Wait for IF820 Bluetooth Connected Event.")
     response = if820_board_c.p_uart.wait_event(
         event=if820_board_c.p_uart.EVENT_BT_CONNECTED)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_c.p_uart.EVENT_BT_CONNECTED, response)
 
     # bt900 event
     logging.info("Wait for BT900 SPP Connect Event.")
     bt900_event = bt900_peripheral.wait_for_response(
         rx_timeout_sec=bt900_peripheral.DEFAULT_WAIT_TIME_SEC)
-    common_lib.check_bt900_response(
+    BT900SerialPort.check_bt900_response(
         bt900_event, bt900_peripheral.BT900_SPP_CONNECT)
 
     # The two devices are connected.  We can now send data on SPP.

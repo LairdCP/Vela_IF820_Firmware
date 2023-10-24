@@ -3,10 +3,10 @@ Documentation       IF820 Manufacturing Test
 ...                 This test will continue to loop to test IF820 modules
 
 Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py
+Library             ..${/}common_lib${/}common_lib${/}If820Board.py    WITH NAME    IF820_Board
 Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Device
 Library             ..${/}common_lib${/}common_lib${/}HciProgrammer.py    WITH NAME    IF820_Programmer
 Library             ..${/}common_lib${/}common_lib${/}HciSerialPort.py    WITH NAME    IF820_HciPort
-Library             ../common/CommonLib.py
 Library             Dialogs
 Library             Collections
 Library             DateTime
@@ -19,6 +19,7 @@ Default Tags        vela if820
 
 
 *** Variables ***
+${lib_if820_board}              ${EMPTY}
 ${lib_if820_device}             ${EMPTY}
 ${ez_system_commands}           ${EMPTY}
 ${MINI_DRIVER}                  ${CURDIR}${/}..${/}files${/}minidriver-20820A1-uart-patchram.hex
@@ -53,6 +54,9 @@ Test Setup
     Read Settings File
 
     # Get instances of python libraries needed
+    ${lib_if820_board} =    Builtin.Get Library Instance    IF820_Board
+    Set Global Variable    ${lib_if820_board}    ${lib_if820_board}
+
     ${lib_if820_device} =    Builtin.Get Library Instance    IF820_Device
     Set Global Variable    ${lib_if820_device}    ${lib_if820_device}
 
@@ -124,7 +128,10 @@ Query Bluetooth Address
     [Timeout]    ${TEST_TIMEOUT_SHORT}
     ${res} =    IF820_Device.Send And Wait    ${ez_system_commands.CMD_GET_BT_ADDR}
     Fail on error    ${res[0]}
-    ${mac_string} =    CommonLib.If820 Mac Addr Response To Mac As String    ${res[1].payload.address}
+    ${mac_string} =    Call Method
+    ...    ${lib_if820_board}
+    ...    if820_mac_addr_response_to_mac_as_string
+    ...    ${res[1].payload.address}
     Log Result    ${mac_string}
     Log    Bluetooth address: ${mac_string}
 

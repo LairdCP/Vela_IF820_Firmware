@@ -8,7 +8,6 @@ import sys
 sys.path.append('./common_lib')
 from common_lib.If820Board import If820Board
 from common_lib.ezserial_host_api.ezslib import Packet
-from common_lib.CommonLib import CommonLib
 import common_lib.SerialPort as serial_port
 import common_lib.EzSerialPort as ez_port
 
@@ -46,8 +45,6 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    common_lib = CommonLib()
-
     boards = If820Board.get_connected_boards()
     if len(boards) < 2:
         logging.critical(
@@ -61,14 +58,14 @@ if __name__ == '__main__':
 
     # Send Ping just to verify coms before proceeding
     ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
-    common_lib.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
     ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_PING)
-    common_lib.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_c.p_uart.CMD_PING, ez_rsp)
 
     # if820 get mac address of peripheral
     ez_rsp = if820_board_p.p_uart.send_and_wait(
         command=if820_board_p.p_uart.CMD_GET_BT_ADDR)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_p.p_uart.CMD_GET_BT_ADDR, ez_rsp)
     peripheral_addr = ez_rsp[1].payload.address
     logging.info(ez_rsp[1].payload.address)
@@ -100,7 +97,7 @@ if __name__ == '__main__':
                                                     sleep_level=0,
                                                     server_security=0,
                                                     client_flags=CYSPP_RX_FLOW_CNTRL)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_c.p_uart.CMD_P_CYSPP_SET_PARAMETERS, ez_rsp)
 
         ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_START_SCAN,
@@ -111,13 +108,13 @@ if __name__ == '__main__':
                                                     filter=SCAN_FILTER_ACCEPT_ALL,
                                                     nodupe=1,
                                                     timeout=5)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_c.p_uart.CMD_GAP_START_SCAN, ez_rsp)
 
         while True:
             ez_rsp = if820_board_c.p_uart.wait_event(
                 if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT)
-            common_lib.check_if820_response(
+            If820Board.check_if820_response(
                 if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT, ez_rsp)
             packet = ez_rsp[1]
             logging.debug(f'Received {packet}')
@@ -130,7 +127,7 @@ if __name__ == '__main__':
 
         ez_rsp = if820_board_c.p_uart.send_and_wait(
             if820_board_c.p_uart.CMD_GAP_STOP_SCAN)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_c.p_uart.CMD_GAP_STOP_SCAN, ez_rsp)
 
         ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_CONNECT,
@@ -142,13 +139,13 @@ if __name__ == '__main__':
                                                     scan_interval=0x0100,
                                                     scan_window=0x0100,
                                                     scan_timeout=0)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_c.p_uart.CMD_GAP_CONNECT, ez_rsp)
 
         logging.info('Found peripheral device, connecting...')
         res = if820_board_c.p_uart.wait_event(
             if820_board_c.p_uart.EVENT_GAP_CONNECTED)
-        common_lib.check_if820_response(
+        If820Board.check_if820_response(
             if820_board_c.p_uart.EVENT_GAP_CONNECTED, ez_rsp)
         logging.info('Connected!')
         # time for cyspp to be setup

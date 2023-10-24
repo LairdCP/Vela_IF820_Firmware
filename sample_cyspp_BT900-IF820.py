@@ -5,11 +5,10 @@ import logging
 import time
 import sys
 sys.path.append('./common_lib')
-import common_lib.SerialPort as serial_port
-from common_lib.BT900SerialPort import BT900SerialPort
-from common_lib.CommonLib import CommonLib
-from common_lib.ezserial_host_api.ezslib import Packet
 from common_lib.If820Board import If820Board
+from common_lib.ezserial_host_api.ezslib import Packet
+from common_lib.BT900SerialPort import BT900SerialPort
+import common_lib.SerialPort as serial_port
 
 """
 Hardware Setup
@@ -40,8 +39,6 @@ if __name__ == '__main__':
     else:
         logging.info("Debugging mode disabled")
 
-    common_lib = CommonLib()
-
     # open devices
     # bt900
     bt900_central = BT900SerialPort()
@@ -60,22 +57,22 @@ if __name__ == '__main__':
     # IF820 Ping
     ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
     logging.info(type(ez_rsp))
-    common_lib.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
+    If820Board.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
 
     # if820 get mac address of peripheral
     response = if820_board_p.p_uart.send_and_wait(
         command=if820_board_p.p_uart.CMD_GET_BT_ADDR, apiformat=Packet.EZS_API_FORMAT_TEXT)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_p.p_uart.CMD_GET_BT_ADDR, ez_rsp)
     # note the BT900 requires a 01 prefix to the start of the MAC address
-    str_mac = BT900_MAC_PREFIX + common_lib.if820_mac_addr_response_to_mac_as_string(
+    str_mac = BT900_MAC_PREFIX + If820Board.if820_mac_addr_response_to_mac_as_string(
         response[1].payload.address)
     logging.info(str_mac)
 
     # bt900 enter command mode
     response = bt900_central.send_and_wait_for_response(
         bt900_central.BT900_CMD_MODE)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # if820 advertise
     response = if820_board_p.p_uart.send_and_wait(
@@ -98,37 +95,37 @@ if __name__ == '__main__':
     connect_command = bt900_central.BT900_CYSPP_CONNECT + \
         str_mac + " 50 30 30 50" + bt900_central.CR
     response = bt900_central.send_and_wait_for_response(connect_command, 5)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # IF820 Event (Text Info contains "C" for connect)
     logging.info("Wait for IF820 Connected Event.")
     response = if820_board_p.p_uart.wait_event(
         event=if820_board_p.p_uart.EVENT_GAP_CONNECTED, rxtimeout=3)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_p.p_uart.EVENT_GAP_CONNECTED, response)
 
     # IF820 Event (Text Info contains "CU" for connection updated)
     logging.info("Wait for IF820 Connection Updated Event.")
     response = if820_board_p.p_uart.wait_event(
         event=if820_board_p.p_uart.EVENT_GAP_CONNECTION_UPDATED, rxtimeout=3)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_p.p_uart.EVENT_GAP_CONNECTION_UPDATED, response)
 
     # bt900 open gattc
     response = bt900_central.send_and_wait_for_response(
         bt900_central.BT900_GATTC_OPEN)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # bt900 enable notifications
     response = bt900_central.send_and_wait_for_response(
         bt900_central.BT900_ENABLE_CYSPP_NOT)
-    common_lib.check_bt900_response(response[0])
+    BT900SerialPort.check_bt900_response(response[0])
 
     # IF820 Event (Text Info contains "W" for gatts data written)
     logging.info("Wait for IF820 Gatts Data Written Event.")
     response = if820_board_p.p_uart.wait_event(
         event=if820_board_p.p_uart.EVENT_GATTS_DATA_WRITTEN, rxtimeout=3)
-    common_lib.check_if820_response(
+    If820Board.check_if820_response(
         if820_board_p.p_uart.EVENT_GATTS_DATA_WRITTEN, response)
 
     time.sleep(1)

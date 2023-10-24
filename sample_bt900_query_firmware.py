@@ -27,8 +27,7 @@ if __name__ == '__main__':
         logging.info("Debugging mode disabled")
 
     bt900 = BT900SerialPort()
-    bt900.device.open(portName=args.connection, baud=115200)
+    bt900.open(portName=args.connection, baud=115200)
     response = bt900.get_bt900_fw_ver()
     logging.info(f'Firmware version: {response}')
-    bt900.device.clear_rx_queue()
-    bt900.device.close()
+    bt900.close()
