@@ -26,9 +26,8 @@ if __name__ == '__main__':
         logging.info("Debugging mode disabled")
 
     if820_board_p = If820Board.get_board()
-    logging.info(f'Port Name: {if820_board_p.puart_port_name}')
     if820_board_p.open_and_init_board()
-
+    logging.info('Sending ping command...')
     res = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
     if res[0] == 0:
         logging.info(f'Ping result success: {res}')

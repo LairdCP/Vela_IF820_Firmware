@@ -2,6 +2,7 @@
 Library     OperatingSystem
 Library     ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    EZ_Serial_Port
 Library     ..${/}common_lib${/}common_lib${/}If820Board.py    WITH NAME    IF820_Board
+Library     ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    DVK_Probe
 
 
 *** Variables ***
@@ -43,11 +44,14 @@ Find Boards and Settings
     # Delay in case boards are re-enumerating over USB
     Sleep    ${BOOT_DELAY_SECONDS}
 
-    ${ez_system_commands}=    EZ_Serial_Port.Get Sys Commands
-    Set Global Variable    ${ez_system_commands}    ${ez_system_commands}
+    ${lib_if820_board}=    Get Library Instance    IF820_Board
+    Set Global Variable    ${lib_if820_board}    ${lib_if820_board}
 
     ${lib_ez_serial_port}=    Get Library Instance    EZ_Serial_Port
     Set Global Variable    ${lib_ez_serial_port}    ${lib_ez_serial_port}
+
+    ${lib_dvk_probe}=    Get Library Instance    DVK_Probe
+    Set Global Variable    ${lib_dvk_probe}    ${lib_dvk_probe}
 
     ${settings_file}=    Get File    ${CURDIR}${/}..${/}.vscode${/}settings.json
     ${settings}=    Evaluate    json.loads('''${settings_file}''')    json
@@ -103,7 +107,7 @@ EZ Set API Mode
     Call Method    ${board.p_uart}    set_api_format    ${apiformat}
 
 EZ Send
-    [Arguments]    ${board}    ${command}    ${apiformat}=${API_MODE_TEXT}    &{kwargs}
+    [Arguments]    ${board}    ${command}    ${apiformat}=${None}    &{kwargs}
 
     ${res}=    Call Method    ${board.p_uart}    send_and_wait    ${command}    ${apiformat}    &{kwargs}
     Fail on error    ${res[0]}
@@ -117,7 +121,7 @@ EZ Wait Event
     RETURN    ${res[1]}
 
 EZ Send DUT1
-    [Arguments]    ${command}    ${apiformat}=${API_MODE_TEXT}    &{kwargs}
+    [Arguments]    ${command}    ${apiformat}=${None}    &{kwargs}
 
     ${res}=    EZ Send    ${settings_if820_board1}    ${command}    ${apiformat}    &{kwargs}
     RETURN    ${res}
@@ -129,7 +133,7 @@ EZ Wait Event DUT1
     RETURN    ${res}
 
 EZ Send DUT2
-    [Arguments]    ${command}    ${apiformat}=${API_MODE_TEXT}    &{kwargs}
+    [Arguments]    ${command}    ${apiformat}=${None}    &{kwargs}
 
     ${res}=    EZ Send    ${settings_if820_board2}    ${command}    ${apiformat}    &{kwargs}
     RETURN    ${res}
@@ -149,9 +153,6 @@ EZ Port Open
     ...    ${board.puart_port_name}
     ...    ${board.p_uart.IF820_DEFAULT_BAUD}
     ...    ${flow_control}
-    IF    "${res[1]}" == ${None}
-        Fail    Error! Failed to open port: ${board.puart_port_name}
-    END
 
 EZ Port Close
     [Arguments]    ${board}
@@ -173,14 +174,14 @@ IF820 Flash Firmware
 IF820 Query Firmware Version
     [Arguments]    ${board}
 
-    ${res}=    EZ Send    ${board}    ${ez_system_commands.CMD_QUERY_FW}
+    ${res}=    EZ Send    ${board}    ${lib_ez_serial_port.CMD_QUERY_FW}
     ${app_ver}=    Convert To Hex    ${res.payload.app}    prefix=0x    length=8
     RETURN    ${app_ver}
 
 IF820 Query Bluetooth Address
     [Arguments]    ${board}
 
-    ${res}=    EZ Send    ${board}    ${ez_system_commands.CMD_GET_BT_ADDR}
+    ${res}=    EZ Send    ${board}    ${lib_ez_serial_port.CMD_GET_BT_ADDR}
     RETURN    ${res.payload.address}
 
 IF820 Query Bluetooth Address String
