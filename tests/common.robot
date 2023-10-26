@@ -1,32 +1,21 @@
 *** Settings ***
 Library     OperatingSystem
-Library     ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    EZ_Serial_Port
-Library     ..${/}common_lib${/}common_lib${/}If820Board.py    WITH NAME    IF820_Board
-Library     ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    DVK_Probe
+Library     ..${/}common_lib${/}common_lib${/}If820Board.py
+Library     ..${/}common_lib${/}common_lib${/}BT900SerialPort.py
+Library     ..${/}common_lib${/}common_lib${/}EzSerialPort.py
 
 
 *** Variables ***
-${API_MODE_TEXT}                            ${0}
-${API_MODE_BINARY}                          ${1}
-${UART_FLOW_CNTRL_NONE}                     ${0}
-${UART_FLOW_CNTRL_ENABLE}                   ${1}
-${DEFAULT_RX_TIMEOUT}                       ${1}
-${CLEAR_QUEUE_TIMEOUT_SEC}                  ${2}
-${ERROR_DEVICE_TYPE}                        Error! Device type not found!
-${BOOT_DELAY_SECONDS}                       ${3}
-@{API_MODES}                                ${API_MODE_TEXT}    ${API_MODE_BINARY}
-@{UART_FLOW_TYPES}                          ${UART_FLOW_CNTRL_NONE}    ${UART_FLOW_CNTRL_ENABLE}
-${settings}                                 ${EMPTY}
-
-# global variables
-${settings_comport_IF820_central}           ${EMPTY}
-${settings_comport_IF820_peripheral}        ${EMPTY}
-${settings_hci_port_IF820_central}          ${EMPTY}
-${settings_hci_port_IF820_peripheral}       ${EMPTY}
-${settings_comport_BT900}                   ${EMPTY}
-${settings_id_pp_central}                   ${EMPTY}
-${settings_id_pp_peripheral}                ${EMPTY}
-${settings_default_baud}                    ${EMPTY}
+${API_MODE_TEXT}                ${0}
+${API_MODE_BINARY}              ${1}
+${UART_FLOW_CNTRL_NONE}         ${0}
+${UART_FLOW_CNTRL_ENABLE}       ${1}
+${DEFAULT_RX_TIMEOUT}           ${1}
+${CLEAR_QUEUE_TIMEOUT_SEC}      ${2}
+${ERROR_DEVICE_TYPE}            Error! Device type not found!
+${BOOT_DELAY_SECONDS}           ${3}
+@{API_MODES}                    ${API_MODE_TEXT}    ${API_MODE_BINARY}
+@{UART_FLOW_TYPES}              ${UART_FLOW_CNTRL_NONE}    ${UART_FLOW_CNTRL_ENABLE}
 
 
 *** Keywords ***
@@ -44,43 +33,28 @@ Find Boards and Settings
     # Delay in case boards are re-enumerating over USB
     Sleep    ${BOOT_DELAY_SECONDS}
 
-    ${lib_if820_board}=    Get Library Instance    IF820_Board
-    Set Global Variable    ${lib_if820_board}    ${lib_if820_board}
-
-    ${lib_ez_serial_port}=    Get Library Instance    EZ_Serial_Port
+    ${lib_ez_serial_port}=    Get Library Instance    EzSerialPort
     Set Global Variable    ${lib_ez_serial_port}    ${lib_ez_serial_port}
 
-    ${lib_dvk_probe}=    Get Library Instance    DVK_Probe
-    Set Global Variable    ${lib_dvk_probe}    ${lib_dvk_probe}
+    ${bt900_board1}=    Get Library Instance    BT900SerialPort
+    Set Global Variable    ${bt900_board1}    ${bt900_board1}
 
     ${settings_file}=    Get File    ${CURDIR}${/}..${/}.vscode${/}settings.json
     ${settings}=    Evaluate    json.loads('''${settings_file}''')    json
 
-    @{if820_boards}=    IF820_Board.Get Connected Boards
+    @{if820_boards}=    If820Board.Get Connected Boards
     ${num_boards}=    Get Length    ${if820_boards}
     Log    ${num_boards} IF820 Boards Found!
 
-    Set Global Variable    ${settings_default_baud}    ${settings["default_baud"]}
-    Set Global Variable    ${settings_comport_BT900}    ${settings["comport_BT900_device1"]}
+    Set Global Variable    ${settings_bt900_board1_comport}    ${settings["comport_BT900_device1"]}
 
     IF    ${num_boards} == ${0}
         Fail    Error! No IF820 boards found!
-    ELSE IF    ${num_boards} >= ${1}
-        Set Global Variable    ${settings_if820_board1}    ${if820_boards[0]}
-        Set Global Variable    ${settings_if820_board2}    ${if820_boards[0]}
-        Set Global Variable    ${settings_comport_IF820_central}    ${if820_boards[0].puart_port_name}
-        Set Global Variable    ${settings_hci_port_IF820_central}    ${if820_boards[0].hci_port_name}
-        Set Global Variable    ${settings_id_pp_central}    ${if820_boards[0].probe.id}
-        Set Global Variable    ${settings_comport_IF820_peripheral}    ${if820_boards[0].puart_port_name}
-        Set Global Variable    ${settings_hci_port_IF820_peripheral}    ${if820_boards[0].hci_port_name}
-        Set Global Variable    ${settings_id_pp_peripheral}    ${if820_boards[0].probe.id}
+    ELSE
+        Set Global Variable    ${if820_board1}    ${if820_boards[0]}
     END
-
-    IF    ${num_boards} >= ${2}
-        Set Global Variable    ${settings_if820_board2}    ${if820_boards[1]}
-        Set Global Variable    ${settings_comport_IF820_peripheral}    ${if820_boards[1].puart_port_name}
-        Set Global Variable    ${settings_hci_port_IF820_peripheral}    ${if820_boards[1].hci_port_name}
-        Set Global Variable    ${settings_id_pp_peripheral}    ${if820_boards[1].probe.id}
+    IF    ${num_boards} > ${1}
+        Set Global Variable    ${if820_board2}    ${if820_boards[1]}
     END
 
     RETURN    ${settings}
@@ -123,25 +97,25 @@ EZ Wait Event
 EZ Send DUT1
     [Arguments]    ${command}    ${apiformat}=${None}    &{kwargs}
 
-    ${res}=    EZ Send    ${settings_if820_board1}    ${command}    ${apiformat}    &{kwargs}
+    ${res}=    EZ Send    ${if820_board1}    ${command}    ${apiformat}    &{kwargs}
     RETURN    ${res}
 
 EZ Wait Event DUT1
     [Arguments]    ${event}    ${timeout}=${DEFAULT_RX_TIMEOUT}
 
-    ${res}=    EZ Wait Event    ${settings_if820_board1}    ${event}    ${timeout}
+    ${res}=    EZ Wait Event    ${if820_board1}    ${event}    ${timeout}
     RETURN    ${res}
 
 EZ Send DUT2
     [Arguments]    ${command}    ${apiformat}=${None}    &{kwargs}
 
-    ${res}=    EZ Send    ${settings_if820_board2}    ${command}    ${apiformat}    &{kwargs}
+    ${res}=    EZ Send    ${if820_board2}    ${command}    ${apiformat}    &{kwargs}
     RETURN    ${res}
 
 EZ Wait Event DUT2
     [Arguments]    ${event}    ${timeout}=${DEFAULT_RX_TIMEOUT}
 
-    ${res}=    EZ Wait Event    ${settings_if820_board2}    ${event}    ${timeout}
+    ${res}=    EZ Wait Event    ${if820_board2}    ${event}    ${timeout}
     RETURN    ${res}
 
 EZ Port Open
@@ -188,7 +162,7 @@ IF820 Query Bluetooth Address String
     [Arguments]    ${board}
 
     ${res}=    IF820 Query Bluetooth Address    ${board}
-    ${bt_addr}=    IF820_Board.if820_mac_addr_response_to_mac_as_string    ${res}
+    ${bt_addr}=    If820Board.if820_mac_addr_response_to_mac_as_string    ${res}
     RETURN    ${bt_addr}
 
 Get DVK Probe Firmware Version
@@ -239,3 +213,14 @@ EZ Clear RX Buffer
     [Arguments]    ${board}
 
     ${res}=    Call Method    ${board.p_uart}    clear_rx_queue
+
+Init BT900
+
+    Call Method    ${bt900_board1}    open    ${settings_bt900_board1_comport}
+
+BT900 Send
+    [Arguments]    ${command}
+
+    ${res}=    Call Method    ${bt900_board1}    send_and_wait    ${command}    ${apiformat}    &{kwargs}
+    Fail on error    ${res[0]}
+    RETURN    ${res[1]}

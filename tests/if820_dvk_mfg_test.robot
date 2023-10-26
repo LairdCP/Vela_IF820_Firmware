@@ -18,14 +18,14 @@ ${PROBE_SETTING_BOARD_NAME}=                Vela IF820 DVK
 DVK MFG Test
     Find Boards and Settings
 
-    Init Board    ${settings_if820_board1}    ${False}
+    Init Board    ${if820_board1}    ${False}
 
     Call Method
-    ...    ${settings_if820_board1.probe}
+    ...    ${if820_board1.probe}
     ...    program_v1_settings
     ...    ${PROBE_SETTING_BOARD_VENDOR}
     ...    ${PROBE_SETTING_BOARD_NAME}
     ...    ${PROBE_SETTING_TARGET_DEVICE_VENDOR}
     ...    ${PROBE_SETTING_TARGET_DEVICE_NAME}
 
-    De-Init Board    ${settings_if820_board1}
+    De-Init Board    ${if820_board1}

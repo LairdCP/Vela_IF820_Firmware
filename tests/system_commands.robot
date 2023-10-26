@@ -52,7 +52,7 @@ Get Uart Params
             ...    ${api_mode}
             ...    uart_type=${0}
         END
-        EZ Port Close    ${settings_if820_board1}
+        EZ Port Close    ${if820_board1}
     END
 
 Factory Reset
@@ -65,7 +65,7 @@ Factory Reset
             ...    ${api_mode}
             EZ Wait Event DUT1    ${lib_ez_serial_port.EVENT_SYSTEM_BOOT}
         END
-        EZ Port Close    ${settings_if820_board1}
+        EZ Port Close    ${if820_board1}
     END
 
 Reboot
@@ -75,7 +75,7 @@ Reboot
         FOR    ${api_mode}    IN    @{API_MODES}
             Reboot Command    ${api_mode}
         END
-        EZ Port Close    ${settings_if820_board1}
+        EZ Port Close    ${if820_board1}
     END
 
 Reboot Loop
@@ -87,7 +87,7 @@ Reboot Loop
                 Reboot Command    ${api_mode}
                 Sleep    ${BOOT_DELAY_SECONDS}
             END
-            EZ Port Close    ${settings_if820_board1}
+            EZ Port Close    ${if820_board1}
         END
     END
 
@@ -95,11 +95,11 @@ Reboot Loop
 *** Keywords ***
 Suite Setup
     Find Boards and Settings
-    Init Board    ${settings_if820_board1}
-    EZ Port Close    ${settings_if820_board1}
+    Init Board    ${if820_board1}
+    EZ Port Close    ${if820_board1}
 
 Suite Teardown
-    De-Init Board    ${settings_if820_board1}
+    De-Init Board    ${if820_board1}
 
 Send Command
     [Arguments]    ${cmd}
@@ -108,7 +108,7 @@ Send Command
         FOR    ${api_mode}    IN    @{API_MODES}
             EZ Send DUT1    ${cmd}    ${api_mode}
         END
-        EZ Port Close    ${settings_if820_board1}
+        EZ Port Close    ${if820_board1}
     END
 
 Set Uart Params
@@ -127,7 +127,7 @@ Set Uart Params
 
 Setup Uarts
     [Arguments]    ${flow}
-    EZ Port Open    ${settings_if820_board1}    ${flow}
+    EZ Port Open    ${if820_board1}    ${flow}
     Set Uart Params    ${flow}
 
 Reboot Command

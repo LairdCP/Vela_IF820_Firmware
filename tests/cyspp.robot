@@ -30,22 +30,22 @@ CYSPP Text Mode
 Test Setup
     Find Boards and Settings
 
-    Init Board    ${settings_if820_board1}
-    Init Board    ${settings_if820_board2}
+    Init Board    ${if820_board1}
+    Init Board    ${if820_board2}
 
-    DVK Probe Set IO Dir    ${settings_if820_board1}    ${lib_if820_board.CP_ROLE}    ${0}
-    DVK Probe Set IO Dir    ${settings_if820_board1}    ${lib_if820_board.CYSPP}    ${0}
-    DVK Probe Set IO Dir    ${settings_if820_board2}    ${lib_if820_board.CP_ROLE}    ${0}
-    DVK Probe Set IO Dir    ${settings_if820_board2}    ${lib_if820_board.CYSPP}    ${0}
+    DVK Probe Set IO Dir    ${if820_board1}    ${if820_board1.CP_ROLE}    ${0}
+    DVK Probe Set IO Dir    ${if820_board1}    ${if820_board1.CYSPP}    ${0}
+    DVK Probe Set IO Dir    ${if820_board2}    ${if820_board1.CP_ROLE}    ${0}
+    DVK Probe Set IO Dir    ${if820_board2}    ${if820_board1.CYSPP}    ${0}
 
-    ${fw_ver_central} =    Get DVK Probe Firmware Version    ${settings_if820_board1}
+    ${fw_ver_central} =    Get DVK Probe Firmware Version    ${if820_board1}
     Log    ${fw_ver_central}
-    ${fw_ver_peripheral} =    Get DVK Probe Firmware Version    ${settings_if820_board2}
+    ${fw_ver_peripheral} =    Get DVK Probe Firmware Version    ${if820_board2}
     Log    ${fw_ver_peripheral}
 
 Test Teardown
-    De-Init Board    ${settings_if820_board1}
-    De-Init Board    ${settings_if820_board2}
+    De-Init Board    ${if820_board1}
+    De-Init Board    ${if820_board2}
 
 Send and Receive data
     [Arguments]    ${sender}    ${receiver}    ${data}
@@ -64,11 +64,11 @@ Send and Receive data
 CYSPP Test
     [Arguments]    ${api_format}
 
-    EZ Set API Mode    ${settings_if820_board1}    ${api_format}
+    EZ Set API Mode    ${if820_board1}    ${api_format}
 
     # Set Central CP_ROLE pin low to boot in central mode
-    DVK Probe Set IO Dir    ${settings_if820_board1}    ${lib_if820_board.CP_ROLE}    ${1}
-    DVK Probe Set IO    ${settings_if820_board1}    ${lib_if820_board.CP_ROLE}    ${0}
+    DVK Probe Set IO Dir    ${if820_board1}    ${if820_board1.CP_ROLE}    ${1}
+    DVK Probe Set IO    ${if820_board1}    ${if820_board1.CP_ROLE}    ${0}
     EZ Send DUT1    ${lib_ez_serial_port.CMD_REBOOT}
 
     # wait for connection
@@ -79,13 +79,13 @@ CYSPP Test
     END
 
     # The CYSPP pin should be low when a CYSPP Connection is active
-    ${io_state_p} =    DVK Probe Read IO    ${settings_if820_board2}    ${lib_if820_board.CYSPP}
-    ${io_state_c} =    DVK Probe Read IO    ${settings_if820_board1}    ${lib_if820_board.CYSPP}
+    ${io_state_p} =    DVK Probe Read IO    ${if820_board2}    ${if820_board1.CYSPP}
+    ${io_state_c} =    DVK Probe Read IO    ${if820_board1}    ${if820_board1.CYSPP}
     Builtin.Should Be Equal    ${0}    ${io_state_p}
     Builtin.Should Be Equal    ${0}    ${io_state_c}
 
     # send data central to peripheral
-    Send and Receive data    ${settings_if820_board1}    ${settings_if820_board2}    ${CY_SPP_DATA}
+    Send and Receive data    ${if820_board1}    ${if820_board2}    ${CY_SPP_DATA}
 
     # send data peripheral to central
-    Send and Receive data    ${settings_if820_board2}    ${settings_if820_board1}    ${CY_SPP_DATA}
+    Send and Receive data    ${if820_board2}    ${if820_board1}    ${CY_SPP_DATA}

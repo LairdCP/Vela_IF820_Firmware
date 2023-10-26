@@ -86,15 +86,15 @@ BLE Custom GATT
 *** Keywords ***
 Test Setup
     Find Boards and Settings
-    Init Board    ${settings_if820_board1}
-    Init Board    ${settings_if820_board2}
+    Init Board    ${if820_board1}
+    Init Board    ${if820_board2}
 
-    ${PERIPHERAL_ADDRESS}=    IF820 Query Bluetooth Address    ${settings_if820_board2}
+    ${PERIPHERAL_ADDRESS}=    IF820 Query Bluetooth Address    ${if820_board2}
     Set Global Variable    ${PERIPHERAL_ADDRESS}    ${PERIPHERAL_ADDRESS}
 
 Test Teardown
-    De-Init Board    ${settings_if820_board1}
-    De-Init Board    ${settings_if820_board2}
+    De-Init Board    ${if820_board1}
+    De-Init Board    ${if820_board2}
 
 Set advertising params
     [Arguments]    ${mode}    ${flags}

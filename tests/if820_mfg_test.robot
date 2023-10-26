@@ -44,7 +44,7 @@ MFG Test
 Test Setup
     Find Boards and Settings
 
-    Init Board    ${settings_if820_board1}    ${False}
+    Init Board    ${if820_board1}    ${False}
 
     # Setup test result file
     ${current_time} =    Get Current Date    result_format=%Y%m%d-%H%M%S
@@ -62,7 +62,7 @@ Test Setup
     Set Global Variable    ${GPIO_SETS}    ${gpio_sets}
 
 Test Teardown
-    De-Init Board    ${settings_if820_board1}
+    De-Init Board    ${if820_board1}
 
 Init Module Result
     ${module_result} =    Create List
@@ -76,19 +76,19 @@ Program firmware
     [Timeout]    ${PROGRAM_FIRMWARE_TIMEOUT}
     [Arguments]    ${skip}=${False}
     IF    not ${skip}
-        IF820 Flash Firmware    ${settings_if820_board1}    ${MINI_DRIVER}    ${FIRMWARE}    ${True}
+        IF820 Flash Firmware    ${if820_board1}    ${MINI_DRIVER}    ${FIRMWARE}    ${True}
     END
-    Init Board    ${settings_if820_board1}    ${True}
+    Init Board    ${if820_board1}    ${True}
 
 Query Firmware Version
     [Timeout]    ${TEST_TIMEOUT_SHORT}
-    ${res} =    IF820 Query Firmware Version    ${settings_if820_board1}
+    ${res} =    IF820 Query Firmware Version    ${if820_board1}
     Log Result    ${res}
     Log    Firmware version: ${res}
 
 Query Bluetooth Address
     [Timeout]    ${TEST_TIMEOUT_SHORT}
-    ${res} =    IF820 Query Bluetooth Address String    ${settings_if820_board1}
+    ${res} =    IF820 Query Bluetooth Address String    ${if820_board1}
     Log Result    ${res}
     Log    Bluetooth address: ${res}
 
