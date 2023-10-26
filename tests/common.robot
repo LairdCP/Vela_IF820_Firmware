@@ -190,3 +190,52 @@ IF820 Query Bluetooth Address String
     ${res}=    IF820 Query Bluetooth Address    ${board}
     ${bt_addr}=    IF820_Board.if820_mac_addr_response_to_mac_as_string    ${res}
     RETURN    ${bt_addr}
+
+Get DVK Probe Firmware Version
+    [Arguments]    ${board}
+
+    ${res}=    Call Method    ${board.probe}    get_dap_info    ${9}
+    RETURN    ${res}
+
+DVK Probe Set IO Dir
+    [Documentation]    Set the IO direction of a DVK probe GPIO
+    [Arguments]    ${board}    ${gpio}    ${io_dir}    ${io_cfg}=${0}
+
+    IF    ${io_dir}
+        ${res}=    Call Method    ${board.probe}    gpio_to_output    ${gpio}    ${io_cfg}
+    ELSE
+        ${res}=    Call Method    ${board.probe}    gpio_to_input    ${gpio}    ${io_cfg}
+    END
+
+DVK Probe Set IO
+    [Documentation]    Set the IO value of a DVK probe GPIO
+    [Arguments]    ${board}    ${gpio}    ${io_val}
+
+    IF    ${io_val}
+        ${res}=    Call Method    ${board.probe}    gpio_to_output_high    ${gpio}
+    ELSE
+        ${res}=    Call Method    ${board.probe}    gpio_to_output_low    ${gpio}
+    END
+
+DVK Probe Read IO
+    [Documentation]    Read the IO value of a DVK probe GPIO
+    [Arguments]    ${board}    ${gpio}
+
+    ${res}=    Call Method    ${board.probe}    gpio_read    ${gpio}
+    RETURN    ${res}
+
+EZ Send Raw
+    [Arguments]    ${board}    ${data}
+
+    ${res}=    Call Method    ${board.p_uart}    send    ${data}
+
+EZ Read Raw
+    [Arguments]    ${board}
+
+    ${res}=    Call Method    ${board.p_uart}    read
+    RETURN    ${res}
+
+EZ Clear RX Buffer
+    [Arguments]    ${board}
+
+    ${res}=    Call Method    ${board.p_uart}    clear_rx_queue

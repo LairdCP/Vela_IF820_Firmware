@@ -1,183 +1,91 @@
 *** Settings ***
 Documentation       CYSPP tests with Vela IF820 devices.
 
-Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    PP_Peripheral
-Library             ..${/}common_lib${/}common_lib${/}DvkProbe.py    WITH NAME    PP_Central
-Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Central
-Library             ..${/}common_lib${/}common_lib${/}EzSerialPort.py    WITH NAME    IF820_Peripheral
-Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_Central_CYSPP
-Library             ..${/}common_lib${/}common_lib${/}SerialPort.py    WITH NAME    IF820_Peripheral_CYSPP
 Resource            common.robot
 
 Test Setup          Test Setup
 Test Teardown       Test Teardown
-Test Timeout        1 minute
+Test Timeout        30 seconds
 
 Default Tags        vela if820
 
 
 *** Variables ***
-${DEV_CENTRAL}                  Central
-${DEV_PERIPHERAL}               Peripheral
-${MAC_ADDR_LEN}                 ${6}
-${INQUIRY_DURATION_SEC}         ${15}
-${FLAG_INQUIRY_NAME}            ${1}
-${STATUS_CONNECTED}             ${53}
-${Connection_Handle}            0
-${CY_SPP_DATA}                  abcdefghijklmnop
-${peripheral_address}           ${EMPTY}
-${lib_if820_central}            ${EMPTY}
-${lib_if820_peripheral}         ${EMPTY}
-${lib_cyspp_central}            ${EMPTY}
-${lib_cyspp_peripheral}         ${EMPTY}
-${lib_pp_central}               ${EMPTY}
-${lib_pp_peripheral}            ${EMPTY}
-${bt900_peripheral_device}      ${EMPTY}
-${ez_system_commands}           ${EMPTY}
-${ez_cyspp_commands}            ${EMPTY}
+${STATUS_CONNECTED}         ${53}
+${CY_SPP_DATA}              abcdefghijklmnop
+${OTA_LATENCY_SECONDS}      ${0.1}
 
 
 *** Test Cases ***
 CYSPP Binary Mode
-    Set Tags    L2-146
+    Set Tags    PROD-677
     ${rx_cyspp_data} =    CYSPP Test    ${API_MODE_BINARY}
-    Builtin.Should Be Equal    ${rx_cyspp_data}    ${CY_SPP_DATA}
 
 CYSPP Text Mode
-    Set Tags    L2-148
+    Set Tags    PROD-679
     ${rx_cyspp_data} =    CYSPP Test    ${API_MODE_TEXT}
-    Builtin.Should Be Equal    ${rx_cyspp_data}    ${CY_SPP_DATA}
 
 
 *** Keywords ***
 Test Setup
-    # The last test may have reboot the device, give it time to boot.
-    Sleep    ${5}
-    Read Settings File
-    IF820_Central.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
-    IF820_Peripheral.Set Queue Timeout    ${CLEAR_QUEUE_TIMEOUT_SEC}
+    Find Boards and Settings
 
-    # Get instances of python libraries needed
-    ${lib_if820_central} =    Builtin.Get Library Instance    IF820_Central
-    ${lib_if820_peripheral} =    Builtin.Get Library Instance    IF820_Peripheral
-    ${lib_pp_central} =    Builtin.Get Library Instance    PP_Central
-    ${lib_pp_peripheral} =    Builtin.Get Library Instance    PP_Peripheral
-    ${lib_cyspp_central} =    Builtin.Get Library Instance    IF820_Central_CYSPP
-    ${lib_cyspp_peripheral} =    Builtin.Get Library Instance    IF820_Peripheral_CYSPP
-    Set Global Variable    ${lib_if820_central}    ${lib_if820_central}
-    Set Global Variable    ${lib_if820_peripheral}    ${lib_if820_peripheral}
-    Set Global Variable    ${lib_cyspp_central}    ${lib_cyspp_central}
-    Set Global Variable    ${lib_cyspp_peripheral}    ${lib_cyspp_peripheral}
-    Set Global Variable    ${lib_pp_central}    ${lib_pp_central}
-    Set Global Variable    ${lib_pp_peripheral}    ${lib_pp_peripheral}
+    Init Board    ${settings_if820_board1}
+    Init Board    ${settings_if820_board2}
 
-    Open Pico Probes
+    DVK Probe Set IO Dir    ${settings_if820_board1}    ${lib_if820_board.CP_ROLE}    ${0}
+    DVK Probe Set IO Dir    ${settings_if820_board1}    ${lib_if820_board.CYSPP}    ${0}
+    DVK Probe Set IO Dir    ${settings_if820_board2}    ${lib_if820_board.CP_ROLE}    ${0}
+    DVK Probe Set IO Dir    ${settings_if820_board2}    ${lib_if820_board.CYSPP}    ${0}
 
-    ${ez_system_commands} =    IF820_Central.Get Sys Commands
-    ${ez_cyspp_commands} =    IF820_Central.Get Cyspp Commands
-    Set Global Variable    ${ez_system_commands}    ${ez_system_commands}
-    Set Global Variable    ${ez_cyspp_commands}    ${ez_cyspp_commands}
-
-    ${fw_ver_central} =    Get Pico Probe Firmware Version    ${DEV_CENTRAL}
+    ${fw_ver_central} =    Get DVK Probe Firmware Version    ${settings_if820_board1}
     Log    ${fw_ver_central}
-    ${fw_ver_peripheral} =    Get Pico Probe Firmware Version    ${DEV_PERIPHERAL}
+    ${fw_ver_peripheral} =    Get DVK Probe Firmware Version    ${settings_if820_board2}
     Log    ${fw_ver_peripheral}
 
-    # open the serial ports for devices in test
-    IF820_Central.open    ${settings_comport_IF820_central}    ${lib_if820_central.IF820_DEFAULT_BAUD}
-    IF820_Peripheral.open    ${settings_comport_IF820_peripheral}    ${lib_if820_peripheral.IF820_DEFAULT_BAUD}
-    Sleep    ${1}
-
-    # IF820 Factory Reset
-    IF820_Central.Clear Rx Queue
-    ${response} =    IF820_Central.Send And Wait    ${ez_system_commands.CMD_FACTORY_RESET}
-    Fail on error    ${response[0]}
-    ${response} =    IF820_Central.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
-
-    IF820_Peripheral.Clear Rx Queue
-    ${response} =    IF820_Peripheral.Send And Wait    ${ez_system_commands.CMD_FACTORY_RESET}
-    Fail on error    ${response[0]}
-    ${response} =    IF820_Peripheral.Wait Event    ${ez_system_commands.EVENT_SYSTEM_BOOT}
-
 Test Teardown
-    IF820_Central.close
-    IF820_Peripheral.close
-    # note rebooting the pico probe will reset the if820 device and all i/o.
-    PP_Central.Reboot
-    PP_Peripheral.Reboot
-    PP_Central.Close
-    PP_Peripheral.Close
-    Log    "Test Teardown Complete"
+    De-Init Board    ${settings_if820_board1}
+    De-Init Board    ${settings_if820_board2}
 
-Open Pico Probes
-    PP_Central.Open    ${settings_id_pp_central}
-    PP_Central.Gpio To Input    ${lib_pp_central.GPIO_19}
-    PP_Central.Gpio To Input    ${lib_pp_central.GPIO_18}
+Send and Receive data
+    [Arguments]    ${sender}    ${receiver}    ${data}
 
-    PP_Peripheral.Open    ${settings_id_pp_peripheral}
-    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_19}
-    PP_Peripheral.Gpio To Input    ${lib_pp_peripheral.GPIO_18}
-
-Get Pico Probe Firmware Version
-    [Documentation]    Deivce refers to what the probe is connected to
-    ...    Either "Central" or "Peripheral"
-    [Arguments]    ${device}
-    ${ids} =    PP_Peripheral.Get Dap Ids
-
-    IF    "${device}" == "${DEV_CENTRAL}"
-        ${fw_ver} =    PP_Central.Get Dap Info1    ${ids.PRODUCT_FW_VERSION}
-    ELSE IF    "${device}" == "${DEV_PERIPHERAL}"
-        ${fw_ver} =    PP_Peripheral.Get Dap Info1    ${ids.PRODUCT_FW_VERSION}
-    END
-    RETURN    ${fw_ver}
+    # clear any RX data on the receiver side to prepare for the TX data
+    EZ Clear RX Buffer    ${receiver}
+    # send the data
+    EZ Send Raw    ${sender}    ${data}
+    # wait for the data to be received over the air
+    Sleep    ${OTA_LATENCY_SECONDS}
+    # read the received data and verify it
+    ${rx_data} =    EZ Read Raw    ${receiver}
+    ${rx_string} =    UTF8 Bytes to String    ${rx_data}
+    Should Be Equal As Strings    ${rx_string}    ${data}
 
 CYSPP Test
     [Arguments]    ${api_format}
 
-    IF820_Central.Set Api Format    ${api_format}
+    EZ Set API Mode    ${settings_if820_board1}    ${api_format}
 
-    # Set Central CY_ROLE pin low to boot in central mode
-    PP_Central.Gpio To Output    ${lib_pp_central.GPIO_18}
-    PP_Central.Gpio To Output Low    ${lib_pp_central.GPIO_18}
-    ${response} =    IF820_Central.Send And Wait    ${ez_system_commands.CMD_REBOOT}
-    Fail on error    ${response[0]}
+    # Set Central CP_ROLE pin low to boot in central mode
+    DVK Probe Set IO Dir    ${settings_if820_board1}    ${lib_if820_board.CP_ROLE}    ${1}
+    DVK Probe Set IO    ${settings_if820_board1}    ${lib_if820_board.CP_ROLE}    ${0}
+    EZ Send DUT1    ${lib_ez_serial_port.CMD_REBOOT}
 
     # wait for connection
-    ${status} =    Set Variable    0
+    ${status} =    Set Variable    ${0}
     WHILE    ${status} != ${STATUS_CONNECTED}
-        ${resp} =    IF820_Central.Wait Event    ${ez_cyspp_commands.EVENT_P_CYSPP_STATUS}
-        ${status} =    Builtin.Get Variable Value    ${resp[1].payload.status}
-        Log    cyspp_status = ${status}
+        ${resp} =    EZ Wait Event DUT1    ${lib_ez_serial_port.EVENT_P_CYSPP_STATUS}
+        ${status} =    Get Variable Value    ${resp.payload.status}
     END
 
-    # devices are connected, send data
-    IF820_Central.Close
-    IF820_Peripheral.Close
-
-    # The IO should be low when a CYSPP Connection is active
-    ${io_state_p} =    PP_Peripheral.Gpio Read    ${lib_pp_peripheral.GPIO_19}
-    ${io_state_c} =    PP_Central.Gpio Read    ${lib_pp_central.GPIO_19}
+    # The CYSPP pin should be low when a CYSPP Connection is active
+    ${io_state_p} =    DVK Probe Read IO    ${settings_if820_board2}    ${lib_if820_board.CYSPP}
+    ${io_state_c} =    DVK Probe Read IO    ${settings_if820_board1}    ${lib_if820_board.CYSPP}
     Builtin.Should Be Equal    ${0}    ${io_state_p}
     Builtin.Should Be Equal    ${0}    ${io_state_c}
 
-    # send data from central to peripheral
-    IF820_Central_CYSPP.open
-    ...    ${settings_comport_IF820_central}
-    ...    ${lib_if820_central.IF820_DEFAULT_BAUD}
+    # send data central to peripheral
+    Send and Receive data    ${settings_if820_board1}    ${settings_if820_board2}    ${CY_SPP_DATA}
 
-    IF820_Peripheral_CYSPP.open
-    ...    ${settings_comport_IF820_peripheral}
-    ...    ${lib_if820_peripheral.IF820_DEFAULT_BAUD}
-
-    ${length} =    Get Length    ${CY_SPP_DATA}
-    FOR    ${index}    IN RANGE    ${length}
-        Log    ${CY_SPP_DATA}[${index}]
-        IF820_Central_CYSPP.Send    ${CY_SPP_DATA}[${index}]
-        Sleep    20ms
-    END
-
-    Sleep    ${1}
-    ${rx_data} =    IF820_Peripheral_CYSPP.Get Rx Queue
-    ${utf8_string} =    UTF8 Bytes to String    ${rx_data}
-    Log    ${utf8_string}
-    RETURN    ${utf8_string}
+    # send data peripheral to central
+    Send and Receive data    ${settings_if820_board2}    ${settings_if820_board1}    ${CY_SPP_DATA}
