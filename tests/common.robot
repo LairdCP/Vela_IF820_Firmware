@@ -16,6 +16,8 @@ ${ERROR_DEVICE_TYPE}            Error! Device type not found!
 ${BOOT_DELAY_SECONDS}           ${3}
 @{API_MODES}                    ${API_MODE_TEXT}    ${API_MODE_BINARY}
 @{UART_FLOW_TYPES}              ${UART_FLOW_CNTRL_NONE}    ${UART_FLOW_CNTRL_ENABLE}
+${OK}                           OK
+${OTA_LATENCY_SECONDS}          ${0.1}
 
 
 *** Keywords ***
@@ -81,9 +83,15 @@ EZ Set API Mode
     Call Method    ${board.p_uart}    set_api_format    ${apiformat}
 
 EZ Send
-    [Arguments]    ${board}    ${command}    ${apiformat}=${None}    &{kwargs}
+    [Arguments]    ${board}    ${command}    ${apiformat}=${None}    ${clear_queue}=${True}    &{kwargs}
 
-    ${res}=    Call Method    ${board.p_uart}    send_and_wait    ${command}    ${apiformat}    &{kwargs}
+    ${res}=    Call Method
+    ...    ${board.p_uart}
+    ...    send_and_wait
+    ...    ${command}
+    ...    ${apiformat}
+    ...    ${clear_queue}
+    ...    &{kwargs}
     Fail on error    ${res[0]}
     RETURN    ${res[1]}
 
@@ -215,12 +223,28 @@ EZ Clear RX Buffer
     ${res}=    Call Method    ${board.p_uart}    clear_rx_queue
 
 Init BT900
-
     Call Method    ${bt900_board1}    open    ${settings_bt900_board1_comport}
+    ${res}=    BT900 Send    ${bt900_board1.BT900_CMD_QUERY_FW}
 
 BT900 Send
     [Arguments]    ${command}
 
-    ${res}=    Call Method    ${bt900_board1}    send_and_wait    ${command}    ${apiformat}    &{kwargs}
-    Fail on error    ${res[0]}
-    RETURN    ${res[1]}
+    ${res}=    Call Method    ${bt900_board1}    send    ${command}
+    RETURN    ${res}
+
+De-Init BT900
+    Call Method    ${bt900_board1}    close
+
+BT900 Enter Command Mode
+    ${res}=    Call Method    ${bt900_board1}    enter_command_mode
+    Should Contain    ${res}    ${OK}
+
+BT900 Exit Command Mode
+    Call Method    ${bt900_board1}    exit_command_mode
+
+BT900 Clear RX Buffer
+    ${res}=    Call Method    ${bt900_board1}    clear_rx_queue
+
+BT900 Read Raw
+    ${res}=    Call Method    ${bt900_board1}    read
+    RETURN    ${res}

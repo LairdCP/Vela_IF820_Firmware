@@ -11,9 +11,8 @@ Default Tags        vela if820
 
 
 *** Variables ***
-${STATUS_CONNECTED}         ${53}
-${CY_SPP_DATA}              abcdefghijklmnop
-${OTA_LATENCY_SECONDS}      ${0.1}
+${STATUS_CONNECTED}     ${53}
+${CY_SPP_DATA}          abcdefghijklmnop
 
 
 *** Test Cases ***
