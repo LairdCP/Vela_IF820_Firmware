@@ -223,12 +223,13 @@ EZ Clear RX Buffer
 
 Init BT900
     Call Method    ${bt900_board1}    open    ${settings_bt900_board1_comport}
-    ${res}=    BT900 Send    ${bt900_board1.BT900_CMD_QUERY_FW}
+    ${res}=    BT900 Send    ${bt900_board1.BT900_CMD_QUERY_FW}    ${False}
 
 BT900 Send
-    [Arguments]    ${command}
+    [Arguments]    ${command}    ${confirm_resp}=${True}
 
     ${res}=    Call Method    ${bt900_board1}    send    ${command}
+    IF    ${confirm_resp}    Should Contain    ${res}    ${OK}
     RETURN    ${res}
 
 De-Init BT900
@@ -246,6 +247,17 @@ BT900 Clear RX Buffer
 
 BT900 Read Raw
     ${res}=    Call Method    ${bt900_board1}    read
+    RETURN    ${res}
+
+BT900 Get MAC Address
+    [Documentation]    Note: This function cannot be called when the BT900 is in command mode.
+    ${res}=    Call Method    ${bt900_board1}    get_bt900_bluetooth_mac
+    RETURN    ${res}
+
+BT900 Wait Response
+    [Arguments]    ${timeout}=${DEFAULT_RX_TIMEOUT}
+
+    ${res}=    Call Method    ${bt900_board1}    wait_for_response    ${timeout}
     RETURN    ${res}
 
 IF820 SPP Send and Receive data
@@ -267,3 +279,32 @@ EZ Factory Reset
 
     EZ Send    ${board}    ${lib_ez_serial_port.CMD_FACTORY_RESET}
     EZ Wait Event    ${board}    ${lib_ez_serial_port.EVENT_SYSTEM_BOOT}
+
+BT900 IF820 SPP Send and Receive Data
+    [Documentation]    Send and receive data over SPP between the BT900 and IF820.
+    ...    If the direction is 0, the BT900 will receive the data and the IF820 will send it.
+    ...    If the direction is 1, the BT900 will send the data and the IF820 will receive it.
+    [Arguments]    ${direction}    ${data}    ${latency}=${OTA_LATENCY_SECONDS}
+
+    # clear any RX data on the receiver side and transmit the data
+    IF    ${direction} == 0
+        BT900 Clear RX Buffer
+        EZ Send Raw    ${if820_board1}    ${data}
+    ELSE
+        EZ Clear RX Buffer    ${if820_board1}
+        ${send_cmd}=    Catenate
+        ...    ${bt900_board1.BT900_SPP_WRITE_PREFIX}
+        ...    ${data}
+        BT900 Send    ${send_cmd}
+    END
+    # wait for the data to be received over the air
+    Sleep    ${latency}
+    # read the received data and verify it
+    IF    ${direction} == 0
+        ${rx_data}=    BT900 Wait Response
+        Should Contain    ${rx_data}    Data:
+    ELSE
+        ${rx_data}=    EZ Read Raw    ${if820_board1}
+        ${rx_string}=    UTF8 Bytes to String    ${rx_data}
+        Should Contain    ${rx_string}    ${data}
+    END

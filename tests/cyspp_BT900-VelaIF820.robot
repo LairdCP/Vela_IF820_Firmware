@@ -6,7 +6,7 @@ Resource            common.robot
 
 Test Setup          Test Setup
 Test Teardown       Test Teardown
-Test Timeout        1 minute
+Test Timeout        30 seconds
 
 Default Tags        vela if820
 
@@ -29,17 +29,16 @@ CYSPP BT900->IF820 Text Mode
 Test Setup
     Find Boards and Settings
     Init Board    ${if820_board1}
-    # Sleep    ${1}
     Init BT900
 
 Test Teardown
-    De-Init Board    ${if820_board1}
     Disconnect BT900
     De-Init BT900
+    De-Init Board    ${if820_board1}
 
 Disconnect BT900
     BT900 Send    ${bt900_board1.BT900_GATTC_CLOSE}
-    BT900 Send    ${bt900_board1.BT900_CYSPP_DISCONNECT}
+    BT900 Send    ${bt900_board1.BT900_DISCONNECT}
     BT900 Exit Command Mode
 
 CYSPP Test
@@ -75,7 +74,6 @@ CYSPP Test
     ${connect_command} =    Set Variable
     ...    ${bt900_board1.BT900_CYSPP_CONNECT}${str_mac} 50 30 30 50
     ${response} =    BT900 Send    ${connect_command}
-    Should Contain    ${response}    ${OK}
 
     # IF820 Event (Text Info contains "C" for connect)
     ${response} =    EZ Wait Event DUT1    ${lib_ez_serial_port.EVENT_GAP_CONNECTED}
@@ -85,11 +83,9 @@ CYSPP Test
 
     # bt900 open gattc
     ${response} =    BT900 Send    ${bt900_board1.BT900_GATTC_OPEN}
-    Should Contain    ${response}    ${OK}
 
     # bt900 enable notifications
     ${response} =    BT900 Send    ${bt900_board1.BT900_ENABLE_CYSPP_NOT}
-    Should Contain    ${response}    ${OK}
 
     # IF820 Event (Text Info contains "W" for gatts data written)
     ${response} =    EZ Wait Event DUT1    ${lib_ez_serial_port.EVENT_GATTS_DATA_WRITTEN}
