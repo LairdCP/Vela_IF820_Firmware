@@ -83,14 +83,13 @@ EZ Set API Mode
     Call Method    ${board.p_uart}    set_api_format    ${apiformat}
 
 EZ Send
-    [Arguments]    ${board}    ${command}    ${apiformat}=${None}    ${clear_queue}=${True}    &{kwargs}
+    [Arguments]    ${board}    ${command}    ${apiformat}=${None}    &{kwargs}
 
     ${res}=    Call Method
     ...    ${board.p_uart}
     ...    send_and_wait
     ...    ${command}
     ...    ${apiformat}
-    ...    ${clear_queue}
     ...    &{kwargs}
     Fail on error    ${res[0]}
     RETURN    ${res[1]}
@@ -248,3 +247,23 @@ BT900 Clear RX Buffer
 BT900 Read Raw
     ${res}=    Call Method    ${bt900_board1}    read
     RETURN    ${res}
+
+IF820 SPP Send and Receive data
+    [Arguments]    ${sender}    ${receiver}    ${data}    ${latency}=${OTA_LATENCY_SECONDS}
+
+    # clear any RX data on the receiver side to prepare for the TX data
+    EZ Clear RX Buffer    ${receiver}
+    # send the data
+    EZ Send Raw    ${sender}    ${data}
+    # wait for the data to be received over the air
+    Sleep    ${latency}
+    # read the received data and verify it
+    ${rx_data}=    EZ Read Raw    ${receiver}
+    ${rx_string}=    UTF8 Bytes to String    ${rx_data}
+    Should Be Equal As Strings    ${rx_string}    ${data}
+
+EZ Factory Reset
+    [Arguments]    ${board}
+
+    EZ Send    ${board}    ${lib_ez_serial_port.CMD_FACTORY_RESET}
+    EZ Wait Event    ${board}    ${lib_ez_serial_port.EVENT_SYSTEM_BOOT}

@@ -46,20 +46,6 @@ Test Teardown
     De-Init Board    ${if820_board1}
     De-Init Board    ${if820_board2}
 
-Send and Receive data
-    [Arguments]    ${sender}    ${receiver}    ${data}
-
-    # clear any RX data on the receiver side to prepare for the TX data
-    EZ Clear RX Buffer    ${receiver}
-    # send the data
-    EZ Send Raw    ${sender}    ${data}
-    # wait for the data to be received over the air
-    Sleep    ${OTA_LATENCY_SECONDS}
-    # read the received data and verify it
-    ${rx_data} =    EZ Read Raw    ${receiver}
-    ${rx_string} =    UTF8 Bytes to String    ${rx_data}
-    Should Be Equal As Strings    ${rx_string}    ${data}
-
 CYSPP Test
     [Arguments]    ${api_format}
 
@@ -84,7 +70,7 @@ CYSPP Test
     Builtin.Should Be Equal    ${0}    ${io_state_c}
 
     # send data central to peripheral
-    Send and Receive data    ${if820_board1}    ${if820_board2}    ${CY_SPP_DATA}
+    IF820 SPP Send and Receive data    ${if820_board1}    ${if820_board2}    ${CY_SPP_DATA}
 
     # send data peripheral to central
-    Send and Receive data    ${if820_board2}    ${if820_board1}    ${CY_SPP_DATA}
+    IF820 SPP Send and Receive data    ${if820_board2}    ${if820_board1}    ${CY_SPP_DATA}
