@@ -14,12 +14,10 @@ import time
 import threading
 import sys
 sys.path.append('./common_lib')
-import common_lib.ezserial_host_api.ezslib as ez_serial
 import common_lib.EzSerialPort as ez_port
 from common_lib.If820Board import If820Board
 
-API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_BINARY
-BOOT_DELAY_SECONDS = 3
+API_FORMAT = 1  # Binary
 ADV_MODE = ez_port.GapAdvertMode.NA.value
 ADV_TYPE = ez_port.GapAdvertType.UNDIRECTED_HIGH_DUTY_CYCLE.value
 ADV_INTERVAL = 0x40
@@ -44,30 +42,11 @@ def quit_on_resp_err(resp: int):
     if resp != 0:
         sys.exit(f'Response err: {hex(resp)}')
 
-
-def reboot_the_device(dev: ez_port.EzSerialPort) -> object:
-    """Reboot the device
-
-    Args:
-        dev (ez_port.EzSerialPort): The device to reboot
-
-    Returns:
-        object: The packet object from the reboot event
-    """
-    quit_on_resp_err(dev.send_and_wait(dev.CMD_REBOOT)[0])
-    res = dev.wait_event(dev.EVENT_SYSTEM_BOOT)
-    quit_on_resp_err(res[0])
-    time.sleep(BOOT_DELAY_SECONDS)
-    return res[1]
-
-
 def scanner_thread():
     """Thread to scan for the peripheral device and print the counter value.
     """
     last_counter = -1
     logging.info('Configure scanner...')
-    res = reboot_the_device(if820_board_c.p_uart)
-    logging.info(f'Scanner: {res}')
     logging.info(
         f'Scan mode: {SCAN_MODE}, interval: {SCAN_INTERVAL}, window: {SCAN_WINDOW}')
     quit_on_resp_err(if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_START_SCAN,
@@ -107,7 +86,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
         logging.info("Debugging mode enabled")
@@ -119,21 +98,19 @@ if __name__ == '__main__':
             "Two IF820 boards required for this sample.")
         exit(1)
 
-    if820_board_p = boards[0]
-    if820_board_c = boards[1]
-    if820_board_p.open_and_init_board()
-    if820_board_c.open_and_init_board()
+    if820_board_c = boards[0]
+    if820_board_p = boards[1]
+    boot_info_p = if820_board_p.open_and_init_board()
+    boot_info_c = if820_board_c.open_and_init_board()
     if820_board_c.p_uart.set_api_format(API_FORMAT)
     if820_board_p.p_uart.set_api_format(API_FORMAT)
-
-    logging.info('Configure advertiser...')
-    res = reboot_the_device(if820_board_p.p_uart)
-    logging.info(f'Advertiser: {res}')
-    PERIPHERAL_ADDRESS = res.payload.address
-
+    logging.info(f'Advertiser: {boot_info_p}')
+    logging.info(f'Scanner: {boot_info_c}')
+    PERIPHERAL_ADDRESS = boot_info_p.payload.address
     threading.Thread(target=scanner_thread,
                      daemon=True).start()
 
+    logging.info('Configure advertiser...')
     quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
         if820_board_p.p_uart.CMD_GAP_STOP_ADV)[0])
     quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_PARAMETERS,
