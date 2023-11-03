@@ -100,7 +100,8 @@ CYSPP Test
 
     # send data from BT900 -> IF820
     EZ Clear RX Buffer    ${if820_board1}
-    ${data_to_send} =    Builtin.Catenate
+    ${data_to_send} =    Catenate
+    ...    SEPARATOR=
     ...    ${bt900_board1.BT900_CYSPP_WRITE_DATA_STRING}
     ...    ${CYSPP_DATA}
     ${response} =    BT900 Send    ${data_to_send}

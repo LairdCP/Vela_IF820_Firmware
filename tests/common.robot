@@ -293,6 +293,7 @@ BT900 IF820 SPP Send and Receive Data
     ELSE
         EZ Clear RX Buffer    ${if820_board1}
         ${send_cmd}=    Catenate
+        ...    SEPARATOR=
         ...    ${bt900_board1.BT900_SPP_WRITE_PREFIX}
         ...    ${data}
         BT900 Send    ${send_cmd}
