@@ -95,7 +95,6 @@ Reboot Loop
 Suite Setup
     Find Boards and Settings
     Init Board    ${if820_board1}
-    EZ Port Close    ${if820_board1}
 
 Suite Teardown
     De-Init Board    ${if820_board1}

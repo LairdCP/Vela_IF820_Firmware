@@ -145,7 +145,6 @@ Scan for custom Peripheral
         ${res}=    EZ Wait Event DUT1
         ...    ${lib_ez_serial_port.EVENT_GAP_SCAN_RESULT}
         ${packet}=    Set Variable    ${res}
-        Log    ${packet}
         IF    ${PERIPHERAL_ADDRESS} == ${packet.payload.address}
             Log    Discovered peripheral!
             ${received_data}=    Set Variable    ${packet.payload.data}
@@ -209,7 +208,6 @@ Connect to Peripheral
         ${res}=    EZ Wait Event DUT1
         ...    ${lib_ez_serial_port.EVENT_GAP_SCAN_RESULT}
         ${packet}=    Set Variable    ${res}
-        Log    ${packet}
         IF    ${PERIPHERAL_ADDRESS} == ${packet.payload.address}
             Log    Discovered peripheral!
             BREAK
