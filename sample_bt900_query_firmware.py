@@ -18,13 +18,11 @@ if __name__ == '__main__':
                         required=True, help="COM port to use")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.info("Debugging mode disabled")
 
     bt900 = BT900SerialPort()
     bt900.open(portName=args.connection, baud=115200)
