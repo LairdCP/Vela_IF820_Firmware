@@ -10,13 +10,11 @@ import logging
 import time
 import sys
 sys.path.append('./common_lib')
-import common_lib.ezserial_host_api.ezslib as ez_serial
-import common_lib.EzSerialPort as ez_port
 from common_lib.If820Board import If820Board
+import common_lib.EzSerialPort as ez_port
 
 
-API_FORMAT = ez_serial.Packet.EZS_API_FORMAT_TEXT
-BOOT_DELAY_SECONDS = 3
+API_FORMAT = 0  # Text
 ADV_MODE = ez_port.GapAdvertMode.NA.value
 ADV_TYPE = ez_port.GapAdvertType.NON_CONNECTABLE_HIGH_DUTY_CYCLE.value
 ADV_INTERVAL = 0x20
@@ -25,7 +23,6 @@ ADV_TIMEOUT = 0
 ADV_FLAGS = ez_port.GapAdvertFlags.ALL.value
 ADV_DATA = [0x02, 0x01, 0x06,
             0x02, 0x0A, 0x00]
-PERIPHERAL_ADDRESS = None
 
 
 def quit_on_resp_err(resp: int):
@@ -38,35 +35,18 @@ def quit_on_resp_err(resp: int):
         sys.exit(f'Response err: {hex(resp)}')
 
 
-def reboot_the_device(dev: ez_port.EzSerialPort) -> object:
-    """Reboot the device
-
-    Args:
-        dev (ez_port.EzSerialPort): The device to reboot
-
-    Returns:
-        object: The packet object from the reboot event
-    """
-    quit_on_resp_err(dev.send_and_wait(dev.CMD_REBOOT)[0])
-    res = dev.wait_event(dev.EVENT_SYSTEM_BOOT)
-    quit_on_resp_err(res[0])
-    time.sleep(BOOT_DELAY_SECONDS)
-    return res[1]
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
     parser.add_argument('-t', '--tx_power', type=int, default=2,
                         help="TX power level index (1-8)")
-    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.info("Debugging mode disabled")
 
     tx_power = args.tx_power
 
@@ -77,9 +57,6 @@ if __name__ == '__main__':
     if820_board_p.p_uart.set_api_format(API_FORMAT)
 
     logging.info('Configure advertiser...')
-    res = reboot_the_device(if820_board_p.p_uart)
-    logging.info(f'Advertiser: {res}')
-    PERIPHERAL_ADDRESS = res.payload.address
     quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
         if820_board_p.p_uart.CMD_GAP_STOP_ADV)[0])
     quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_PARAMETERS,
