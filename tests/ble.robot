@@ -13,19 +13,10 @@ Default Tags        vela if820
 
 
 *** Variables ***
-${DEV_PERIPHERAL}                           Peripheral
-${DEV_Central}                              Central
-${BOOT_DELAY_SECONDS}                       3
-${API_MODE}                                 ${1}
-${SLEEP_LEVEL_NORMAL}                       ${1}
-${CYSPP_FLAGS_RX_FLOW_CONTROL}              ${0x02}
-${COMPANY_ID}                               ${0x0077}
 ${ADV_MODE}                                 ${2}
 ${ADV_TYPE}                                 ${3}
 ${ADV_INTERVAL}                             ${0x40}
 ${ADV_CHANNELS}                             ${0x07}
-${ADV_TIMEOUT}                              ${0}
-${ADV_FILTER}                               ${0}
 ${ADV_FLAGS_CUSTOM_DATA}                    ${0x02}
 ${ADV_FLAGS_GATT}                           ${0x00}
 # Flags, short name my_sensor, VS data uint16 LSB

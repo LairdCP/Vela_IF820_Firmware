@@ -12,7 +12,6 @@ Default Tags        vela if820
 
 
 *** Variables ***
-${MAC_ADDR_LEN}             ${6}
 ${REBOOT_COUNT}             5
 ${BOOT_DELAY_SECONDS}       ${0.5}
 
