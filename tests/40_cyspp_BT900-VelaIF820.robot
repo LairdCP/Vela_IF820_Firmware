@@ -67,6 +67,7 @@ CYSPP Test
     ...    flags=${0}
     ...    directAddr=${0}
     ...    directAddrType=${0}
+    EZ Wait Event DUT1    ${lib_ez_serial_port.EVENT_GAP_ADV_STATE_CHANGED}
 
     # bt900 cyspp connect
     # note:    the bt900 central could scan for devices and pick out the appropriate device to connect to.
