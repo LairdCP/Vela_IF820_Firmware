@@ -17,19 +17,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.info("Debugging mode disabled")
 
     if820_board_p = If820Board.get_board()
     if820_board_p.open_and_init_board()
     logging.info('Sending ping command...')
     res = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
-    if res[0] == 0:
-        logging.info(f'Ping result success: {res}')
-    else:
-        logging.error(f'Ping result error: {res}')
+    If820Board.check_if820_response(if820_board_p.p_uart.CMD_PING, res)
