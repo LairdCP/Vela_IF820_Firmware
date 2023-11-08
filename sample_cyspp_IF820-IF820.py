@@ -4,11 +4,8 @@ import logging
 import argparse
 import time
 import sys
-import sys
 sys.path.append('./common_lib')
 from common_lib.If820Board import If820Board
-from common_lib.ezserial_host_api.ezslib import Packet
-import common_lib.SerialPort as serial_port
 import common_lib.EzSerialPort as ez_port
 
 """
@@ -19,9 +16,10 @@ This sample requires the following hardware:
 -P27 is the "Connection" indicator.  On the Laird Module this is pin 33 of the module, attached to GPIO_21 of the pico probe.
 -The jumper on J3 CP_ROLE must be placed.
 """
+API_FORMAT = ez_port.EzSerialApiMode.TEXT.value
 SCAN_MODE_GENERAL_DISCOVERY = ez_port.GapScanMode.NA.value
 SCAN_FILTER_ACCEPT_ALL = ez_port.GapScanFilter.NA.value
-CY_SPP_DATA = "abcdefghijklmnop"
+CYSPP_DATA = "abcdefghijklmnop"
 CENTRAL_ROLE = 1
 ENABLE_PLUS_AUTO_START = 2
 CYSPP_RX_FLOW_CNTRL = 2
@@ -32,18 +30,37 @@ Method 2:  API Command
 If using the API command method, additional api commands are required to connect to a device.
 """
 GPIO_MODE = False
+OTA_LATENCY = 1
+
+def wait_for_cyspp_connection(board: If820Board, expected_status: int):
+    wait_for_conn = True
+    while (wait_for_conn):
+        ez_rsp = board.p_uart.wait_event(
+            board.p_uart.EVENT_P_CYSPP_STATUS)
+        logging.info(ez_rsp)
+        if ez_rsp[1].payload.status == expected_status:
+            wait_for_conn = False
+
+def send_receive_data(sender: If820Board, receiver: If820Board, data: str):
+    receiver.p_uart.clear_rx_queue()
+    sender.p_uart.send(bytes(data, 'utf-8'))
+    # wait to ensure all data is sent and received
+    time.sleep(OTA_LATENCY)
+    rx_data = receiver.p_uart.read()
+    logging.info(
+        f"received: {rx_data}")
+    if (len(rx_data) == 0):
+        sys.exit(f"Error!  No data received.")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
     args, unknown = parser.parse_known_args()
-    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.info("Debugging mode disabled")
 
     boards = If820Board.get_connected_boards()
     if len(boards) < 2:
@@ -51,12 +68,14 @@ if __name__ == '__main__':
             "Two IF820 boards required for this sample.")
         exit(1)
 
-    if820_board_p = boards[0]
-    if820_board_c = boards[1]
-    if820_board_p.open_and_init_board()
+    if820_board_c = boards[0]
+    if820_board_p = boards[1]
     if820_board_c.open_and_init_board()
+    if820_board_p.open_and_init_board()
+    if820_board_c.p_uart.set_api_format(API_FORMAT)
+    if820_board_p.p_uart.set_api_format(API_FORMAT)
 
-    # Send Ping just to verify coms before proceeding
+    # Send Ping just to verify communication before proceeding
     ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
     If820Board.check_if820_response(if820_board_p.p_uart.CMD_PING, ez_rsp)
     ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_PING)
@@ -68,26 +87,17 @@ if __name__ == '__main__':
     If820Board.check_if820_response(
         if820_board_p.p_uart.CMD_GET_BT_ADDR, ez_rsp)
     peripheral_addr = ez_rsp[1].payload.address
-    logging.info(ez_rsp[1].payload.address)
+    logging.info(f'Peripheral MAC address: {peripheral_addr}')
 
     if GPIO_MODE:
-        # Set Central CY_ROLE pin low to boot in central mode
+        logging.info("Put IF820 into central mode via CP_ROLE pin")
         if820_board_c.probe.gpio_to_output(if820_board_c.CP_ROLE)
         if820_board_c.probe.gpio_to_output_low(if820_board_c.CP_ROLE)
         if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_REBOOT)
 
-        wait_for_conn = True
-        while (wait_for_conn):
-            ez_rsp = if820_board_c.p_uart.wait_event(
-                if820_board_c.p_uart.EVENT_P_CYSPP_STATUS)
-            logging.info(ez_rsp)
-            if ez_rsp[1].payload.status == 53:
-                wait_for_conn = False
-
     else:
         # Get device into central mode using api.
         ez_rsp = if820_board_c.p_uart.send_and_wait(command=if820_board_c.p_uart.CMD_P_CYSPP_SET_PARAMETERS,
-                                                    apiformat=Packet.EZS_API_FORMAT_TEXT,
                                                     enable=ENABLE_PLUS_AUTO_START,
                                                     role=CENTRAL_ROLE,
                                                     company=305,
@@ -100,6 +110,7 @@ if __name__ == '__main__':
         If820Board.check_if820_response(
             if820_board_c.p_uart.CMD_P_CYSPP_SET_PARAMETERS, ez_rsp)
 
+        logging.info("Scanning for peripheral device...")
         ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_START_SCAN,
                                                     mode=SCAN_MODE_GENERAL_DISCOVERY,
                                                     interval=0x400,
@@ -117,83 +128,62 @@ if __name__ == '__main__':
             If820Board.check_if820_response(
                 if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT, ez_rsp)
             packet = ez_rsp[1]
-            logging.debug(f'Received {packet}')
             received_addr = packet.payload.address
             address_type = packet.payload.address_type
             if received_addr == peripheral_addr:
+                logging.info('Found peripheral device!')
                 break
             else:
                 logging.debug(f'Not looking for {received_addr}')
 
         ez_rsp = if820_board_c.p_uart.send_and_wait(
-            if820_board_c.p_uart.CMD_GAP_STOP_SCAN)
+            if820_board_c.p_uart.CMD_GAP_STOP_SCAN, ez_port.EzSerialApiMode.BINARY.value)
         If820Board.check_if820_response(
             if820_board_c.p_uart.CMD_GAP_STOP_SCAN, ez_rsp)
 
+        logging.info('Connecting to peripheral device...')
         ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_CONNECT,
                                                     address=received_addr,
                                                     type=address_type,
-                                                    interval=6,
-                                                    slave_latency=0,
-                                                    supervision_timeout=100,
+                                                    interval=24,
+                                                    slave_latency=5,
+                                                    supervision_timeout=500,
                                                     scan_interval=0x0100,
                                                     scan_window=0x0100,
                                                     scan_timeout=0)
         If820Board.check_if820_response(
             if820_board_c.p_uart.CMD_GAP_CONNECT, ez_rsp)
 
-        logging.info('Found peripheral device, connecting...')
         res = if820_board_c.p_uart.wait_event(
             if820_board_c.p_uart.EVENT_GAP_CONNECTED)
         If820Board.check_if820_response(
             if820_board_c.p_uart.EVENT_GAP_CONNECTED, ez_rsp)
-        logging.info('Connected!')
-        # time for cyspp to be setup
-        time.sleep(2)
+        logging.info('Central Connected!')
+        res = if820_board_p.p_uart.wait_event(
+            if820_board_p.p_uart.EVENT_GAP_CONNECTED)
+        If820Board.check_if820_response(
+            if820_board_p.p_uart.EVENT_GAP_CONNECTED, ez_rsp)
+        logging.info('Peripheral Connected!')
 
-    # close ez serial ports
-    if820_board_p.p_uart.close()
-    if820_board_c.p_uart.close()
+    logging.info("Peripheral: Waiting for CYSPP connection...")
+    wait_for_cyspp_connection(if820_board_p, 0x05)
+    logging.info("Peripheral: CYSPP started")
+    logging.info("Central: Waiting for CYSPP connection...")
+    wait_for_cyspp_connection(if820_board_c, 0x35)
+    logging.info("Central: CYSPP ready!")
+    if not GPIO_MODE:
+        logging.info("Peripheral: Waiting for CYSPP connection to finalize...")
+        wait_for_cyspp_connection(if820_board_p, 0x05)
+        logging.info("Peripheral: CYSPP ready!")
 
-    # open serial ports
-    sp_peripheral = serial_port.SerialPort()
-    sp_central = serial_port.SerialPort()
-    sp_peripheral.open(if820_board_p.puart_port_name,
-                       if820_board_p.p_uart.IF820_DEFAULT_BAUD)
-    sp_central.open(if820_board_c.puart_port_name,
-                    if820_board_c.p_uart.IF820_DEFAULT_BAUD)
+    logging.info("Sending data from central to peripheral...")
+    send_receive_data(if820_board_c, if820_board_p, CYSPP_DATA)
 
-    # send data from central to peripheral
-    for c in CY_SPP_DATA:
-        sp_central.send(c)
-        time.sleep(0.02)
-    # wait 1 sec to ensure all data is sent and received
-    time.sleep(1)
-    rx_data = sp_peripheral.get_rx_queue()
-    string_utf8 = bytes(rx_data).decode('utf-8')
-    logging.debug(
-        f"Received CYSPP Data Central->Peripheral: {string_utf8}")
-    if (len(string_utf8) == 0):
-        sys.exit(f"Error!  No data received over CYSPP.")
+    logging.info("Sending data from peripheral to central...")
+    send_receive_data(if820_board_p, if820_board_c, CYSPP_DATA)
 
-     # send data from peripheral to central
-    for c in CY_SPP_DATA:
-        sp_peripheral.send(c)
-        time.sleep(0.02)
-    # wait 1 sec to ensure all data is sent and received
-    time.sleep(1)
-    rx_data = sp_central.get_rx_queue()
-    string_utf8 = bytes(rx_data).decode('utf-8', 'replace')
-    logging.debug(
-        f"Received CYSPP Data Peripheral->Central: {string_utf8}")
-    if (len(string_utf8) == 0):
-        sys.exit(f"Error!  No data received over CYSPP.")
-
-    logging.info("Success!  Cleaning up...")
+    logging.info("Data exchanged! Reset the boards...")
     # clean everything up
     if820_board_p.close_ports_and_reset()
     if820_board_c.close_ports_and_reset()
-    # close the open com ports
-    sp_peripheral.close()
-    sp_central.close()
-    logging.info("Done!")
+    logging.info("Goodbye!")
