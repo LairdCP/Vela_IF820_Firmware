@@ -5,11 +5,10 @@ import argparse
 import time
 import sys
 sys.path.append('./common_lib')
-from common_lib.ezserial_host_api.ezslib import Packet
 from common_lib.If820Board import If820Board
+import common_lib.EzSerialPort as ez_port
 
-
-API_FORMAT = Packet.EZS_API_FORMAT_TEXT
+API_FORMAT = ez_port.EzSerialApiMode.TEXT.value
 SYS_DEEP_SLEEP_LEVEL = 2
 HIBERNATE = False
 SLEEP_TIME = 60
@@ -43,14 +42,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
 
     if820_board_p = If820Board.get_board()
-    logging.info(f'Port Name: {if820_board_p.puart_port_name}')
     if820_board_p.open_and_init_board()
     if820_board_p.p_uart.set_api_format(API_FORMAT)
 
