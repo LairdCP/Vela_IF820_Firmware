@@ -6,6 +6,9 @@ The custom advertisement payload contains a 1 byte counter value that is increme
 every two seconds.
 The central device prints the counter value when it receives a new advertisement.
 To run this test you need two IF820 DVK boards.
+
+Use the -l option to enable low power mode for the advertiser.
+This can be used to evaluate the power consumption of an IF820 advertiser.
 """
 
 import argparse
@@ -17,10 +20,12 @@ sys.path.append('./common_lib')
 import common_lib.EzSerialPort as ez_port
 from common_lib.If820Board import If820Board
 
-API_FORMAT = 1  # Binary
+API_FORMAT = ez_port.EzSerialApiMode.TEXT.value
 ADV_MODE = ez_port.GapAdvertMode.NA.value
 ADV_TYPE = ez_port.GapAdvertType.UNDIRECTED_HIGH_DUTY_CYCLE.value
-ADV_INTERVAL = 0x40
+# The following two values can be adjusted to see how it affects the power consumption of the advertiser.
+ADV_INTERVAL = 400  # 400 * 0.625ms = 250ms
+ADV_UPDATE_INTERVAL_SECONDS = 2
 ADV_CHANNELS = ez_port.GapAdvertChannels.CHANNEL_ALL.value
 ADV_TIMEOUT = 0
 ADV_FLAGS = ez_port.GapAdvertFlags.ALL.value
@@ -33,6 +38,32 @@ SCAN_FILTER_ACCEPT_ALL = ez_port.GapScanFilter.NA.value
 PERIPHERAL_ADDRESS = None
 
 
+def board_wait_awake(board: If820Board):
+    """Wait for the board to be ready to accept commands.
+    BT_HOST_WAKE is an output from the IF820 to the host.
+    When the IF820 is awake and ready to accept commands, this pin will be high.
+
+    Args:
+        board (If820Board): board to wait for
+    """
+    pin = 0
+    while not pin:
+        pin = board.probe.gpio_read(board.BT_HOST_WAKE)
+        if not pin:
+            time.sleep(0.01)
+        else:
+            break
+    return pin
+
+
+def board_allow_sleep(board: If820Board):
+    board.probe.gpio_to_output_low(board.LP_MODE)
+
+
+def board_wake_up(board: If820Board):
+    board.probe.gpio_to_output_high(board.LP_MODE)
+
+
 def quit_on_resp_err(resp: int):
     """Exit the program if the response code is not 0.
 
@@ -41,6 +72,7 @@ def quit_on_resp_err(resp: int):
     """
     if resp != 0:
         sys.exit(f'Response err: {hex(resp)}')
+
 
 def scanner_thread():
     """Thread to scan for the peripheral device and print the counter value.
@@ -86,11 +118,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
-    logging.basicConfig(format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
+    parser.add_argument('-l', '--low-power', action='store_true',
+                        help="Enable low power mode for the advertiser")
+    logging.basicConfig(
+        format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
+
+    low_power = args.low_power
 
     boards = If820Board.get_connected_boards()
     if len(boards) < 2:
@@ -98,8 +135,18 @@ if __name__ == '__main__':
             "Two IF820 boards required for this sample.")
         exit(1)
 
+    logging.info('Init boards...')
     if820_board_c = boards[0]
     if820_board_p = boards[1]
+    # Reset the DVK Probe to clear all IO states
+    if820_board_p.open_and_init_board(False)
+    if820_board_c.open_and_init_board(False)
+    if820_board_p.close_ports_and_reset()
+    time.sleep(0.5)
+    if820_board_c.close_ports_and_reset()
+    # Wait for boards to re-enumerate over USB
+    time.sleep(5)
+    # Init the modules
     boot_info_p = if820_board_p.open_and_init_board()
     boot_info_c = if820_board_c.open_and_init_board()
     if820_board_c.p_uart.set_api_format(API_FORMAT)
@@ -107,12 +154,37 @@ if __name__ == '__main__':
     logging.info(f'Advertiser: {boot_info_p}')
     logging.info(f'Scanner: {boot_info_c}')
     PERIPHERAL_ADDRESS = boot_info_p.payload.address
+
+    logging.info('Configure advertiser...')
+    if low_power:
+        logging.info(f'A: Keep module awake')
+        if820_board_p.probe.gpio_to_output(if820_board_p.LP_MODE)
+        board_wake_up(if820_board_p)
+        if820_board_p.probe.gpio_to_input(if820_board_p.BT_HOST_WAKE)
+        res = board_wait_awake(if820_board_p)
+        logging.info(f'A: BT_HOST_WAKE: {res}')
+
+        logging.info(f'A: Stop Bluetooth classic discovery.')
+        ez_rsp = if820_board_p.p_uart.send_and_wait(
+            if820_board_p.p_uart.CMD_SET_PARAMS,
+            apiformat=ez_port.EzSerialApiMode.TEXT.value,
+            link_super_time_out=0x7d00,
+            discoverable=0,
+            connectable=0,
+            flags=0,
+            scn=0,
+            active_bt_discoverability=0,
+            active_bt_connectability=0)
+        If820Board.check_if820_response(
+            if820_board_p.p_uart.CMD_SET_PARAMS, ez_rsp)
+
+    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
+        if820_board_p.p_uart.CMD_GAP_STOP_ADV, ez_port.EzSerialApiMode.BINARY.value)[0])
+
+    # Start the scanner thread
     threading.Thread(target=scanner_thread,
                      daemon=True).start()
 
-    logging.info('Configure advertiser...')
-    quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
-        if820_board_p.p_uart.CMD_GAP_STOP_ADV)[0])
     quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_PARAMETERS,
                                                         mode=ADV_MODE,
                                                         type=ADV_TYPE,
@@ -143,12 +215,17 @@ if __name__ == '__main__':
                                                         directAddrType=ez_port.GapAddressType.PUBLIC.value)[0])
 
     while (True):
-        time.sleep(2)
+        time.sleep(ADV_UPDATE_INTERVAL_SECONDS)
         counter = ADV_DATA[-1]
         counter = counter + 1
         if counter >= 256:
             counter = 0
         ADV_DATA[-1] = counter
+        if low_power:
+            board_wake_up(if820_board_p)
+            board_wait_awake(if820_board_p)
         logging.info(f'Advertising value {counter}')
         quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_DATA,
                                                             data=ADV_DATA)[0])
+        if low_power:
+            board_allow_sleep(if820_board_p)
