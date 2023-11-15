@@ -6,6 +6,9 @@ change the battery level.
 A central device scans for the peripheral device and connects to it.
 The central device will received the battery level every time it is updated.
 To run this test you need two IF820 DVK boards.
+
+Use the -l option to enable low power mode for the peripheral.
+This can be used to evaluate the power consumption of an IF820 peripheral in a connection.
 """
 
 import argparse
@@ -17,8 +20,7 @@ sys.path.append('./common_lib')
 import common_lib.EzSerialPort as ez_port
 from common_lib.If820Board import If820Board
 
-API_FORMAT = ez_port.EzSerialApiMode.BINARY.value
-BOOT_DELAY_SECONDS = 3
+API_FORMAT = ez_port.EzSerialApiMode.TEXT.value
 ADV_MODE = ez_port.GapAdvertMode.NA.value
 ADV_TYPE = ez_port.GapAdvertType.UNDIRECTED_LOW_DUTY_CYCLE.value
 ADV_INTERVAL = 0x40
@@ -30,10 +32,43 @@ ADV_DATA = [0x02, 0x01, 0x06,
             0x03, 0x02, 0x0f, 0x18]
 SCAN_MODE_GENERAL_DISCOVERY = ez_port.GapScanMode.NA.value
 SCAN_FILTER_ACCEPT_ALL = ez_port.GapScanFilter.NA.value
+SCAN_INTERVAL = 0x100
+SCAN_WINDOW = 0x100
+# The following 4 values can be adjusted to see how it affects the power consumption of the peripheral.
+CONNECTION_INTERVAL = 400 # 400 * 1.25ms = 500ms
+SLAVE_LATENCY = 3
+SUPERVISION_TIMEOUT = 500 # 500 * 10ms = 5s
+DATA_UPDATE_INTERVAL_SECONDS = 5
 PERIPHERAL_ADDRESS = None
 battery_level = 100
 battery_level_handle = 0
 batter_level_ccc_handle = 0
+
+
+def board_wait_awake(board: If820Board):
+    """Wait for the board to be ready to accept commands.
+    BT_HOST_WAKE is an output from the IF820 to the host.
+    When the IF820 is awake and ready to accept commands, this pin will be high.
+
+    Args:
+        board (If820Board): board to wait for
+    """
+    pin = 0
+    while not pin:
+        pin = board.probe.gpio_read(board.BT_HOST_WAKE)
+        if not pin:
+            time.sleep(0.01)
+        else:
+            break
+    return pin
+
+
+def board_allow_sleep(board: If820Board):
+    board.probe.gpio_to_output_low(board.LP_MODE)
+
+
+def board_wake_up(board: If820Board):
+    board.probe.gpio_to_output_high(board.LP_MODE)
 
 
 def quit_on_resp_err(resp: int):
@@ -54,12 +89,12 @@ def scanner_thread():
     logging.debug('Central: start scanning...')
     quit_on_resp_err(if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_START_SCAN,
                                                         mode=SCAN_MODE_GENERAL_DISCOVERY,
-                                                        interval=0x100,
-                                                        window=0x100,
+                                                        interval=SCAN_INTERVAL,
+                                                        window=SCAN_WINDOW,
                                                         active=0,
                                                         filter=SCAN_FILTER_ACCEPT_ALL,
                                                         nodupe=1,
-                                                        timeout=30)[0])
+                                                        timeout=0)[0])
     while True:
         res = if820_board_c.p_uart.wait_event(
             if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT)
@@ -84,11 +119,11 @@ def scanner_thread():
     quit_on_resp_err(if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_CONNECT,
                                                         address=received_addr,
                                                         type=address_type,
-                                                        interval=24,
-                                                        slave_latency=5,
-                                                        supervision_timeout=500,
-                                                        scan_interval=0x0100,
-                                                        scan_window=0x0100,
+                                                        interval=CONNECTION_INTERVAL,
+                                                        slave_latency=SLAVE_LATENCY,
+                                                        supervision_timeout=SUPERVISION_TIMEOUT,
+                                                        scan_interval=SCAN_INTERVAL,
+                                                        scan_window=SCAN_WINDOW,
                                                         scan_timeout=0)[0])
 
     logging.debug('Central: Wait for connection...')
@@ -123,6 +158,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
+    parser.add_argument('-l', '--low-power', action='store_true',
+                        help="Enable low power mode for the peripheral")
     logging.basicConfig(
         format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     args, unknown = parser.parse_known_args()
@@ -130,14 +167,26 @@ if __name__ == '__main__':
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
 
+    low_power = args.low_power
+
     boards = If820Board.get_connected_boards()
     if len(boards) < 2:
         logging.critical(
             "Two IF820 boards required for this sample.")
         exit(1)
 
+    logging.info('Init boards...')
     if820_board_c = boards[0]
     if820_board_p = boards[1]
+    # Reset the DVK Probe to clear all IO states
+    if820_board_p.open_and_init_board(False)
+    if820_board_c.open_and_init_board(False)
+    if820_board_p.close_ports_and_reset()
+    time.sleep(0.5)
+    if820_board_c.close_ports_and_reset()
+    # Wait for boards to re-enumerate over USB
+    time.sleep(5)
+    # Init the modules
     boot_info_p = if820_board_p.open_and_init_board()
     boot_info_c = if820_board_c.open_and_init_board()
     if820_board_c.p_uart.set_api_format(API_FORMAT)
@@ -145,6 +194,7 @@ if __name__ == '__main__':
     logging.info(f'Advertiser: {boot_info_p}')
     logging.info(f'Scanner: {boot_info_c}')
     PERIPHERAL_ADDRESS = boot_info_p.payload.address
+
     logging.debug('Stop peripheral device advertising...')
     if820_board_p.stop_advertising()
 
@@ -158,6 +208,29 @@ if __name__ == '__main__':
                      daemon=True).start()
 
     logging.info('Configure advertiser...')
+
+    if low_power:
+        logging.info(f'A: Keep module awake')
+        if820_board_p.probe.gpio_to_output(if820_board_p.LP_MODE)
+        board_wake_up(if820_board_p)
+        if820_board_p.probe.gpio_to_input(if820_board_p.BT_HOST_WAKE)
+        res = board_wait_awake(if820_board_p)
+        logging.info(f'A: BT_HOST_WAKE: {res}')
+
+        logging.info(f'A: Stop Bluetooth classic discovery.')
+        ez_rsp = if820_board_p.p_uart.send_and_wait(
+            if820_board_p.p_uart.CMD_SET_PARAMS,
+            apiformat=ez_port.EzSerialApiMode.TEXT.value,
+            link_super_time_out=0x7d00,
+            discoverable=0,
+            connectable=0,
+            flags=0,
+            scn=0,
+            active_bt_discoverability=0,
+            active_bt_connectability=0)
+        If820Board.check_if820_response(
+            if820_board_p.p_uart.CMD_SET_PARAMS, ez_rsp)
+
     # Set advertising parameters
     quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_PARAMETERS,
                                                         mode=ADV_MODE,
@@ -229,10 +302,14 @@ if __name__ == '__main__':
     con_handle = res.payload.conn_handle
 
     while (True):
-        time.sleep(5)
+        time.sleep(DATA_UPDATE_INTERVAL_SECONDS)
         battery_level -= 1
         if battery_level < 0:
             battery_level = 100
+
+        if low_power:
+            board_wake_up(if820_board_p)
+            board_wait_awake(if820_board_p)
 
         try:
             res = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GATTS_WRITE_HANDLE,
@@ -243,6 +320,8 @@ if __name__ == '__main__':
             else:
                 logging.error(
                     f'Failed to change battery level {battery_level} [{hex(res[0])}]')
+                if low_power:
+                    board_allow_sleep(if820_board_p)
                 continue
 
             # Notify that battery level has changed to any connected device subscribed to notifications
@@ -253,5 +332,7 @@ if __name__ == '__main__':
             if res[0] != 0:
                 logging.error(
                     f'Failed to notify battery level {battery_level} [{hex(res[0])}]')
+            if low_power:
+                board_allow_sleep(if820_board_p)
         except:
             pass
