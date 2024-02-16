@@ -5,7 +5,7 @@ Python CLI for IF820 Firmware Upgrade
 
 pyinstaller command to produce a single executable file:
 
-pyinstaller --clean --console --noconfirm  --onefile --add-data "files/v1.4.12.12_int-ant/minidriver-20820A1-uart-patchram.hex:files" --collect-all pyocd  --collect-all cmsis_pack_manager -p common_lib if820_flasher_cli.py
+pyinstaller --clean --console --noconfirm  --onefile --add-data "files/v1.4.12.12_int-ant/minidriver-20820A1-uart-patchram.hex:files" --collect-all pyocd  --collect-all cmsis_pack_manager -p common_lib/libraries if820_flasher_cli.py
 
 """
 

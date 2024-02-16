@@ -12,7 +12,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 a = Analysis(
     ['if820_flasher_gui.py'],
-    pathex=['common_lib'],
+    pathex=['common_lib/libraries'],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
