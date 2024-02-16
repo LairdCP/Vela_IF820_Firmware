@@ -4,8 +4,8 @@ import argparse
 import logging
 import textwrap
 import sys
-sys.path.append('./common_lib')
-from common_lib.If820Board import If820Board
+sys.path.append('./common_lib/libraries')
+from If820Board import If820Board
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -20,6 +20,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d", "--debug", action="store_true", help="Enable verbose debug messages"
     )
+    parser.add_argument(
+        "-b", "--bootloader", action="store_true",
+        help="Reboot the DVK Probe (RP2040) to its bootloader"
+    )
 
     logging.basicConfig(
         format="%(asctime)s | %(levelname)s | %(message)s", level=logging.INFO
@@ -28,6 +32,7 @@ if __name__ == "__main__":
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
+    reboot_to_bootloader = args.bootloader
 
     boards = If820Board.get_connected_boards()
     if len(boards) == 0:
@@ -42,4 +47,4 @@ if __name__ == "__main__":
         choice = int(input("Enter the number of the board: "))
     board = boards[choice]
     board.probe.open()
-    board.probe.reboot()
+    board.probe.reboot(reboot_to_bootloader)
