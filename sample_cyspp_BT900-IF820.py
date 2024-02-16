@@ -4,9 +4,9 @@ import argparse
 import logging
 import time
 import sys
-sys.path.append('./common_lib')
-from common_lib.If820Board import If820Board
-from common_lib.BT900SerialPort import BT900SerialPort
+sys.path.append('./common_lib/libraries')
+from If820Board import If820Board
+from BT900SerialPort import BT900SerialPort
 
 """
 Hardware Setup

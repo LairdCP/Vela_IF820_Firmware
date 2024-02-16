@@ -3,8 +3,8 @@
 import argparse
 import logging
 import sys
-sys.path.append('./common_lib')
-from common_lib.BT900SerialPort import BT900SerialPort
+sys.path.append('./common_lib/libraries')
+from BT900SerialPort import BT900SerialPort
 
 """
 Hardware Setup

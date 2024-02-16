@@ -4,8 +4,8 @@ import argparse
 import logging
 import time
 import sys
-sys.path.append('./common_lib')
-from common_lib.If820Board import If820Board
+sys.path.append('./common_lib/libraries')
+from If820Board import If820Board
 
 """
 Hardware Setup

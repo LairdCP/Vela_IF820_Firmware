@@ -16,9 +16,9 @@ import logging
 import time
 import threading
 import sys
-sys.path.append('./common_lib')
-import common_lib.EzSerialPort as ez_port
-from common_lib.If820Board import If820Board
+sys.path.append('./common_lib/libraries')
+import EzSerialPort as ez_port
+from If820Board import If820Board
 
 API_FORMAT = ez_port.EzSerialApiMode.TEXT.value
 ADV_MODE = ez_port.GapAdvertMode.NA.value

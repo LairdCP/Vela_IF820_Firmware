@@ -4,10 +4,10 @@ import argparse
 import logging
 import time
 import sys
-sys.path.append('./common_lib')
-from common_lib.BT900SerialPort import BT900SerialPort
-from common_lib.If820Board import If820Board
-import common_lib.EzSerialPort as ez_port
+sys.path.append('./common_lib/libraries')
+from BT900SerialPort import BT900SerialPort
+from If820Board import If820Board
+import EzSerialPort as ez_port
 
 API_FORMAT = ez_port.EzSerialApiMode.TEXT.value
 BT900_ADV_FLAGS = bytes([0x02, 0x01, 0x06])

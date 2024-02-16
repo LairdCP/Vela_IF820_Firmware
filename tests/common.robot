@@ -1,8 +1,8 @@
 *** Settings ***
 Library     OperatingSystem
-Library     ..${/}common_lib${/}common_lib${/}If820Board.py
-Library     ..${/}common_lib${/}common_lib${/}BT900SerialPort.py
-Library     ..${/}common_lib${/}common_lib${/}EzSerialPort.py
+Library     ..${/}common_lib${/}libraries${/}If820Board.py
+Library     ..${/}common_lib${/}libraries${/}BT900SerialPort.py
+Library     ..${/}common_lib${/}libraries${/}EzSerialPort.py
 
 
 *** Variables ***

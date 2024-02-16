@@ -9,9 +9,9 @@ import argparse
 import logging
 import time
 import sys
-sys.path.append('./common_lib')
-from common_lib.If820Board import If820Board
-import common_lib.EzSerialPort as ez_port
+sys.path.append('./common_lib/libraries')
+from If820Board import If820Board
+import EzSerialPort as ez_port
 
 
 API_FORMAT = 0  # Text
