@@ -5,22 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
-            "type": "python",
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [
-                "-c",
-                "${config:comport_IF820_device1}",
-                "-d",
-                "False"
-            ]
+            "args": "${command:pickArgs}"
         },
         {
             "name": "Ping",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_ping.py",
             "console": "integratedTerminal",
@@ -31,7 +25,7 @@
         },
         {
             "name": "Reboot Loop",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_reboot_loop.py",
             "console": "integratedTerminal",
@@ -42,25 +36,29 @@
         },
         {
             "name": "SPP IF820->IF820",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_spp_IF820-IF820.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["-d"]
+            "args": [
+                "-d"
+            ]
         },
         {
             "name": "CYSPP IF820->IF820",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_cyspp_IF820-IF820.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["-d"]
+            "args": [
+                "-d"
+            ]
         },
         {
             "name": "BT900 Single",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_bt900_query_firmware.py",
             "console": "integratedTerminal",
@@ -73,7 +71,7 @@
         },
         {
             "name": "SPP IF820 -> BT900",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_spp_IF820-BT900.py",
             "console": "integratedTerminal",
@@ -86,7 +84,7 @@
         },
         {
             "name": "SPP BT900 -> IF820",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_spp_BT900-IF820.py",
             "console": "integratedTerminal",
@@ -99,7 +97,7 @@
         },
         {
             "name": "CYSPP BT900 -> IF820",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_cyspp_BT900-IF820.py",
             "console": "integratedTerminal",
@@ -112,7 +110,7 @@
         },
         {
             "name": "CYSPP IF820 -> BT900",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_cyspp_IF820-BT900.py",
             "console": "integratedTerminal",
@@ -125,7 +123,7 @@
         },
         {
             "name": "UART programmer, chip erase",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/if820_flasher_cli.py",
             "console": "integratedTerminal",
@@ -139,7 +137,7 @@
         },
         {
             "name": "UART programmer, no chip erase",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/if820_flasher_cli.py",
             "console": "integratedTerminal",
@@ -152,7 +150,7 @@
         },
         {
             "name": "Chip erase",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/if820_flasher_cli.py",
             "console": "integratedTerminal",
@@ -163,22 +161,40 @@
             ]
         },
         {
+            "name": "UART programmer, Ez-Serial HCD firmware",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/if820_flasher_cli.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "-d",
+                "-f",
+                "${config:ezserial_hcd_firmware}",
+                "-ce"
+            ]
+        },
+        {
             "name": "Debug BLE Sample",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_${input:ble_sample}.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["-d"]
+            "args": [
+                "-d"
+            ]
         },
         {
             "name": "Sleep Sample",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sample_sleep.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["-d"],
+            "args": [
+                "-d"
+            ],
         }
     ],
     "inputs": [

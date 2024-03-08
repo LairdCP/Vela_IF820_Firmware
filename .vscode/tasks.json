@@ -27,6 +27,18 @@
             "problemMatcher": []
         },
         {
+            "label": "Flash EZ-Serial HCD firmware",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}/if820_flasher_cli.py",
+                "-f",
+                "${config:ezserial_hcd_firmware}",
+                "-ce"
+            ],
+            "problemMatcher": []
+        },
+        {
             "label": "Run chip erase",
             "type": "shell",
             "command": "python",

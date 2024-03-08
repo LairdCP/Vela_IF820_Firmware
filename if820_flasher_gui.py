@@ -104,7 +104,7 @@ class Window(wx.Frame):
         st_selfirmware.SetFont(font)
         vbox.Add(st_selfirmware, flag=wx.LEFT | wx.RIGHT, border=10)
         self.picker_firmware = wx.FilePickerCtrl(
-            panel, message='Select firmware hex file', wildcard='*.hex')
+            panel, message='Select firmware hex file', wildcard='Firmware files (.hex, .hcd)|*.hex;*.hcd')
         vbox.Add(self.picker_firmware, flag=wx.EXPAND |
                  wx.LEFT | wx.RIGHT | wx.BOTTOM, border=10)
 
