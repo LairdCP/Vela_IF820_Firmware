@@ -5,8 +5,8 @@ import argparse
 import time
 import sys
 sys.path.append('./common_lib/libraries')
-from If820Board import If820Board
 import EzSerialPort as ez_port
+from If820Board import If820Board
 
 """
 Hardware Setup
@@ -32,6 +32,24 @@ If using the API command method, additional api commands are required to connect
 GPIO_MODE = False
 OTA_LATENCY = 1
 
+
+def factory_reset(board: If820Board):
+    logging.info("IF820 Factory Reset")
+    ez_rsp = board.p_uart.send_and_wait(
+        board.p_uart.CMD_FACTORY_RESET)
+    If820Board.check_if820_response(
+        board.p_uart.CMD_FACTORY_RESET, ez_rsp)
+    logging.info("Wait for IF820 Reboot...")
+    ez_rsp = board.p_uart.wait_event(
+        board.p_uart.EVENT_SYSTEM_BOOT)
+    If820Board.check_if820_response(
+        board.p_uart.EVENT_SYSTEM_BOOT, ez_rsp)
+    ez_rsp = board.p_uart.wait_event(
+        board.p_uart.EVENT_GAP_ADV_STATE_CHANGED)
+    If820Board.check_if820_response(
+        board.p_uart.EVENT_GAP_ADV_STATE_CHANGED, ez_rsp)
+
+
 def wait_for_cyspp_connection(board: If820Board, expected_status: int):
     wait_for_conn = True
     while (wait_for_conn):
@@ -40,6 +58,7 @@ def wait_for_cyspp_connection(board: If820Board, expected_status: int):
         logging.info(ez_rsp)
         if ez_rsp[1].payload.status == expected_status:
             wait_for_conn = False
+
 
 def send_receive_data(sender: If820Board, receiver: If820Board, data: str):
     receiver.p_uart.clear_rx_queue()
@@ -50,14 +69,16 @@ def send_receive_data(sender: If820Board, receiver: If820Board, data: str):
     logging.info(
         f"received: {rx_data}")
     if (len(rx_data) == 0):
-        sys.exit(f"Error!  No data received.")
+        logging.error(f"No data received!")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Enable verbose debug messages")
     args, unknown = parser.parse_known_args()
-    logging.basicConfig(format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s [%(module)s] %(levelname)s: %(message)s', level=logging.INFO)
     if args.debug:
         logging.info("Debugging mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
@@ -74,6 +95,9 @@ if __name__ == '__main__':
     if820_board_p.open_and_init_board()
     if820_board_c.p_uart.set_api_format(API_FORMAT)
     if820_board_p.p_uart.set_api_format(API_FORMAT)
+
+    factory_reset(if820_board_c)
+    factory_reset(if820_board_p)
 
     # Send Ping just to verify communication before proceeding
     ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_PING)
@@ -171,10 +195,6 @@ if __name__ == '__main__':
     logging.info("Central: Waiting for CYSPP connection...")
     wait_for_cyspp_connection(if820_board_c, 0x35)
     logging.info("Central: CYSPP ready!")
-    if not GPIO_MODE:
-        logging.info("Peripheral: Waiting for CYSPP connection to finalize...")
-        wait_for_cyspp_connection(if820_board_p, 0x05)
-        logging.info("Peripheral: CYSPP ready!")
 
     logging.info("Sending data from central to peripheral...")
     send_receive_data(if820_board_c, if820_board_p, CYSPP_DATA)
@@ -186,4 +206,4 @@ if __name__ == '__main__':
     # clean everything up
     if820_board_p.close_ports_and_reset()
     if820_board_c.close_ports_and_reset()
-    logging.info("Goodbye!")
+    logging.info("Done!")
