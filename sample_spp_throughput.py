@@ -46,12 +46,6 @@ SEND_DATA_CHUNK_LEN = THROUGHPUT_TEST_TIMEOUT_SECS * BAUD_RATE / UART_BITS_PER_B
 # How long to wait for data to be received. This is used to determine when RX is finished.
 RX_TIMEOUT_SECS = 1
 
-rx_done_event = None
-data_sent = []
-data_received = []
-tx_start_time = 0
-
-
 def factory_reset(board: If820Board):
     logging.info("IF820 Factory Reset")
     ez_rsp = board.p_uart.send_and_wait(
@@ -77,17 +71,23 @@ def wait_for_connection(board: If820Board):
 
 
 def send_receive_data(sender: If820Board, receiver: If820Board):
-    global data_sent, rx_done_event, tx_start_time
-    receiver.p_uart.clear_rx_queue()
-    rx_thread = threading.Thread(target=lambda: __receive_data_thread(receiver),
-                                 daemon=True)
+    dev_name = sender.probe.id
     rx_done_event = threading.Event()
+    data_sent = []
+    data_received = []
+    tx_start_time = time.time()
+
+    receiver.p_uart.clear_rx_queue()
+    rx_thread = threading.Thread(target=lambda: __receive_data_thread(receiver,
+                                                                      data_sent,
+                                                                      data_received,
+                                                                      rx_done_event,
+                                                                      tx_start_time),
+                                 daemon=True)
     rx_thread.start()
     logging.info(
-        f"Start sending data for at least {THROUGHPUT_TEST_TIMEOUT_SECS} seconds...")
-    data_sent = []
+        f"{dev_name} start sending data for at least {THROUGHPUT_TEST_TIMEOUT_SECS} seconds...")
     packet_num = 0
-    tx_start_time = time.time()
     while (time.time() - tx_start_time) < THROUGHPUT_TEST_TIMEOUT_SECS:
         send = bytearray(''.join(random.choices(string.ascii_letters +
                                                 string.digits, k=int(SEND_DATA_CHUNK_LEN))), 'utf-8')
@@ -100,37 +100,42 @@ def send_receive_data(sender: If820Board, receiver: If820Board):
         data_sent.extend(list(send))
         packet_num += 1
 
-    logging.info(f"Sent {len(data_sent)} bytes, Wait for data to be received...")
+    logging.info(f"{dev_name} sent {len(data_sent)} bytes, Wait for data to be received...")
     if not rx_done_event.wait(THROUGHPUT_TEST_TIMEOUT_SECS * 2):
-        logging.error("Timeout waiting for data to be received")
+        logging.error(f"{dev_name} timeout waiting for data to be received")
 
 
-def __receive_data_thread(receiver: If820Board):
-    global data_sent, data_received, rx_done_event, tx_start_time
+def __receive_data_thread(receiver: If820Board,
+                          data_sent: list,
+                          data_received: list,
+                          rx_done_event: threading.Event,
+                          tx_start_time: float):
+    dev_name = receiver.probe.id
     last_rx_time = time.time()
-    logging.info("Start receiving data...")
-    data_received = []
+    logging.info(f"{dev_name} start receiving data...")
     while time.time() - last_rx_time < RX_TIMEOUT_SECS:
         rx_data = receiver.p_uart.read()
         if len(rx_data) > 0:
             last_rx_time = time.time()
             data_received.extend(list(rx_data))
-    logging.info(f"All data received! Received {len(data_received)} bytes")
+    logging.info(f"{dev_name} data received! Received {len(data_received)} bytes")
     if data_received != data_sent:
         logging.error(
-            f"\r\n\r\nData received does not match data sent!\r\n")
+            f"\r\n\r\n{dev_name} data received does not match data sent!\r\n")
         for index, (txd, rxd) in enumerate(zip(data_sent, data_received)):
             if txd != rxd:
                 print(
-                    f"RX mismatch at index: {index} (packet {hex(int(index/SEND_DATA_CHUNK_LEN))}), val: {hex(rxd)}")
+                    f"{dev_name} RX mismatch at index: {index} (packet {hex(int(index/SEND_DATA_CHUNK_LEN))}), val: {hex(rxd)}")
                 print(
-                    f"tx[{index}]: {hex(data_sent[index])}, tx[{index + 1}]: {hex(data_sent[index + 1])}, tx[{index + 2}]: {hex(data_sent[index + 2])}")
+                    f"{dev_name} tx[{index}]: {hex(data_sent[index])}, tx[{index + 1}]: {hex(data_sent[index + 1])}, tx[{index + 2}]: {hex(data_sent[index + 2])}")
                 print(
-                    f"rx[{index}]: {hex(data_received[index])}, rx[{index + 1}]: {hex(data_received[index + 1])}")
+                    f"{dev_name} rx[{index}]: {hex(data_received[index])}, rx[{index + 1}]: {hex(data_received[index + 1])}")
                 data_received.insert(index, data_sent[index])
+                # Print the first mismatch
+                break
     bytes_per_sec = len(data_received) / (last_rx_time - tx_start_time)
     logging.info(
-        f"Total TX -> RX time: {last_rx_time - tx_start_time:.1f} Throughput: {bytes_per_sec:.2f} Bps ({bytes_per_sec * 8:.2f} bps)")
+        f"{dev_name} Total time: {last_rx_time - tx_start_time:.1f} Throughput: {bytes_per_sec:.2f} Bps ({bytes_per_sec * 8:.2f} bps)")
     rx_done_event.set()
 
 
@@ -216,7 +221,10 @@ if __name__ == '__main__':
     logging.info("Send data from Peripheral to Central")
     send_receive_data(if820_board_p, if820_board_c)
 
-    logging.info("Data exchanged! Reset the boards...")
-    if820_board_p.close_ports_and_reset()
-    if820_board_c.close_ports_and_reset()
-    logging.info("Done!")
+    logging.info("Running bidirectional throughput test...")
+    dir1_thread = threading.Thread(target=lambda: send_receive_data(if820_board_c, if820_board_p),
+                                   daemon=False)
+    dir2_thread = threading.Thread(target=lambda: send_receive_data(if820_board_p, if820_board_c),
+                                   daemon=False)
+    dir1_thread.start()
+    dir2_thread.start()
