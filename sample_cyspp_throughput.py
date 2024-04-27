@@ -8,8 +8,8 @@ import threading
 import random
 import string
 sys.path.append('./common_lib/libraries')
-from If820Board import If820Board
 import EzSerialPort as ez_port
+from If820Board import If820Board
 
 """
 This sample creates a CYSPP (BLE) connection between two IF820 boards and sends data between them.
@@ -128,7 +128,7 @@ def __receive_data_thread(receiver: If820Board,
     last_rx_time = time.time()
     logging.info(f"{dev_name} start receiving data...")
     data_received = []
-    while time.time() - last_rx_time < RX_TIMEOUT_SECS:
+    while time.time() - last_rx_time < RX_TIMEOUT_SECS or len(data_received) == 0:
         rx_data = receiver.p_uart.read()
         if len(rx_data) > 0:
             last_rx_time = time.time()
@@ -179,141 +179,149 @@ if __name__ == '__main__':
     if820_board_c.p_uart.set_api_format(API_FORMAT)
     if820_board_p.p_uart.set_api_format(API_FORMAT)
 
-    factory_reset(if820_board_c)
-    factory_reset(if820_board_p)
+    try:
+        factory_reset(if820_board_c)
+        factory_reset(if820_board_p)
 
-    logging.info(f"Set UART baud {BAUD_RATE} flow control {FLOW_CONTROL}")
-    ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_SET_UART_PARAMS,
-                                                baud=BAUD_RATE,
-                                                autobaud=0,
-                                                autocorrect=0,
-                                                flow=FLOW_CONTROL,
-                                                databits=8,
-                                                parity=0,
-                                                stopbits=1,
-                                                uart_type=0)
-    If820Board.check_if820_response(
-        if820_board_c.p_uart.CMD_SET_UART_PARAMS, ez_rsp)
-    ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_SET_UART_PARAMS,
-                                                baud=BAUD_RATE,
-                                                autobaud=0,
-                                                autocorrect=0,
-                                                flow=FLOW_CONTROL,
-                                                databits=8,
-                                                parity=0,
-                                                stopbits=1,
-                                                uart_type=0)
-    If820Board.check_if820_response(
-        if820_board_p.p_uart.CMD_SET_UART_PARAMS, ez_rsp)
-
-    if820_board_c.reconfig_puart(BAUD_RATE)
-    if820_board_p.reconfig_puart(BAUD_RATE)
-    if820_board_c.p_uart.set_api_format(API_FORMAT)
-    if820_board_p.p_uart.set_api_format(API_FORMAT)
-
-    # Wait for the module to change its UART params
-    time.sleep(0.1)
-
-    # if820 get mac address of peripheral
-    ez_rsp = if820_board_p.p_uart.send_and_wait(
-        command=if820_board_p.p_uart.CMD_GET_BT_ADDR)
-    If820Board.check_if820_response(
-        if820_board_p.p_uart.CMD_GET_BT_ADDR, ez_rsp)
-    peripheral_addr = ez_rsp[1].payload.address
-    logging.info(f'Peripheral MAC address: {peripheral_addr}')
-
-    if GPIO_MODE:
-        logging.info("Put IF820 into central mode via CP_ROLE pin")
-        if820_board_c.probe.gpio_to_output(if820_board_c.CP_ROLE)
-        if820_board_c.probe.gpio_to_output_low(if820_board_c.CP_ROLE)
-        if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_REBOOT)
-
-    else:
-        # Get device into central mode using api.
-        ez_rsp = if820_board_c.p_uart.send_and_wait(command=if820_board_c.p_uart.CMD_P_CYSPP_SET_PARAMETERS,
-                                                    enable=ENABLE_PLUS_AUTO_START,
-                                                    role=CENTRAL_ROLE,
-                                                    company=305,
-                                                    local_key=0,
-                                                    remote_key=0,
-                                                    remote_mask=0,
-                                                    sleep_level=0,
-                                                    server_security=0,
-                                                    client_flags=CYSPP_RX_FLOW_CNTRL)
+        logging.info(f"Set UART baud {BAUD_RATE} flow control {FLOW_CONTROL}")
+        ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_SET_UART_PARAMS,
+                                                    baud=BAUD_RATE,
+                                                    autobaud=0,
+                                                    autocorrect=0,
+                                                    flow=FLOW_CONTROL,
+                                                    databits=8,
+                                                    parity=0,
+                                                    stopbits=1,
+                                                    uart_type=0)
         If820Board.check_if820_response(
-            if820_board_c.p_uart.CMD_P_CYSPP_SET_PARAMETERS, ez_rsp)
-
-        logging.info("Scanning for peripheral device...")
-        ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_START_SCAN,
-                                                    mode=SCAN_MODE_GENERAL_DISCOVERY,
-                                                    interval=0x400,
-                                                    window=0x400,
-                                                    active=0,
-                                                    filter=SCAN_FILTER_ACCEPT_ALL,
-                                                    nodupe=1,
-                                                    timeout=5)
+            if820_board_c.p_uart.CMD_SET_UART_PARAMS, ez_rsp)
+        ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_SET_UART_PARAMS,
+                                                    baud=BAUD_RATE,
+                                                    autobaud=0,
+                                                    autocorrect=0,
+                                                    flow=FLOW_CONTROL,
+                                                    databits=8,
+                                                    parity=0,
+                                                    stopbits=1,
+                                                    uart_type=0)
         If820Board.check_if820_response(
-            if820_board_c.p_uart.CMD_GAP_START_SCAN, ez_rsp)
+            if820_board_p.p_uart.CMD_SET_UART_PARAMS, ez_rsp)
 
-        while True:
-            ez_rsp = if820_board_c.p_uart.wait_event(
-                if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT)
+        if820_board_c.reconfig_puart(BAUD_RATE)
+        if820_board_p.reconfig_puart(BAUD_RATE)
+        if820_board_c.p_uart.set_api_format(API_FORMAT)
+        if820_board_p.p_uart.set_api_format(API_FORMAT)
+
+        # Wait for the module to change its UART params
+        time.sleep(0.1)
+
+        # if820 get mac address of peripheral
+        ez_rsp = if820_board_p.p_uart.send_and_wait(
+            command=if820_board_p.p_uart.CMD_GET_BT_ADDR)
+        If820Board.check_if820_response(
+            if820_board_p.p_uart.CMD_GET_BT_ADDR, ez_rsp)
+        peripheral_addr = ez_rsp[1].payload.address
+        logging.info(f'Peripheral MAC address: {peripheral_addr}')
+
+        if GPIO_MODE:
+            logging.info("Put IF820 into central mode via CP_ROLE pin")
+            if820_board_c.probe.gpio_to_output(if820_board_c.CP_ROLE)
+            if820_board_c.probe.gpio_to_output_low(if820_board_c.CP_ROLE)
+            if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_REBOOT)
+
+        else:
+            # Get device into central mode using api.
+            ez_rsp = if820_board_c.p_uart.send_and_wait(command=if820_board_c.p_uart.CMD_P_CYSPP_SET_PARAMETERS,
+                                                        enable=ENABLE_PLUS_AUTO_START,
+                                                        role=CENTRAL_ROLE,
+                                                        company=305,
+                                                        local_key=0,
+                                                        remote_key=0,
+                                                        remote_mask=0,
+                                                        sleep_level=0,
+                                                        server_security=0,
+                                                        client_flags=CYSPP_RX_FLOW_CNTRL)
             If820Board.check_if820_response(
-                if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT, ez_rsp)
-            packet = ez_rsp[1]
-            received_addr = packet.payload.address
-            address_type = packet.payload.address_type
-            if received_addr == peripheral_addr:
-                logging.info('Found peripheral device!')
-                break
-            else:
-                logging.debug(f'Not looking for {received_addr}')
+                if820_board_c.p_uart.CMD_P_CYSPP_SET_PARAMETERS, ez_rsp)
 
-        ez_rsp = if820_board_c.p_uart.send_and_wait(
-            if820_board_c.p_uart.CMD_GAP_STOP_SCAN, ez_port.EzSerialApiMode.BINARY.value)
-        If820Board.check_if820_response(
-            if820_board_c.p_uart.CMD_GAP_STOP_SCAN, ez_rsp)
+            logging.info("Scanning for peripheral device...")
+            ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_START_SCAN,
+                                                        mode=SCAN_MODE_GENERAL_DISCOVERY,
+                                                        interval=0x400,
+                                                        window=0x400,
+                                                        active=0,
+                                                        filter=SCAN_FILTER_ACCEPT_ALL,
+                                                        nodupe=1,
+                                                        timeout=5)
+            If820Board.check_if820_response(
+                if820_board_c.p_uart.CMD_GAP_START_SCAN, ez_rsp)
 
-        logging.info('Connecting to peripheral device...')
-        ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_CONNECT,
-                                                    address=received_addr,
-                                                    type=address_type,
-                                                    interval=24,
-                                                    slave_latency=5,
-                                                    supervision_timeout=500,
-                                                    scan_interval=0x0100,
-                                                    scan_window=0x0100,
-                                                    scan_timeout=0)
-        If820Board.check_if820_response(
-            if820_board_c.p_uart.CMD_GAP_CONNECT, ez_rsp)
+            while True:
+                ez_rsp = if820_board_c.p_uart.wait_event(
+                    if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT)
+                If820Board.check_if820_response(
+                    if820_board_c.p_uart.EVENT_GAP_SCAN_RESULT, ez_rsp)
+                packet = ez_rsp[1]
+                received_addr = packet.payload.address
+                address_type = packet.payload.address_type
+                if received_addr == peripheral_addr:
+                    logging.info('Found peripheral device!')
+                    break
+                else:
+                    logging.debug(f'Not looking for {received_addr}')
 
-        res = if820_board_c.p_uart.wait_event(
-            if820_board_c.p_uart.EVENT_GAP_CONNECTED)
-        If820Board.check_if820_response(
-            if820_board_c.p_uart.EVENT_GAP_CONNECTED, ez_rsp)
-        logging.info('Central Connected!')
-        res = if820_board_p.p_uart.wait_event(
-            if820_board_p.p_uart.EVENT_GAP_CONNECTED)
-        If820Board.check_if820_response(
-            if820_board_p.p_uart.EVENT_GAP_CONNECTED, ez_rsp)
-        logging.info('Peripheral Connected!')
+            ez_rsp = if820_board_c.p_uart.send_and_wait(
+                if820_board_c.p_uart.CMD_GAP_STOP_SCAN, ez_port.EzSerialApiMode.BINARY.value)
+            If820Board.check_if820_response(
+                if820_board_c.p_uart.CMD_GAP_STOP_SCAN, ez_rsp)
 
-    logging.info("Peripheral: Waiting for CYSPP connection...")
-    wait_for_cyspp_connection(if820_board_p, 0x05)
-    logging.info("Peripheral: CYSPP started")
-    logging.info("Central: Waiting for CYSPP connection...")
-    wait_for_cyspp_connection(if820_board_c, 0x35)
-    logging.info("Central: CYSPP ready!")
+            logging.info('Connecting to peripheral device...')
+            ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_GAP_CONNECT,
+                                                        address=received_addr,
+                                                        type=address_type,
+                                                        interval=24,
+                                                        slave_latency=5,
+                                                        supervision_timeout=500,
+                                                        scan_interval=0x0100,
+                                                        scan_window=0x0100,
+                                                        scan_timeout=0)
+            If820Board.check_if820_response(
+                if820_board_c.p_uart.CMD_GAP_CONNECT, ez_rsp)
 
-    logging.info("Sending data from central to peripheral...")
-    send_receive_data(if820_board_c, if820_board_p)
-    logging.info("Sending data from peripheral to central...")
-    send_receive_data(if820_board_p, if820_board_c)
+            res = if820_board_c.p_uart.wait_event(
+                if820_board_c.p_uart.EVENT_GAP_CONNECTED)
+            If820Board.check_if820_response(
+                if820_board_c.p_uart.EVENT_GAP_CONNECTED, ez_rsp)
+            logging.info('Central Connected!')
+            res = if820_board_p.p_uart.wait_event(
+                if820_board_p.p_uart.EVENT_GAP_CONNECTED)
+            If820Board.check_if820_response(
+                if820_board_p.p_uart.EVENT_GAP_CONNECTED, ez_rsp)
+            logging.info('Peripheral Connected!')
 
-    logging.info("Running bidirectional throughput test...")
-    dir1_thread = threading.Thread(target=lambda: send_receive_data(if820_board_c, if820_board_p),
-                                   daemon=False)
-    dir2_thread = threading.Thread(target=lambda: send_receive_data(if820_board_p, if820_board_c),
-                                   daemon=False)
-    dir1_thread.start()
-    dir2_thread.start()
+        logging.info("Peripheral: Waiting for CYSPP connection...")
+        wait_for_cyspp_connection(if820_board_p, 0x05)
+        logging.info("Peripheral: CYSPP started")
+        logging.info("Central: Waiting for CYSPP connection...")
+        wait_for_cyspp_connection(if820_board_c, 0x35)
+        logging.info("Central: CYSPP ready!")
+
+        logging.info("Sending data from central to peripheral...")
+        send_receive_data(if820_board_c, if820_board_p)
+        logging.info("Sending data from peripheral to central...")
+        send_receive_data(if820_board_p, if820_board_c)
+
+        logging.info("Running bidirectional throughput test...")
+        dir1_thread = threading.Thread(target=lambda: send_receive_data(if820_board_c, if820_board_p),
+                                       daemon=False)
+        dir2_thread = threading.Thread(target=lambda: send_receive_data(if820_board_p, if820_board_c),
+                                       daemon=False)
+        dir1_thread.start()
+        dir2_thread.start()
+        while dir1_thread.is_alive() or dir2_thread.is_alive():
+            time.sleep(1)
+    except Exception as e:
+        logging.critical(f"Error: {e}")
+
+    if820_board_c.close_ports_and_reset()
+    if820_board_p.close_ports_and_reset()

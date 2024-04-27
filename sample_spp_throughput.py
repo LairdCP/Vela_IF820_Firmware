@@ -46,6 +46,7 @@ SEND_DATA_CHUNK_LEN = THROUGHPUT_TEST_TIMEOUT_SECS * BAUD_RATE / UART_BITS_PER_B
 # How long to wait for data to be received. This is used to determine when RX is finished.
 RX_TIMEOUT_SECS = 1
 
+
 def factory_reset(board: If820Board):
     logging.info("IF820 Factory Reset")
     ez_rsp = board.p_uart.send_and_wait(
@@ -100,7 +101,8 @@ def send_receive_data(sender: If820Board, receiver: If820Board):
         data_sent.extend(list(send))
         packet_num += 1
 
-    logging.info(f"{dev_name} sent {len(data_sent)} bytes, Wait for data to be received...")
+    logging.info(
+        f"{dev_name} sent {len(data_sent)} bytes, Wait for data to be received...")
     if not rx_done_event.wait(THROUGHPUT_TEST_TIMEOUT_SECS * 2):
         logging.error(f"{dev_name} timeout waiting for data to be received")
 
@@ -113,12 +115,13 @@ def __receive_data_thread(receiver: If820Board,
     dev_name = receiver.probe.id
     last_rx_time = time.time()
     logging.info(f"{dev_name} start receiving data...")
-    while time.time() - last_rx_time < RX_TIMEOUT_SECS:
+    while time.time() - last_rx_time <= RX_TIMEOUT_SECS or len(data_received) == 0:
         rx_data = receiver.p_uart.read()
         if len(rx_data) > 0:
             last_rx_time = time.time()
             data_received.extend(list(rx_data))
-    logging.info(f"{dev_name} data received! Received {len(data_received)} bytes")
+    logging.info(
+        f"{dev_name} data received! Received {len(data_received)} bytes")
     if data_received != data_sent:
         logging.error(
             f"\r\n\r\n{dev_name} data received does not match data sent!\r\n")
@@ -163,68 +166,78 @@ if __name__ == '__main__':
     if820_board_c.p_uart.set_api_format(API_FORMAT)
     if820_board_p.p_uart.set_api_format(API_FORMAT)
 
-    factory_reset(if820_board_c)
-    factory_reset(if820_board_p)
+    try:
+        factory_reset(if820_board_c)
+        factory_reset(if820_board_p)
 
-    logging.info(f"Set UART baud {BAUD_RATE} flow control {FLOW_CONTROL}")
-    ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_SET_UART_PARAMS,
-                                                baud=BAUD_RATE,
-                                                autobaud=0,
-                                                autocorrect=0,
-                                                flow=FLOW_CONTROL,
-                                                databits=8,
-                                                parity=0,
-                                                stopbits=1,
-                                                uart_type=0)
-    If820Board.check_if820_response(
-        if820_board_c.p_uart.CMD_SET_UART_PARAMS, ez_rsp)
-    ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_SET_UART_PARAMS,
-                                                baud=BAUD_RATE,
-                                                autobaud=0,
-                                                autocorrect=0,
-                                                flow=FLOW_CONTROL,
-                                                databits=8,
-                                                parity=0,
-                                                stopbits=1,
-                                                uart_type=0)
-    If820Board.check_if820_response(
-        if820_board_p.p_uart.CMD_SET_UART_PARAMS, ez_rsp)
+        logging.info(f"Set UART baud {BAUD_RATE} flow control {FLOW_CONTROL}")
+        ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_SET_UART_PARAMS,
+                                                    baud=BAUD_RATE,
+                                                    autobaud=0,
+                                                    autocorrect=0,
+                                                    flow=FLOW_CONTROL,
+                                                    databits=8,
+                                                    parity=0,
+                                                    stopbits=1,
+                                                    uart_type=0)
+        If820Board.check_if820_response(
+            if820_board_c.p_uart.CMD_SET_UART_PARAMS, ez_rsp)
+        ez_rsp = if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_SET_UART_PARAMS,
+                                                    baud=BAUD_RATE,
+                                                    autobaud=0,
+                                                    autocorrect=0,
+                                                    flow=FLOW_CONTROL,
+                                                    databits=8,
+                                                    parity=0,
+                                                    stopbits=1,
+                                                    uart_type=0)
+        If820Board.check_if820_response(
+            if820_board_p.p_uart.CMD_SET_UART_PARAMS, ez_rsp)
 
-    if820_board_c.reconfig_puart(BAUD_RATE)
-    if820_board_p.reconfig_puart(BAUD_RATE)
-    if820_board_c.p_uart.set_api_format(API_FORMAT)
-    if820_board_p.p_uart.set_api_format(API_FORMAT)
+        if820_board_p.reconfig_puart(BAUD_RATE)
+        if820_board_c.reconfig_puart(BAUD_RATE)
+        if820_board_p.p_uart.set_api_format(API_FORMAT)
+        if820_board_c.p_uart.set_api_format(API_FORMAT)
 
-    # Wait for the module to change its UART params
-    time.sleep(0.1)
+        # Wait for the module to change its UART params
+        time.sleep(1)
 
-    logging.info("Get Peripheral BT MAC")
-    peripheral_bt_mac = None
-    ez_rsp = if820_board_p.p_uart.send_and_wait(
-        if820_board_p.p_uart.CMD_GET_BT_ADDR)
-    If820Board.check_if820_response(
-        if820_board_p.p_uart.CMD_GET_BT_ADDR, ez_rsp)
-    peripheral_bt_mac = ez_rsp[1].payload.address
+        logging.info("Get Peripheral BT MAC")
+        peripheral_bt_mac = None
+        ez_rsp = if820_board_p.p_uart.send_and_wait(
+            if820_board_p.p_uart.CMD_GET_BT_ADDR)
+        If820Board.check_if820_response(
+            if820_board_p.p_uart.CMD_GET_BT_ADDR, ez_rsp)
+        peripheral_bt_mac = ez_rsp[1].payload.address
 
-    logging.info("Connect to Peripheral")
-    ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_CONNECT,
-                                                address=peripheral_bt_mac,
-                                                type=1)
-    If820Board.check_if820_response(if820_board_p.p_uart.CMD_CONNECT, ez_rsp)
-    logging.info("Wait for central connection...")
-    wait_for_connection(if820_board_c)
-    logging.info("Wait for peripheral connection...")
-    wait_for_connection(if820_board_p)
+        logging.info("Connect to Peripheral")
+        ez_rsp = if820_board_c.p_uart.send_and_wait(if820_board_c.p_uart.CMD_CONNECT,
+                                                    address=peripheral_bt_mac,
+                                                    type=1)
+        If820Board.check_if820_response(
+            if820_board_p.p_uart.CMD_CONNECT, ez_rsp)
+        logging.info("Wait for central connection...")
+        wait_for_connection(if820_board_c)
+        logging.info("Wait for peripheral connection...")
+        wait_for_connection(if820_board_p)
 
-    logging.info("Send data from Central to Peripheral")
-    send_receive_data(if820_board_c, if820_board_p)
-    logging.info("Send data from Peripheral to Central")
-    send_receive_data(if820_board_p, if820_board_c)
+        logging.info("Send data from Central to Peripheral")
+        send_receive_data(if820_board_c, if820_board_p)
+        logging.info("Send data from Peripheral to Central")
+        send_receive_data(if820_board_p, if820_board_c)
 
-    logging.info("Running bidirectional throughput test...")
-    dir1_thread = threading.Thread(target=lambda: send_receive_data(if820_board_c, if820_board_p),
-                                   daemon=False)
-    dir2_thread = threading.Thread(target=lambda: send_receive_data(if820_board_p, if820_board_c),
-                                   daemon=False)
-    dir1_thread.start()
-    dir2_thread.start()
+        logging.info("Running bidirectional throughput test...")
+        dir1_thread = threading.Thread(target=lambda: send_receive_data(if820_board_c, if820_board_p),
+                                       daemon=False)
+        dir2_thread = threading.Thread(target=lambda: send_receive_data(if820_board_p, if820_board_c),
+                                       daemon=False)
+        dir1_thread.start()
+        dir2_thread.start()
+
+        while dir1_thread.is_alive() or dir2_thread.is_alive():
+            time.sleep(1)
+    except Exception as e:
+        logging.critical(f"Error: {e}")
+
+    if820_board_c.close_ports_and_reset()
+    if820_board_p.close_ports_and_reset()
