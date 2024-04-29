@@ -86,6 +86,7 @@ def wait_for_cyspp_connection(board: If820Board, expected_status: int):
 def send_receive_data(sender: If820Board, receiver: If820Board):
     dev_name = sender.probe.id
     rx_done_event = threading.Event()
+    tx_done_event = threading.Event()
     data_sent = []
     data_received = []
     tx_start_time = time.time()
@@ -95,7 +96,8 @@ def send_receive_data(sender: If820Board, receiver: If820Board):
                                                                       data_sent,
                                                                       data_received,
                                                                       rx_done_event,
-                                                                      tx_start_time),
+                                                                      tx_start_time,
+                                                                      tx_done_event),
                                  daemon=True)
     rx_thread.start()
     logging.info(
@@ -115,6 +117,7 @@ def send_receive_data(sender: If820Board, receiver: If820Board):
 
     logging.info(
         f"{dev_name} sent {len(data_sent)} bytes, Wait for data to be received...")
+    tx_done_event.set()
     if not rx_done_event.wait(THROUGHPUT_TEST_TIMEOUT_SECS * 2):
         logging.error("{dev_name} timeout waiting for data to be received")
 
@@ -123,12 +126,13 @@ def __receive_data_thread(receiver: If820Board,
                           data_sent: list,
                           data_received: list,
                           rx_done_event: threading.Event,
-                          tx_start_time: float):
+                          tx_start_time: float,
+                          tx_done_event: threading.Event):
     dev_name = receiver.probe.id
     last_rx_time = time.time()
     logging.info(f"{dev_name} start receiving data...")
     data_received = []
-    while time.time() - last_rx_time < RX_TIMEOUT_SECS or len(data_received) == 0:
+    while time.time() - last_rx_time < RX_TIMEOUT_SECS or len(data_received) == 0 or not tx_done_event.is_set():
         rx_data = receiver.p_uart.read()
         if len(rx_data) > 0:
             last_rx_time = time.time()
@@ -213,7 +217,7 @@ if __name__ == '__main__':
         if820_board_p.p_uart.set_api_format(API_FORMAT)
 
         # Wait for the module to change its UART params
-        time.sleep(0.1)
+        time.sleep(1)
 
         # if820 get mac address of peripheral
         ez_rsp = if820_board_p.p_uart.send_and_wait(
@@ -322,6 +326,8 @@ if __name__ == '__main__':
             time.sleep(1)
     except Exception as e:
         logging.critical(f"Error: {e}")
-
-    if820_board_c.close_ports_and_reset()
-    if820_board_p.close_ports_and_reset()
+        raise e
+    finally:
+        logging.info("Closing ports and resetting IF820 boards")
+        if820_board_c.close_ports_and_reset()
+        if820_board_p.close_ports_and_reset()
