@@ -42,6 +42,8 @@ SEND_DATA_CHUNK_LEN = THROUGHPUT_TEST_TIMEOUT_SECS * \
 # How long to wait for data to be received. This is used to determine when RX is finished.
 RX_TIMEOUT_SECS = 1
 
+SEND_CHUNK_LIMIT = 3000000
+
 SCAN_MODE_GENERAL_DISCOVERY = ez_port.GapScanMode.NA.value
 SCAN_FILTER_ACCEPT_ALL = ez_port.GapScanFilter.NA.value
 CENTRAL_ROLE = 1
@@ -103,9 +105,12 @@ def send_receive_data(sender: If820Board, receiver: If820Board):
     logging.info(
         f"{dev_name} start sending data for at least {THROUGHPUT_TEST_TIMEOUT_SECS} seconds...")
     packet_num = 0
+    chunk_len = int(SEND_DATA_CHUNK_LEN)
+    if chunk_len > SEND_CHUNK_LIMIT:
+        chunk_len = SEND_CHUNK_LIMIT
     while (time.time() - tx_start_time) < THROUGHPUT_TEST_TIMEOUT_SECS:
         send = bytearray(''.join(random.choices(string.ascii_letters +
-                                                string.digits, k=int(SEND_DATA_CHUNK_LEN))), 'utf-8')
+                                                string.digits, k=chunk_len)), 'utf-8')
         # Add a packet header that contains the packet number
         # This is useful for identifying the packet when looking at UART logic traces
         header = packet_num.to_bytes(4, byteorder='little')
