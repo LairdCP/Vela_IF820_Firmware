@@ -11,9 +11,9 @@ Default Tags        vela if820
 ${PROBE_SETTING_TARGET_DEVICE_VENDOR}=      ARM
 ${PROBE_SETTING_TARGET_DEVICE_NAME}=        cortex_m
 ${PROBE_SETTING_BOARD_VENDOR}=              Ezurio
-${PROBE_SETTING_BOARD_NAME}=                Vela IF820 DVK
+${PROBE_SETTING_BOARD_NAME}=                Vela IF820 USB Dongle
 ${PROBE_SETTING_USB_VID}=                   ${0x3016}
-${PROBE_SETTING_USB_PID}=                   ${0x0009}
+${PROBE_SETTING_USB_PID}=                   ${0x000A}
 
 
 *** Test Cases ***
