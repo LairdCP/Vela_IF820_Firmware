@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('img/IF820_fw_upgrade_header.png', 'img'), ('files/v1.4.12.12_int-ant/minidriver-20820A1-uart-patchram.hex', 'files')]
+datas = [('img/IF820_fw_upgrade_header.png', 'img'), ('files/v1.4.12.12_int-ant/minidriver-20820A1-uart-patchram.hex', 'files/v1.4.12.12_int-ant')]
 binaries = []
 hiddenimports = []
 tmp_ret = collect_all('pyocd')
@@ -21,6 +21,7 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
+    optimize=0,
 )
 pyz = PYZ(a.pure)
 
@@ -43,10 +44,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-)
-app = BUNDLE(
-    exe,
-    name='if820_flasher_gui.app',
-    icon=None,
-    bundle_identifier=None,
 )

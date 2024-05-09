@@ -5,7 +5,7 @@ Python GUI for IF820 Firmware Upgrade
 
 pyinstaller command to produce a single executable file:
 
-pyinstaller --clean --windowed --noconfirm  --onefile --add-data "img/IF820_fw_upgrade_header.png:img" --add-data "files/v1.4.12.12_int-ant/minidriver-20820A1-uart-patchram.hex:files" --collect-all pyocd  --collect-all cmsis_pack_manager -p common_lib/libraries if820_flasher_gui.py
+pyinstaller --clean --windowed --noconfirm  --onefile --add-data "img/IF820_fw_upgrade_header.png:img" --add-data "files/v1.4.12.12_int-ant/minidriver-20820A1-uart-patchram.hex:files/v1.4.12.12_int-ant" --collect-all pyocd  --collect-all cmsis_pack_manager -p common_lib/libraries if820_flasher_gui.py
 
 """
 
@@ -22,7 +22,7 @@ from If820Board import If820Board
 LOG_MODULE_HCI_PORT = 'hci_port'
 PROGRAM_TITLE = 'Vela IF820 Firmware Upgrade Tool'
 LOGGING_FORMAT = '%(asctime)s | %(levelname)s | %(message)s'
-
+VERSION = '2.0.0'
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -41,8 +41,8 @@ class WxTextCtrlLogHandler(logging.Handler):
         wx.CallAfter(self.ctrl.AppendText, s)
 
 
-header_img = resource_path('img/IF820_fw_upgrade_header.png')
-minidriver = resource_path('files/v1.4.12.12_int-ant/minidriver-20820A1-uart-patchram.hex')
+HEADER_IMG = resource_path(f'img{os.sep}IF820_fw_upgrade_header.png')
+MINIDRIVER = resource_path(f'files{os.sep}v1.4.12.12_int-ant{os.sep}minidriver-20820A1-uart-patchram.hex')
 
 
 class Window(wx.Frame):
@@ -61,7 +61,7 @@ class Window(wx.Frame):
         vbox = wx.BoxSizer(wx.VERTICAL)
 
         # Place a nice image to the top
-        bmpl = wx.Image(header_img, wx.BITMAP_TYPE_ANY)
+        bmpl = wx.Image(HEADER_IMG, wx.BITMAP_TYPE_ANY)
         img_header = wx.StaticBitmap(panel, -1, bmpl, (0, 0))
         hbox_image = wx.BoxSizer(wx.HORIZONTAL)
         hbox_image.Add(img_header)
@@ -140,7 +140,7 @@ class Window(wx.Frame):
 
         # Create a status bar and populate with version number
         self.CreateStatusBar()
-        self.SetStatusText("Version 0.1")
+        self.SetStatusText(f"Version {VERSION}")
 
         # Add a log handler to the root logger to show log messages in the GUI
         log_handler = WxTextCtrlLogHandler(self.tx_logoutput)
@@ -162,7 +162,7 @@ class Window(wx.Frame):
         """
         try:
             self.selected_board.flash_firmware(
-                minidriver, f'{self.picker_firmware.GetTextCtrl().GetValue()}', self.ch_chiperase.GetValue())
+                MINIDRIVER, f'{self.picker_firmware.GetTextCtrl().GetValue()}', self.ch_chiperase.GetValue())
         except Exception as e:
             # Log any error
             logging.error(e)
