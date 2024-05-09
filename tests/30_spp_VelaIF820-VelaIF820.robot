@@ -35,7 +35,7 @@ Test Setup
 
 Test Teardown
     EZ Factory Reset    ${if820_board1}
-    EZ Factory Reset    ${if820_board1}
+    EZ Factory Reset    ${if820_board2}
     De-Init Board    ${if820_board1}
     De-Init Board    ${if820_board2}
 
