@@ -16,7 +16,7 @@ Default Tags        vela if820
 *** Variables ***
 ${MINI_DRIVER}                  ${CURDIR}${/}..${/}files${/}minidriver-20820A1-uart-patchram.hex
 ${FIRMWARE}
-...                             ${CURDIR}${/}..${/}files${/}v1.4.12.12_int-ant/202309011_ezserial_app_VELA-IF820-INT-ANT-EVK_141212_v1.4.12.12_download.hex
+...                             ${CURDIR}${/}..${/}files${/}v1.4.16.16_int-ant/220240328_ezserial_app_VELA-IF820-INT-ANT-EVK_141616_v1.4.16.16_download.hex
 ${PROGRAM_FIRMWARE_TIMEOUT}     30 seconds
 ${TEST_TIMEOUT_SHORT}           2 seconds
 @{module_result}                ${EMPTY}

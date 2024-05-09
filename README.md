@@ -26,4 +26,4 @@ pip3 install -r requirements.txt
 
 ## Documentation
 
-Please see the [Vela IF820 Software User Guide](https://lairdcp.github.io/guides/vela_if820_user_guide/1.0/introduction.html) for all documentation.
+Please see the [Vela IF820 Software User Guide](https://lairdcp.github.io/guides/vela_if820_user_guide/latest.html) for all documentation.

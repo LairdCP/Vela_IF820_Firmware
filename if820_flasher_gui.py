@@ -5,7 +5,7 @@ Python GUI for IF820 Firmware Upgrade
 
 pyinstaller command to produce a single executable file:
 
-pyinstaller --clean --windowed --noconfirm  --onefile --add-data "img/IF820_fw_upgrade_header.png:img" --add-data "files/v1.4.12.12_int-ant/minidriver-20820A1-uart-patchram.hex:files/v1.4.12.12_int-ant" --collect-all pyocd  --collect-all cmsis_pack_manager -p common_lib/libraries if820_flasher_gui.py
+pyinstaller --clean --windowed --noconfirm  --onefile --add-data "img/IF820_fw_upgrade_header.png:img" --add-data "files/v1.4.16.16_int-ant/minidriver-20820A1-uart-patchram.hex:files/v1.4.16.16_int-ant" --collect-all pyocd  --collect-all cmsis_pack_manager -p common_lib/libraries if820_flasher_gui.py
 
 """
 
@@ -42,7 +42,7 @@ class WxTextCtrlLogHandler(logging.Handler):
 
 
 HEADER_IMG = resource_path(f'img{os.sep}IF820_fw_upgrade_header.png')
-MINIDRIVER = resource_path(f'files{os.sep}v1.4.12.12_int-ant{os.sep}minidriver-20820A1-uart-patchram.hex')
+MINIDRIVER = resource_path(f'files{os.sep}v1.4.16.16_int-ant{os.sep}minidriver-20820A1-uart-patchram.hex')
 
 
 class Window(wx.Frame):
