@@ -59,6 +59,8 @@ if __name__ == '__main__':
     logging.info('Configure advertiser...')
     quit_on_resp_err(if820_board_p.p_uart.send_and_wait(
         if820_board_p.p_uart.CMD_GAP_STOP_ADV)[0])
+    quit_on_resp_err(if820_board_p.p_uart.wait_event(
+        if820_board_p.p_uart.EVENT_GAP_ADV_STATE_CHANGED)[0])
     quit_on_resp_err(if820_board_p.p_uart.send_and_wait(if820_board_p.p_uart.CMD_GAP_SET_ADV_PARAMETERS,
                                                         mode=ADV_MODE,
                                                         type=ADV_TYPE,
