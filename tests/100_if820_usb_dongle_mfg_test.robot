@@ -1,6 +1,6 @@
 *** Settings ***
-Documentation       IF820 DVK Manufacturing Test
-...                 This test will test one IF820 DVK at a time.
+Documentation       IF820 USB Dongle Manufacturing Test
+...                 This test will test one IF820 USB dongle at a time.
 
 Resource            common.robot
 
